@@ -6,11 +6,13 @@ const { autoUpdater } = require("electron-updater");
 // autoUpdater.currentVersion = '0.8.0';
 // autoUpdater.updateConfigPath = path.join(__dirname, 'dev-app-update.yml');
 
+// Releases of this fork. Upstream pointed at ramboxapp/download, which is
+// archived, so a packaged build was asking a dead repository for updates.
 autoUpdater.setFeedURL({
 	"provider": "github",
-	"owner": "ramboxapp",
-	"repo": "download",
-	"vPrefixedTagName": true
+	"owner": "lukasborges",
+	"repo": "rambox-ce",
+	"vPrefixedTagName": false
 });
 
 const initialize = (window) => {

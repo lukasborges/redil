@@ -31,7 +31,19 @@ Style work belongs in those CSS files, not in the Sass, which no longer builds. 
 
 If Sencha Cmd is ever available again, `sencha app watch` still works and takes precedence, since it overwrites the same `bootstrap.js`.
 
-The production pipeline still assumes Sencha Cmd and therefore does not run today: `npm run sencha:clean`, `npm run sencha:compile` (runs `sencha app build`, then installs npm deps inside the compiled app), then `npm run pack:*` (electron-packager) and `npm run build:*` (electron-builder). The `all:linux` and `all:win` scripts chain the whole sequence. The pack and build scripts expect the compiled application at `build/production/Rambox/`, which CI populated by cloning the separate `rambox-build` repository into that path. Packaging needs a replacement for that step before releases can be produced again.
+Packaging runs from the repository itself:
+
+```bash
+npm run build:linux     # AppImage, deb and tar.gz into dist/
+npm run build:win
+npm run build:mac
+```
+
+Each one regenerates `bootstrap.js` first, because it is gitignored and the packaged app cannot boot without it. Upstream instead chained `sencha app build` into `electron-packager`, taking the compiled app from `build/production/Rambox/`, which CI populated by cloning a separate `rambox-build` repository. All of that is gone: the `sencha:*`, `pack:*` and `all:*` scripts were removed along with `electron-packager`, and `electron-builder` alone produces the artifacts.
+
+The `files` list in the build config is an allowlist rather than the default catch-all, because `ext/` is 121 MB and the app needs about 14 MB of it. If the renderer starts loading an Ext class that is not in `ext-all-rtl-debug.js` or under `ext/src`, add its path there or it will only fail in a packaged build.
+
+Only Linux has been built and run end to end. Windows and macOS are configured but untested, and the macOS signing and notarisation path needs credentials plus a move to the renamed `@electron/notarize`.
 
 There is no linter or formatter configured.
 
