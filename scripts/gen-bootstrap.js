@@ -33,8 +33,8 @@ const FRAMEWORK = ['ext/build/ext-all-rtl-debug.js'];
 /**
  * Loaded after the framework. Ext.Loader resolves everything under app/ on its
  * own, so only files it cannot discover by class name belong here: the theme
- * marker, the Ext.override calls, the two loose renderer helpers, and app.js
- * last because it calls Ext.application.
+ * marker, the Ext.override calls, the loose renderer helper, and app.js last
+ * because it calls Ext.application.
  */
 function filesAfterFramework() {
 	return [
@@ -46,7 +46,6 @@ function filesAfterFramework() {
 		'ext/src/ux/BoxReorderer.js',
 		'ext/src/ux/TabReorderer.js',
 		'ext/src/ux/statusbar/StatusBar.js',
-		'resources/js/GALocalStorage.js',
 		'resources/js/loadscreen.js',
 		'app.js',
 	];

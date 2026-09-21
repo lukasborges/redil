@@ -19,7 +19,7 @@ npm start               # electron electron/main.js
 npm run start:debug     # same, with --enable-logging
 ```
 
-`scripts/gen-bootstrap.js` generates the `bootstrap.js` that `index.html` loads. It serves the Ext JS build already vendored in `ext/build/` and the theme CSS already compiled in `ext/packages/`, then points `Ext.Loader` at `app/` so the framework resolves `Rambox.*` classes by name. Only files the loader cannot discover by class name are listed explicitly: the theme marker, the `Ext.override` calls in `overrides/`, the two loose helpers in `resources/js/`, and `app.js` last because it calls `Ext.application`. Regenerate after adding files in `overrides/` or `resources/js/`; ordinary classes under `app/` need no regeneration. `bootstrap.js` stays gitignored.
+`scripts/gen-bootstrap.js` generates the `bootstrap.js` that `index.html` loads. It serves the Ext JS build already vendored in `ext/build/` and the theme CSS already compiled in `ext/packages/`, then points `Ext.Loader` at `app/` so the framework resolves `Rambox.*` classes by name. Only files the loader cannot discover by class name are listed explicitly: the theme marker, the `Ext.override` calls in `overrides/`, the loose helper in `resources/js/`, and `app.js` last because it calls `Ext.application`. Regenerate after adding files in `overrides/` or `resources/js/`; ordinary classes under `app/` need no regeneration. `bootstrap.js` stays gitignored.
 
 The Sass in `packages/local/rambox-default-theme` is not compiled either. The app loads the stock `ext-theme-crisp` CSS that the custom theme extends, and `resources/css/rambox-theme.css` then restates Rambox's own look as plain CSS on top. That file must load last, which the generator guarantees.
 
@@ -89,7 +89,9 @@ The `validateMasterPassword` handler in `electron/main.js` assigns `event.return
 
 ## Localization
 
-Translations come from Crowdin. `npm run translations:download` fetches CSVs into `resources/languages/<locale>/`, and `npm run translations:generate` collapses each locale folder into a single `resources/languages/<locale>.js` that assigns into a global `locale[]` array and deletes the folder. `index.html` injects the file for the configured locale before the app boots, which is why `locale['key']` is available at class-definition time in models and views. Do not hand-edit the generated `.js` files.
+Translations come from Crowdin. `npm run translations:download` reads the API key from `CROWDIN_API_KEY` and fetches CSVs into `resources/languages/<locale>/`, and `npm run translations:generate` collapses each locale folder into a single `resources/languages/<locale>.js` that assigns into a global `locale[]` array and deletes the folder. `index.html` injects the file for the configured locale before the app boots, which is why `locale['key']` is available at class-definition time in models and views. Do not hand-edit the generated `.js` files.
+
+The key used to sit in `languages.js` in plain text. It is still in this repository's history and in the archived upstream, so it has to be revoked on Crowdin; deleting it from the working tree does not un-leak it. The `crowdin` package is also old enough to throw while loading on a modern Node, which is why it is required inside the download branch rather than at the top of the file: the generate command does not need it and used to break along with it.
 
 ## Conventions
 
