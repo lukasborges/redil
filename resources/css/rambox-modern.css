@@ -65,6 +65,23 @@ body {
 }
 
 /*
+ * The 2015 theme pushed the bar body down 8px and pulled the strip up 10px to
+ * clear the strip it drew across the whole width. This layer draws no strip, and
+ * the leftover padding made the body taller than the bar it sits in, so the
+ * overflow showed as a white band under the tabs. The tabs carry their own
+ * padding now, so the body goes back to none, and it also paints the bar colour
+ * in case a future layout leaves it taller again.
+ */
+.x-tab-bar-top .x-tab-bar-body {
+	padding: 0 4px !important;
+	background-color: var(--rx-sunken);
+}
+
+.x-tab-bar-top .x-tab-bar-strip {
+	margin-top: 0;
+}
+
+/*
  * The full width strip under the bar goes. A tab that is a lifted white surface
  * sitting on the sunken bar already says which service you are in, and it reads
  * as continuous with the content below it.
@@ -230,7 +247,54 @@ body {
 .x-form-text-default,
 .x-form-trigger-wrap-default {
 	border-color: var(--rx-line);
-	border-radius: var(--rx-radius);
+	border-radius: var(--rx-radius-lg);
+}
+
+.x-form-text-default {
+	padding-left: 10px;
+}
+
+/*
+ * Ext draws its checkboxes as a sprite on an <input type="button">. Dropping the
+ * sprite and building the box in CSS gives a rounded control that matches the
+ * rest of this layer and scales without a new image. The checked class sits on
+ * the field wrapper, three levels above the input.
+ */
+.x-form-checkbox-default {
+	-webkit-appearance: none;
+	appearance: none;
+	width: 16px;
+	height: 16px;
+	border: 1.5px solid #B9C6D0;
+	border-radius: 5px;
+	background-color: #FFF;
+	background-image: none;
+	transition: background-color 0.12s ease, border-color 0.12s ease;
+}
+
+.x-form-checkbox-default:hover {
+	border-color: var(--rx-brand);
+}
+
+.x-form-cb-checked .x-form-checkbox-default {
+	background-color: var(--rx-brand);
+	border-color: var(--rx-brand);
+	background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%23fff' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round' d='M3.5 8.4l3 3 6-6'/%3E%3C/svg%3E");
+	background-size: 11px 11px;
+	background-position: center;
+	background-repeat: no-repeat;
+}
+
+.x-form-checkbox-default:focus-visible {
+	outline: none;
+	box-shadow: 0 0 0 3px rgba(46, 101, 142, 0.25);
+}
+
+/* crisp clears the absolutely positioned input with 19px, which left the label
+   almost touching the box; two classes to outrank it */
+.x-form-cb-label-default.x-form-cb-label-after {
+	padding-left: 24px;
+	color: var(--rx-ink);
 }
 
 .x-form-trigger-wrap-default.x-form-trigger-wrap-focus,
