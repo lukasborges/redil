@@ -1,6 +1,6 @@
 'use strict';
 
-const {app, BrowserWindow, shell, Menu, ipcMain, nativeImage, session, desktopCapturer} = require('electron');
+const {app, BrowserWindow, shell, Menu, ipcMain, nativeImage, session, desktopCapturer, dialog} = require('electron');
 // Tray
 const tray = require('./tray');
 // Remote module (replacement for the built-in one removed in Electron 14)
@@ -352,13 +352,90 @@ ipcMain.on('validateMasterPassword', function(event, pass) {
 	event.returnValue = false;
 });
 
+// Service permissions
+//
+// A webview runs somebody else's web app, so a permission it asks for is that
+// site's request and not Rambox's. This used to answer callback(true) to
+// everything that was not a notification, which silently handed every service
+// the camera, the microphone and the user's location. Anything not named below
+// is now refused.
+
+// Needed to use a messaging app normally, and not sensitive on their own.
+const SILENT_PERMISSIONS = [
+	 'fullscreen'
+	,'pointerLock'
+	,'clipboard-sanitized-write'
+	,'background-sync'
+];
+
+// Sensitive, but calls and screen sharing genuinely need them, so the person is
+// asked once per service and the answer is kept.
+const PROMPTED_PERMISSIONS = {
+	 'media': 'use your camera and microphone'
+	,'display-capture': 'capture your screen'
+};
+
+function permissionKey(partition, permission) {
+	return partition + '|' + permission;
+}
+
+function rememberedPermission(partition, permission) {
+	return (config.get('permissions') || {})[permissionKey(partition, permission)];
+}
+
+function serviceNameFor(partition) {
+	return String(partition).replace('persist:', '').split('_')[0] || 'This service';
+}
+
+function askAboutPermission(partition, permission, callback) {
+	const remembered = rememberedPermission(partition, permission);
+	if ( typeof remembered === 'boolean' ) return callback(remembered);
+
+	dialog.showMessageBox(mainWindow, {
+		 type: 'question'
+		,buttons: ['Allow', 'Block']
+		,defaultId: 1
+		,cancelId: 1
+		,title: 'Permission request'
+		,message: serviceNameFor(partition) + ' wants to ' + PROMPTED_PERMISSIONS[permission] + '.'
+		,detail: 'Rambox remembers this answer for this service. Remove and add the service again to be asked once more.'
+	}).then(function(result) {
+		const allowed = result.response === 0;
+		const decisions = config.get('permissions') || {};
+		decisions[permissionKey(partition, permission)] = allowed;
+		config.set('permissions', decisions);
+		callback(allowed);
+	}).catch(function() { callback(false); });
+}
+
+/**
+ * A null partition means the renderer has not reported this service's settings
+ * yet. There is no key to remember an answer against in that state, so the
+ * sensitive permissions are refused instead of prompted; the real policy
+ * replaces this one as soon as the service reaches dom-ready.
+ */
+function applyPermissionPolicy(serviceSession, partition, notificationsAllowed) {
+	serviceSession.setPermissionRequestHandler(function(webContents, permission, callback) {
+		if ( permission === 'notifications' ) return callback(notificationsAllowed);
+		if ( SILENT_PERMISSIONS.indexOf(permission) !== -1 ) return callback(true);
+		if ( PROMPTED_PERMISSIONS[permission] && partition ) return askAboutPermission(partition, permission, callback);
+		console.info('Refused permission "' + permission + '" for ' + (partition || 'an unconfigured service'));
+		callback(false);
+	});
+
+	// navigator.permissions.query never reaches the request handler
+	serviceSession.setPermissionCheckHandler(function(webContents, permission) {
+		if ( permission === 'notifications' ) return notificationsAllowed;
+		if ( SILENT_PERMISSIONS.indexOf(permission) !== -1 ) return true;
+		if ( PROMPTED_PERMISSIONS[permission] && partition ) return rememberedPermission(partition, permission) === true;
+		return false;
+	});
+}
+
 // Handle Service Notifications
 ipcMain.on('setServiceNotifications', function(event, partition, op) {
 	if ( partition === null ) return;
-	session.fromPartition(partition).setPermissionRequestHandler(function(webContents, permission, callback) {
-		if (permission === 'notifications') return callback(op);
-		callback(true)
-	});
+	applyPermissionPolicy(session.fromPartition(partition), partition, op);
 });
 
 ipcMain.on('setDontDisturb', function(event, arg) {
@@ -421,6 +498,9 @@ app.on('web-contents-created', (webContentsCreatedEvent, contents) => {
 	if (contents.getType() !== 'webview') return;
 	// The service preload builds its context menu through @electron/remote.
 	remoteMain.enable(contents);
+	// Without this the session carries no handler until the renderer reports the
+	// service's settings, and Electron's own default is to grant.
+	applyPermissionPolicy(contents.session, null, false);
 	// Block some Deep links to prevent that open its app (Ex: Slack)
 	contents.on('will-navigate', (event, url) => url.substring(0, 8) === 'slack://' && event.preventDefault());
 	// New Window handler. The about:blank case is finished in 'did-create-window'.
