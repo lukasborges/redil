@@ -1,0 +1,25 @@
+{
+  "name": "electron-contextmenu-wrapper",
+  "version": "4.0.5",
+  "description": "Sane context menu handler",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TheGoddessInari/electron-contextmenu-wrapper"
+  },
+  "keywords": [
+    "contextmenu",
+    "context-menu",
+    "electron",
+    "rightclick"
+  ],
+  "author": "TheGoddessInari <thegoddessinari@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/TheGoddessInari/electron-contextmenu-wrapper/issues"
+  },
+  "main": "src/index.js",
+  "homepage": "https://github.com/TheGoddessInari/electron-contextmenu-wrapper",
+  "dependencies": {
+    "debug": "^4.1.1"
+  }
+}

@@ -71,9 +71,9 @@
 		"appId": "com.grupovrs.ramboxce",
 		"afterSign": "resources/installer/notarize.js",
 		"asar": true,
-		"electronVersion": "13.6.3",
+		"electronVersion": "44.4.3",
 		"electronDownload": {
-			"version": "13.6.3"
+			"version": "44.4.3"
 		},
 		"mac": {
 			"category": "public.app-category.productivity",
@@ -218,7 +218,7 @@
 		"chai": "3.5.0",
 		"crowdin": "1.0.0",
 		"csvjson": "4.3.3",
-		"electron": "13.6.3",
+		"electron": "44.4.3",
 		"electron-builder": "22.14.13",
 		"electron-notarize": "1.0.0",
 		"electron-packager": "15.1.0",
@@ -226,10 +226,11 @@
 		"spectron": "^15.0.0"
 	},
 	"dependencies": {
+		"@electron/remote": "2.1.3",
 		"@exponent/electron-cookies": "2.0.0",
 		"auto-launch-patched": "5.0.2",
 		"crypto": "1.0.1",
-		"electron-contextmenu-wrapper": "git+https://github.com/ramboxapp/electron-contextmenu-wrapper.git",
+		"electron-contextmenu-wrapper": "file:vendor/electron-contextmenu-wrapper",
 		"electron-is-dev": "1.2.0",
 		"electron-log": "4.3.0",
 		"electron-store": "6.0.1",
@@ -244,5 +245,8 @@
 	},
 	"volta": {
 		"node": "14.16.1"
+	},
+	"allowScripts": {
+		"electron@44.4.3": true
 	}
 }

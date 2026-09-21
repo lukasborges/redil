@@ -2,7 +2,7 @@
  * This file is loaded in the service web views to provide a Rambox API.
  */
 
-const { desktopCapturer, ipcRenderer } = require('electron');
+const { ipcRenderer } = require('electron');
 const { ContextMenuBuilder, ContextMenuListener } = require('electron-contextmenu-wrapper');
 
 /**
@@ -67,10 +67,6 @@ mousetrap.bind(process.platform === 'darwin' ? ['command+left', 'command+right']
 window.navigator.mediaDevices.getDisplayMedia = () =>
   new Promise(async (resolve, reject) => {
     try {
-      const sources = await desktopCapturer.getSources({
-        types: ['screen', 'window'],
-      });
-
       const unlisten = () => {
         ipcRenderer.removeAllListeners('screenShare:cancel');
         ipcRenderer.removeAllListeners('screenShare:share');
@@ -96,13 +92,10 @@ window.navigator.mediaDevices.getDisplayMedia = () =>
           .then(stream => resolve(stream));
       });
 
-      const mappedSources = sources.map(it => ({
-        id: it.id,
-        name: it.name,
-        thumbnail: it.thumbnail.toDataURL(),
-      }));
+      // The main process enumerates the screens and serialises the thumbnails.
+      const sources = await ipcRenderer.invoke('screenShare:listSources');
 
-      ipcRenderer.send('screenShare:show', mappedSources);
+      ipcRenderer.send('screenShare:show', sources);
     } catch (err) {
       reject(err);
     }

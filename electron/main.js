@@ -1,8 +1,11 @@
 'use strict';
 
-const {app, BrowserWindow, shell, Menu, ipcMain, nativeImage, session} = require('electron');
+const {app, BrowserWindow, shell, Menu, ipcMain, nativeImage, session, desktopCapturer} = require('electron');
 // Tray
 const tray = require('./tray');
+// Remote module (replacement for the built-in one removed in Electron 14)
+const remoteMain = require('@electron/remote/main');
+remoteMain.initialize();
 // AutoLaunch
 var AutoLaunch = require('auto-launch-patched');
 // Configuration
@@ -105,8 +108,7 @@ function createWindow () {
 		,show: !config.get('start_minimized')
 		,acceptFirstMouse: true
 		,webPreferences: {
-			 enableRemoteModule: true
-			,plugins: true
+			 plugins: true
 			,partition: 'persist:rambox'
 			,nodeIntegration: true
 			,webviewTag: true
@@ -114,6 +116,8 @@ function createWindow () {
 			,spellcheck: false
 		}
 	});
+
+	remoteMain.enable(mainWindow.webContents);
 
 	// Check if user has defined a custom User-Agent
 	if ( config.get('user_agent').length > 0 ) mainWindow.webContents.setUserAgent( config.get('user_agent') );
@@ -146,26 +150,19 @@ function createWindow () {
 	updater.initialize(mainWindow);
 
 	// Open links in default browser
-	mainWindow.webContents.on('new-window', function(e, url, frameName, disposition, options) {
-		const protocol = require('url').parse(url).protocol;
-		switch ( disposition ) {
-			case 'new-window':
-				e.preventDefault();
-				const win = new BrowserWindow(options);
-				if ( config.get('user_agent').length > 0 ) win.webContents.setUserAgent( config.get('user_agent') );
-				win.once('ready-to-show', () => win.show());
-				win.loadURL(url);
-				e.newGuest = win;
-				break;
-			case 'foreground-tab':
-				if (protocol === 'http:' || protocol === 'https:' || protocol === 'mailto:') {
-					e.preventDefault();
-					shell.openExternal(url);
-				}
-				break;
-			default:
-				break;
+	mainWindow.webContents.setWindowOpenHandler(({ url, disposition }) => {
+		if ( disposition === 'foreground-tab' ) {
+			const protocol = require('url').parse(url).protocol;
+			if ( protocol === 'http:' || protocol === 'https:' || protocol === 'mailto:' ) {
+				shell.openExternal(url);
+				return { action: 'deny' };
+			}
 		}
+		return { action: 'allow' };
+	});
+
+	mainWindow.webContents.on('did-create-window', (win) => {
+		if ( config.get('user_agent').length > 0 ) win.webContents.setUserAgent( config.get('user_agent') );
 	});
 
 	mainWindow.webContents.on('will-navigate', function(event, url) {
@@ -234,9 +231,12 @@ function createMasterPasswordWindow() {
 		,frame: false
 		,webPreferences: {
 			 nodeIntegration: true
-			,enableRemoteModule: true
+			,contextIsolation: false
 		}
 	});
+
+	remoteMain.enable(mainMasterPasswordWindow.webContents);
+
 	// Open the DevTools.
 	if ( isDev ) mainMasterPasswordWindow.webContents.openDevTools();
 
@@ -419,38 +419,38 @@ let allowPopUp = [
 
 app.on('web-contents-created', (webContentsCreatedEvent, contents) => {
 	if (contents.getType() !== 'webview') return;
+	// The service preload builds its context menu through @electron/remote.
+	remoteMain.enable(contents);
 	// Block some Deep links to prevent that open its app (Ex: Slack)
 	contents.on('will-navigate', (event, url) => url.substring(0, 8) === 'slack://' && event.preventDefault());
-	// New Window handler
-	contents.on('new-window', (event, url, frameName, disposition, options, additionalFeatures, referrer, postBody) => {
-		// If the url is about:blank we allow the window and handle it in 'did-create-window'
+	// New Window handler. The about:blank case is finished in 'did-create-window'.
+	contents.setWindowOpenHandler(({ url }) => {
 		if (['about:blank', 'about:blank#blocked'].includes(url)) {
-			event.preventDefault();
-			Object.assign(options, { show: false });
-			const win = new BrowserWindow(options);
-			win.center();
-			let once = false;
-			win.webContents.on('will-navigate', (e, nextURL) => {
-				if (once) return;
-				if (['about:blank', 'about:blank#blocked'].includes(nextURL)) return;
-				once = true;
-				let allow = false;
-				allowPopUp.forEach(url => nextURL.indexOf(url) > -1 && (allow = true));
-				// If the url is in aboutBlankOnlyWindow we handle this as a popup window
-				if (allow) return win.show();
-				shell.openExternal(nextURL);
-				win.close()
-			})
-			event.newGuest = win;
-			return;
+			return { action: 'allow', overrideBrowserWindowOptions: { show: false } };
 		}
-		// We check if url is in the allowPopUpLoginURLs or allowForegroundTabURLs in Firebase to open a as a popup,
-		// if it is not we send this to the app
+
+		// Protocol rules used to live on the webview's own 'new-window' DOM event,
+		// which was removed alongside this one.
+		let protocol;
+		try {
+			protocol = new URL(url).protocol;
+		} catch (e) {
+			return { action: 'deny' };
+		}
+		// Block deep links that would hand the session to a native app (Ex: Slack)
+		if (protocol === 'slack:') return { action: 'deny' };
+		if (!['http:', 'https:'].includes(protocol)) {
+			shell.openExternal(url);
+			return { action: 'deny' };
+		}
+
+		// Allow the login and foreground-tab URLs that need a real popup,
+		// send everything else to the default browser.
 		let allow = false;
 		allowPopUp.forEach(allowed => url.indexOf(allowed) > -1 && (allow = true));
-		if (allow) return;
+		if (allow) return { action: 'allow' };
 		shell.openExternal(url);
-		event.preventDefault();
+		return { action: 'deny' };
 	});
 	contents.on('did-create-window', (win, details) => {
 		// Here we center the new window.
@@ -481,7 +481,7 @@ ipcMain.on('image:download', function(event, url, partition) {
 	let file = imageCache[url];
 	if (file) {
 		if (file.complete) {
-			shell.openItem(file.path);
+			shell.openPath(file.path);
 		}
 
 		// Pending downloads intentionally do not proceed
@@ -507,7 +507,7 @@ ipcMain.on('image:download', function(event, url, partition) {
 		downloadItem.once('done', () => {
 			tmpWindow.destroy();
 			tmpWindow = null;
-			shell.openItem(file.path);
+			shell.openPath(file.path);
 			file.complete = true;
 		});
 	});
@@ -577,6 +577,18 @@ ipcMain.on('toggleWin', function(event, allwaysShow) {
 });
 
 // ScreenShare
+// Enumerating screens belongs to the main process: desktopCapturer stopped being
+// reachable from renderers, so the service preload asks for the list over IPC.
+// Thumbnails are serialised here because a NativeImage cannot cross the boundary.
+ipcMain.handle('screenShare:listSources', async () => {
+	const sources = await desktopCapturer.getSources({ types: ['screen', 'window'] });
+	return sources.map(source => ({
+		 id: source.id
+		,name: source.name
+		,thumbnail: source.thumbnail.toDataURL()
+	}));
+});
+
 ipcMain.on('screenShare:show', (event, screenList) => {
 	let tmpWindow = new BrowserWindow({
 		title: 'Rambox - Select screen',

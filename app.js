@@ -29,8 +29,8 @@ ipc.on('showPreferences', function(event, message) {
 	!Ext.cq1('preferences') ? Ext.create('Rambox.view.preferences.Preferences').show() : '';
 });
 ipc.on('grantPermissions', async function() {
-	await require('electron').remote.systemPreferences.askForMediaAccess('microphone');
-	await require('electron').remote.systemPreferences.askForMediaAccess('camera');
+	await require('@electron/remote').systemPreferences.askForMediaAccess('microphone');
+	await require('@electron/remote').systemPreferences.askForMediaAccess('camera');
 });
 ipc.on('autoUpdater:check-update', function() {
 	Rambox.app.checkUpdate();
