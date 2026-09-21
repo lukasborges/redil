@@ -7,10 +7,9 @@
  * Ext JS build already vendored in ext/ and the theme CSS already compiled in
  * ext/packages/. That makes `npm start` work with nothing but npm installed.
  *
- * What this does NOT do: compile the Sass in packages/local/rambox-default-theme.
- * The app falls back to the stock ext-theme-crisp CSS that the custom theme
- * extends, so Rambox's own tab bar and button tweaks are missing. Everything is
- * functional; some styling differs from a Sencha Cmd build.
+ * The Sass in packages/local/rambox-default-theme is not compiled either. The app
+ * loads the stock ext-theme-crisp CSS that the custom theme extends, and then
+ * resources/css/rambox-theme.css restates Rambox's own look as plain CSS on top.
  */
 
 'use strict';
@@ -23,6 +22,8 @@ const root = path.join(__dirname, '..');
 const STYLESHEETS = [
 	'ext/packages/ext-theme-crisp/build/resources/ext-theme-crisp-all-debug.css',
 	'packages/local/rambox-default-theme/resources/fonts/font-awesome/css/font-awesome.css',
+	// Rambox's own look, layered over crisp. Must stay last.
+	'resources/css/rambox-theme.css',
 ];
 
 const FRAMEWORK = ['ext/build/ext-all-rtl-debug.js'];

@@ -1,0 +1,371 @@
+/*
+ * Rambox's own look, expressed as plain CSS on top of the stock ext-theme-crisp
+ * stylesheet that bootstrap.js loads before this file.
+ *
+ * Upstream this lived in packages/local/rambox-default-theme as Sass compiled by
+ * Sencha Cmd. That toolchain is gone, so the rules below restate the same design
+ * against the class names the crisp build actually emits. Where the original set
+ * a Sass variable and let a theme mixin expand it, the visible result is written
+ * out directly; the source variable is named in a comment so the two stay
+ * traceable.
+ *
+ * Load order matters. This file must come last.
+ */
+
+:root {
+	/* $base-color in the original theme */
+	--rambox-base: #2E658E;
+	--rambox-base-light-20: #5999c9;
+	--rambox-base-light-55: #e0ecf5;
+}
+
+/* ------------------------------------------------------------------ base */
+
+/*
+ * The original imported Roboto and Josefin Sans from Google Fonts on every
+ * launch. A desktop app should not reach the network to draw its own chrome,
+ * so this resolves Roboto locally and falls back to the system sans. Josefin
+ * Sans was imported but never referenced by any rule, so it is dropped.
+ */
+body {
+	margin: 0;
+	background-color: var(--rambox-base);
+	font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+	overflow: hidden;
+}
+
+/* ----------------------------------------------------------- load screen */
+
+.component {
+	position: absolute;
+	z-index: 1;
+	width: 200px;
+	height: 200px;
+	margin: -100px 0 0 -100px;
+	top: 50%;
+	left: 50%;
+}
+
+.button {
+	font-weight: bold;
+	position: absolute;
+	bottom: 4px;
+	top: 50%;
+	left: 50%;
+	width: 200px;
+	height: 200px;
+	margin: -100px 0 0 -100px;
+	padding: 0;
+	text-align: center;
+	color: #00a7e7;
+	border: none;
+	background: none;
+	transition: opacity 0.3s;
+}
+
+.uil-ring-css {
+	background: url('../Icon.png') no-repeat center center;
+	background-size: 160px 160px;
+	position: absolute;
+	width: 200px;
+	height: 200px;
+	top: 50%;
+	left: 50%;
+	margin-left: -100px;
+	margin-top: -100px;
+}
+
+.uil-ring-css > div {
+	position: absolute;
+	display: block;
+	width: 160px;
+	height: 160px;
+	top: 20px;
+	left: 20px;
+	border-radius: 80px;
+	box-shadow: 0 6px 0 0 #07a6cb;
+	animation: uil-ring-anim 1s linear infinite;
+}
+
+@keyframes uil-ring-anim {
+	0%   { transform: rotate(0deg); }
+	100% { transform: rotate(360deg); }
+}
+
+/* ------------------------------------------------------------ tab bar */
+
+/* $tabbar-strip-background-color, $tabbar-strip-height */
+.x-tab-bar-strip-default,
+.x-tab-bar-top > .x-tab-bar-strip {
+	background-color: var(--rambox-base);
+	border-color: var(--rambox-base);
+	height: 3px;
+}
+
+.x-tab-bar-top .x-tab-bar-body {
+	padding: 8px 0 0 0 !important;
+}
+
+.x-tab-bar-top .x-tab-bar-strip {
+	position: relative !important;
+	margin-top: -10px;
+}
+
+/*
+ * $tab-padding, $tab-border-width, $tab-border-radius. The border and the inner
+ * border are both zeroed in the original, so the inset box-shadow crisp uses to
+ * fake the inner border goes too.
+ */
+.x-tab-default-top {
+	padding: 13px;
+	border-width: 0;
+	border-radius: 4px 4px 0 0;
+	background-color: transparent;
+	box-shadow: none;
+}
+
+.x-tab-default-top.x-tab-focus,
+.x-tab-default-top.x-tab-focus.x-tab-active,
+.x-tab-default-top.x-tab-focus.x-tab-over {
+	border-width: 0;
+	box-shadow: none;
+}
+
+/*
+ * $tab-base-color-active. Crisp paints the active tab from
+ * `.x-tab.x-tab-active.x-tab-default`, so these selectors have to carry the same
+ * three classes to outrank it.
+ */
+.x-tab.x-tab-active.x-tab-default-top {
+	background-color: #FFF;
+	border-color: #FFF;
+}
+
+/* $tab-color, $tab-font-size */
+.x-tab-inner-default {
+	font-size: 18px;
+	line-height: 22px;
+	color: var(--rambox-base);
+}
+
+/* $tab-color-active */
+.x-tab.x-tab-active.x-tab-default-top .x-tab-inner-default,
+.x-tab.x-tab-active.x-tab-default-top .x-tab-glyph {
+	color: #000;
+}
+
+/* $tab-icon-width, $tab-icon-height */
+.x-tab-icon-el-default {
+	width: 24px;
+	min-width: 24px;
+	height: 24px;
+	line-height: 24px;
+	background-size: 24px;
+}
+
+.x-title-icon {
+	background-size: 16px;
+}
+
+/* Tab bar while Do Not Disturb is on */
+.x-tab-bar-default.dontdisturb {
+	background-color: #c3c3c3 !important;
+}
+
+.x-tab-bar-default.dontdisturb .x-tab {
+	background-color: #c3c3c3;
+}
+
+/* Tab panels need to let the unread badge escape the tab box */
+.allow-overflow .x-box-layout-ct,
+.allow-overflow .x-box-inner,
+.allow-overflow .x-box-item {
+	overflow: visible;
+}
+
+/* -------------------------------------------------- unread count badges */
+
+.x-badge {
+	position: relative;
+	overflow: visible;
+}
+
+.x-badge[data-badge-text]:after {
+	content: attr(data-badge-text);
+	position: absolute;
+	font-size: 10px;
+	top: 0;
+	right: 2px;
+	width: auto;
+	font-weight: bold;
+	color: white;
+	text-shadow: rgba(0, 0, 0, 0.5) 0 -0.08em 0;
+	border-radius: 3px;
+	padding: 0 4px;
+	background-color: #C00;
+	background-image: linear-gradient(to bottom, #ff1a1a, #e60000 3%, #b30000);
+	box-shadow: rgba(0, 0, 0, 0.3) 0 0.1em 0.1em;
+}
+
+.x-badge.green-badge[data-badge-text]:after {
+	background-color: #0C0;
+	background-image: linear-gradient(to bottom, #1AFF1A, #00E600 3%, #00B300);
+}
+
+.x-badge.blue-badge[data-badge-text]:after {
+	background-color: #00C;
+	background-image: linear-gradient(to bottom, #1A1AFF, #0000E6 3%, #0000B3);
+}
+
+.x-tab-closable.x-badge[data-badge-text]:after {
+	right: 16px;
+}
+
+/* --------------------------------------------------- toolbars and buttons */
+
+/* extjs-toolbar-ui($ui: 'main') */
+.x-toolbar-main {
+	background-image: none;
+	background-color: var(--rambox-base);
+	border-color: var(--rambox-base);
+}
+
+/* extjs-toolbar-ui($ui: 'newversion') */
+.x-toolbar-newversion {
+	background-image: none;
+	background-color: #31B96E;
+	border-color: #31B96E;
+}
+
+.x-toolbar-newversion label {
+	color: #1B1112;
+}
+
+/* extjs-button-small-ui($ui: 'decline'), a flat text button in the base colour */
+.x-btn-decline-small {
+	background-image: none;
+	background-color: transparent;
+	border-color: transparent;
+	box-shadow: none;
+}
+
+.x-btn-decline-small.x-btn-over,
+.x-btn-decline-small.x-btn-pressed,
+.x-btn-decline-small.x-btn-focus {
+	background-color: transparent;
+	border-color: transparent;
+	box-shadow: none;
+}
+
+.x-btn-inner-decline-small {
+	color: var(--rambox-base);
+}
+
+.x-btn-inner-decline-small:hover {
+	text-decoration: underline;
+}
+
+/* $button-toolbar-inner-border-color: none */
+.x-btn-default-toolbar-small {
+	box-shadow: none;
+}
+
+.x-btn-icon-el-default-small.x-btn-glyph {
+	cursor: pointer;
+	color: var(--rambox-base);
+}
+
+/* ------------------------------------------------------------ status bar */
+
+.x-statusbar {
+	padding: 0 !important;
+	background-color: var(--rambox-base) !important;
+}
+
+.x-statusbar.x-docked-bottom {
+	border-top: 1px solid #CCC !important;
+	border-top-width: 1px !important;
+}
+
+.x-statusbar .x-toolbar-text-default {
+	color: #FFF !important;
+}
+
+/* ------------------------------------------------------------------ grid */
+
+.x-action-col-glyph {
+	font-size: 16px;
+	line-height: 16px;
+	width: 16px;
+	margin: 0 5px;
+	color: var(--rambox-base-light-20);
+}
+
+.x-action-col-glyph:hover {
+	color: var(--rambox-base);
+}
+
+.x-grid-item-over .x-hidden-display,
+.x-grid-item-selected .x-hidden-display {
+	display: inline-block !important;
+}
+
+.x-grid-cell-inner {
+	height: 44px;
+	line-height: 32px !important;
+}
+
+.x-grid-cell-inner.x-grid-cell-inner-action-col {
+	line-height: 44px !important;
+}
+
+#ramboxTab .x-grid-cell-inner-checkcolumn {
+	padding: 13px 10px 14px 10px !important;
+}
+
+/* -------------------------------------------------- service catalog list */
+
+.service {
+	width: 230px;
+	display: inline-block;
+	padding: 10px;
+	cursor: pointer;
+}
+
+.service img {
+	float: left;
+}
+
+.service span {
+	margin-left: 10px;
+	line-height: 48px;
+}
+
+.service:hover {
+	background-color: var(--rambox-base-light-55);
+}
+
+/* -------------------------------------------------------------- load mask */
+
+.bottomMask {
+	bottom: 0;
+	height: 32px;
+	position: fixed;
+	top: auto !important;
+	left: 0 !important;
+	width: 120px;
+}
+
+.bottomMask .x-mask-msg-text {
+	padding: 0 0 0 24px;
+	background-image: url('../../ext/packages/ext-theme-crisp/build/resources/images/loadmask/loading.gif');
+	background-repeat: no-repeat;
+	background-position: 0 0;
+}
+
+/* ------------------------------------------------------- end of life bar */
+
+.deprecation {
+	background-color: #E6A23C !important;
+	color: #FFF;
+}

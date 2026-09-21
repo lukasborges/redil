@@ -21,7 +21,9 @@ npm run start:debug     # same, with --enable-logging
 
 `scripts/gen-bootstrap.js` generates the `bootstrap.js` that `index.html` loads. It serves the Ext JS build already vendored in `ext/build/` and the theme CSS already compiled in `ext/packages/`, then points `Ext.Loader` at `app/` so the framework resolves `Rambox.*` classes by name. Only files the loader cannot discover by class name are listed explicitly: the theme marker, the `Ext.override` calls in `overrides/`, the two loose helpers in `resources/js/`, and `app.js` last because it calls `Ext.application`. Regenerate after adding files in `overrides/` or `resources/js/`; ordinary classes under `app/` need no regeneration. `bootstrap.js` stays gitignored.
 
-The one thing this does not do is compile the Sass in `packages/local/rambox-default-theme`. The app falls back to the stock `ext-theme-crisp` CSS that the custom theme extends, so Rambox's own tab bar, button and load-mask tweaks are missing and some layout is visibly looser than a Sencha Cmd build. Everything is functional.
+The Sass in `packages/local/rambox-default-theme` is not compiled either. The app loads the stock `ext-theme-crisp` CSS that the custom theme extends, and `resources/css/rambox-theme.css` then restates Rambox's own look as plain CSS on top. That file must load last, which the generator guarantees.
+
+Style work belongs in that CSS file, not in the Sass, which no longer builds. Where the original set a Sass variable and let a theme mixin expand it, the CSS writes the visible result directly and names the variable in a comment. Two things to watch. Crisp often wins on specificity, for instance it paints the active tab from `.x-tab.x-tab-active.x-tab-default`, so an override needs to carry as many classes. And the original pulled Roboto and Josefin Sans from Google Fonts on every launch; the CSS resolves Roboto locally instead and drops Josefin Sans, which no rule ever referenced.
 
 If Sencha Cmd is ever available again, `sencha app watch` still works and takes precedence, since it overwrites the same `bootstrap.js`.
 
