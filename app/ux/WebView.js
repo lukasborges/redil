@@ -225,8 +225,23 @@ Ext.define('Rambox.ux.WebView',{
 		return cfg;
 	}
 	,getUserAgent: function() {
-		var ua = ipc.sendSync('getConfig').user_agent ? ipc.sendSync('getConfig').user_agent : Ext.getStore('ServicesList').getById(this.record.get('type')) ? Ext.getStore('ServicesList').getById(this.record.get('type')).get('userAgent') : ''
-		return ua.length === 0 ? window.clientInformation.userAgent.replace(/Rambox\/([0-9]\.?)+\s/ig,'').replace(/Electron\/([0-9]\.?)+\s/ig,'') : ua;
+		// A user agent typed into Preferences is used exactly as written.
+		var configured = ipc.sendSync('getConfig').user_agent;
+		if ( configured ) return configured;
+
+		var catalogEntry = Ext.getStore('ServicesList').getById(this.record.get('type'));
+		var pinned = catalogEntry ? catalogEntry.get('userAgent') : '';
+
+		if ( !pinned ) {
+			return window.clientInformation.userAgent.replace(/Rambox\/([0-9]\.?)+\s/ig,'').replace(/Electron\/([0-9]\.?)+\s/ig,'');
+		}
+
+		// The agents pinned in resources/services.json name whatever Chrome was
+		// current when the entry was written. WhatsApp's still says 70, from 2018,
+		// and the site now turns away anything below 100. The platform half of each
+		// string is still doing a job, so only the version is moved up to the
+		// Chromium this build actually runs on.
+		return pinned.replace(/Chrome\/[0-9.]+/i, 'Chrome/' + process.versions.chrome);
 	}
 
 	,statusBarConstructor: function(floating) {
