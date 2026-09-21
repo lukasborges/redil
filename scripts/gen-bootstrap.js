@@ -22,8 +22,10 @@ const root = path.join(__dirname, '..');
 const STYLESHEETS = [
 	'ext/packages/ext-theme-crisp/build/resources/ext-theme-crisp-all-debug.css',
 	'packages/local/rambox-default-theme/resources/fonts/font-awesome/css/font-awesome.css',
-	// Rambox's own look, layered over crisp. Must stay last.
+	// Rambox's own look, layered over crisp.
 	'resources/css/rambox-theme.css',
+	// The modernisation pass. Drop this line to get the original look back.
+	'resources/css/rambox-modern.css',
 ];
 
 const FRAMEWORK = ['ext/build/ext-all-rtl-debug.js'];

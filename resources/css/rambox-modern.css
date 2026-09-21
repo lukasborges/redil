@@ -1,0 +1,314 @@
+/*
+ * A light modernisation layer, loaded after rambox-theme.css.
+ *
+ * rambox-theme.css restates the 2015 theme faithfully and stays traceable to the
+ * original Sass. This file is the opinionated part and is meant to be readable
+ * on its own: drop it from the STYLESHEETS list in scripts/gen-bootstrap.js and
+ * the app returns to the original look, unchanged.
+ *
+ * The idea behind the choices: Rambox is a frame around other people's apps.
+ * Gmail, Slack and Facebook each bring their own loud branding inside the
+ * window, so this chrome recedes and spends all of its contrast on the one
+ * thing only Rambox can tell you, which is where messages are waiting.
+ */
+
+:root {
+	--rx-ink: #12222E;        /* text, in place of a hard black */
+	--rx-brand: #2E658E;      /* unchanged Rambox blue */
+	--rx-chrome: #24506F;     /* command bar, a step behind the content */
+	--rx-surface: #FFFFFF;
+	--rx-sunken: #F3F6F8;     /* cool grey, in place of crisp's warm #f5f5f5 */
+
+	--rx-line: #E3E9EE;       /* hairline, in place of crisp's #cecece */
+	--rx-muted: #5B7183;
+	--rx-alert: #E03131;      /* the unread badge, the one loud colour */
+
+	--rx-radius: 6px;
+	--rx-radius-lg: 9px;
+}
+
+/* ---------------------------------------------------------------- type */
+
+/*
+ * The host system's own interface face. A shell that wraps other applications
+ * should speak in the voice of the desktop it runs on rather than ship a
+ * downloaded face of its own, and it keeps the app off the network at launch.
+ * Glyph classes are left alone; they are FontAwesome.
+ */
+body,
+.x-body,
+.x-panel-header-title-default,
+.x-title-text,
+.x-tab-inner,
+.x-btn-inner,
+.x-form-field,
+.x-form-cb-label,
+.x-grid-cell-inner,
+.x-grid-group-hd,
+.x-toolbar-text,
+.x-menu-item-text,
+.x-boundlist-item,
+.x-window-header-title,
+.service span {
+	font-family: system-ui, -apple-system, 'Segoe UI', Cantarell, Ubuntu, 'Noto Sans', 'Helvetica Neue', sans-serif;
+}
+
+body {
+	color: var(--rx-ink);
+}
+
+/* ------------------------------------------------------------- tab bar */
+
+.x-tab-bar-default-top {
+	background-color: var(--rx-sunken);
+	border-bottom: 1px solid var(--rx-line);
+}
+
+/*
+ * The full width strip under the bar goes. A tab that is a lifted white surface
+ * sitting on the sunken bar already says which service you are in, and it reads
+ * as continuous with the content below it.
+ */
+.x-tab-bar-strip-default,
+.x-tab-bar-top > .x-tab-bar-strip {
+	background-color: transparent;
+	border-color: transparent;
+	height: 0;
+}
+
+.x-tab-default-top {
+	padding: 10px 14px;
+	border-radius: var(--rx-radius) var(--rx-radius) 0 0;
+	transition: background-color 0.12s ease;
+}
+
+.x-tab-default-top:not(.x-tab-active):hover {
+	background-color: rgba(46, 101, 142, 0.07);
+}
+
+.x-tab.x-tab-active.x-tab-default-top {
+	background-color: var(--rx-surface);
+	border-color: var(--rx-surface);
+	box-shadow: inset 0 -2px 0 0 var(--rx-brand);
+}
+
+/* 18px tab labels were the single most dated thing on screen */
+.x-tab-inner-default {
+	font-size: 14px;
+	line-height: 18px;
+	font-weight: 500;
+	color: var(--rx-muted);
+}
+
+.x-tab.x-tab-active.x-tab-default-top .x-tab-inner-default,
+.x-tab.x-tab-active.x-tab-default-top .x-tab-glyph {
+	color: var(--rx-ink);
+	font-weight: 600;
+}
+
+/* ------------------------------------------------- the one loud thing */
+
+.x-badge[data-badge-text]:after {
+	background-image: none;
+	background-color: var(--rx-alert);
+	border-radius: 999px;
+	padding: 1px 5px;
+	font-size: 10px;
+	font-weight: 700;
+	line-height: 14px;
+	text-shadow: none;
+	/* a ring in the bar colour lifts the count clear of the tab */
+	box-shadow: 0 0 0 2px var(--rx-sunken);
+}
+
+.x-tab.x-tab-active.x-badge[data-badge-text]:after {
+	box-shadow: 0 0 0 2px var(--rx-surface);
+}
+
+/* Badge.js leaves the attribute in place and empties it at zero unread */
+.x-badge[data-badge-text=""]:after {
+	display: none;
+}
+
+.x-badge.green-badge[data-badge-text]:after {
+	background-image: none;
+	background-color: #2F9E44;
+}
+
+.x-badge.blue-badge[data-badge-text]:after {
+	background-image: none;
+	background-color: #1971C2;
+}
+
+/* -------------------------------------------------------- command bar */
+
+.x-toolbar-main {
+	background-color: var(--rx-chrome);
+	border-color: var(--rx-chrome);
+	padding: 7px 10px;
+}
+
+/* Grey relief buttons on a navy bar were fighting it. These sit in it. */
+.x-toolbar-main .x-btn-default-toolbar-small {
+	background-color: rgba(255, 255, 255, 0.10);
+	border: 1px solid rgba(255, 255, 255, 0.16);
+	border-radius: var(--rx-radius);
+	box-shadow: none;
+	transition: background-color 0.12s ease;
+}
+
+.x-toolbar-main .x-btn-default-toolbar-small.x-btn-over {
+	background-color: rgba(255, 255, 255, 0.18);
+}
+
+.x-toolbar-main .x-btn-default-toolbar-small.x-btn-pressed {
+	background-color: rgba(255, 255, 255, 0.26);
+}
+
+.x-toolbar-main .x-btn-inner,
+.x-toolbar-main .x-btn-icon-el,
+.x-toolbar-main .x-btn-glyph {
+	color: #E8F1F8;
+	font-size: 12.5px;
+}
+
+/* ------------------------------------------------------- panels, grid */
+
+.x-panel-header-default {
+	background-color: var(--rx-surface);
+	background-image: none;
+	border-color: var(--rx-line);
+	padding: 12px 14px;
+}
+
+/* A heading is not a link, so it stops being brand blue */
+.x-panel-header-title-default .x-title-text {
+	color: var(--rx-ink);
+	font-size: 15px;
+	font-weight: 600;
+}
+
+.x-panel-body-default,
+.x-grid-body,
+.x-toolbar-default,
+.x-grid-item,
+.x-grid-cell {
+	border-color: var(--rx-line);
+}
+
+.x-grid-group-hd {
+	background-color: var(--rx-sunken);
+	border-color: var(--rx-line);
+	color: var(--rx-muted);
+	font-size: 12px;
+	font-weight: 600;
+}
+
+.x-grid-item-over .x-grid-cell,
+.x-grid-item-over {
+	background-color: rgba(46, 101, 142, 0.05);
+}
+
+/* --------------------------------------------------- service catalogue */
+
+.service {
+	border-radius: var(--rx-radius-lg);
+	transition: background-color 0.12s ease;
+}
+
+.service:hover {
+	background-color: rgba(46, 101, 142, 0.07);
+}
+
+.service span {
+	color: var(--rx-ink);
+	font-size: 13.5px;
+}
+
+/* ------------------------------------------------------------- inputs */
+
+.x-form-text-default,
+.x-form-trigger-wrap-default {
+	border-color: var(--rx-line);
+	border-radius: var(--rx-radius);
+}
+
+.x-form-trigger-wrap-default.x-form-trigger-wrap-focus,
+.x-form-text-default:focus {
+	border-color: var(--rx-brand);
+	box-shadow: 0 0 0 3px rgba(46, 101, 142, 0.15);
+	outline: none;
+}
+
+/* --------------------------------------------------------- status bar */
+
+.x-statusbar {
+	background-color: var(--rx-chrome) !important;
+}
+
+/* ---------------------------------------------------- end of life bar */
+
+/* Dark text on amber is legible; white on amber was not */
+.deprecation {
+	background-color: #F0A83C !important;
+	color: #3B2A0E;
+}
+
+/* crisp sets its own size on the label, and system-ui runs wider than Roboto,
+   which pushed the button in this bar off the edge */
+.deprecation .x-toolbar-text {
+	font-size: 12px;
+}
+
+/* --------------------------------------------------------- scrollbars */
+
+::-webkit-scrollbar {
+	width: 11px;
+	height: 11px;
+}
+
+::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+	background-color: #C4CFD8;
+	border-radius: 999px;
+	border: 3px solid transparent;
+	background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background-color: #9FB1BF;
+}
+
+::-webkit-scrollbar-corner {
+	background: transparent;
+}
+
+/* ------------------------------------------------------------- a11y */
+
+.x-btn:focus-visible,
+.service:focus-visible {
+	outline: 2px solid var(--rx-brand);
+	outline-offset: 2px;
+}
+
+.x-tab-default-focus {
+	outline: none;
+	box-shadow: inset 0 0 0 2px rgba(46, 101, 142, 0.35);
+}
+
+.x-tab.x-tab-active.x-tab-default-top.x-tab-default-focus {
+	box-shadow: inset 0 -2px 0 0 var(--rx-brand);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		transition-duration: 0.01ms !important;
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+	}
+}
