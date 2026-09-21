@@ -362,10 +362,3 @@ body {
 	background-repeat: no-repeat;
 	background-position: 0 0;
 }
-
-/* ------------------------------------------------------- end of life bar */
-
-.deprecation {
-	background-color: #E6A23C !important;
-	color: #FFF;
-}

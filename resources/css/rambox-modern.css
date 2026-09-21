@@ -341,20 +341,6 @@ body {
 	background-color: var(--rx-chrome) !important;
 }
 
-/* ---------------------------------------------------- end of life bar */
-
-/* Dark text on amber is legible; white on amber was not */
-.deprecation {
-	background-color: #F0A83C !important;
-	color: #3B2A0E;
-}
-
-/* crisp sets its own size on the label, and system-ui runs wider than Roboto,
-   which pushed the button in this bar off the edge */
-.deprecation .x-toolbar-text {
-	font-size: 12px;
-}
-
 /* --------------------------------------------------------- scrollbars */
 
 ::-webkit-scrollbar {
