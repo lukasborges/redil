@@ -244,10 +244,36 @@ body {
 
 /* ------------------------------------------------------------- inputs */
 
-.x-form-text-default,
+/*
+ * Ext draws a text field as an input and any triggers side by side inside a
+ * wrapper, and crisp puts the border on the wrapper alone. So the border, the
+ * corner and the focus ring belong there too. Styling the input as well is what
+ * produced two concentric rounded boxes, the inner one cutting across the
+ * trigger.
+ */
 .x-form-trigger-wrap-default {
-	border-color: var(--rx-line);
+	border: 1px solid var(--rx-line);
 	border-radius: var(--rx-radius-lg);
+	background-color: #FFF;
+	transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.x-form-trigger-wrap-default:hover {
+	border-color: #B9C6D0;
+}
+
+/* the focus ring reaches 3px past the border and was touching the label beside
+   it; only fields sitting in a toolbar need the gap */
+.x-toolbar .x-form-trigger-wrap-default {
+	margin-left: 8px;
+}
+
+.x-form-text-default,
+.x-form-trigger-default {
+	border: 0;
+	border-radius: 0;
+	box-shadow: none;
+	background-color: transparent;
 }
 
 .x-form-text-default {
@@ -297,10 +323,15 @@ body {
 	color: var(--rx-ink);
 }
 
-.x-form-trigger-wrap-default.x-form-trigger-wrap-focus,
-.x-form-text-default:focus {
+.x-form-trigger-wrap-default.x-form-trigger-wrap-focus {
 	border-color: var(--rx-brand);
 	box-shadow: 0 0 0 3px rgba(46, 101, 142, 0.15);
+}
+
+/* the ring is the wrapper's job; the input must not draw a second one */
+.x-form-text-default:focus,
+.x-form-text-default.x-form-focus {
+	box-shadow: none;
 	outline: none;
 }
 
