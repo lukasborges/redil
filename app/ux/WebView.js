@@ -209,7 +209,7 @@ Ext.define('Rambox.ux.WebView',{
 					 tag: 'webview'
 					,src: me.record.get('url')
 					,style: 'width:100%;height:100%;visibility:visible;'
-					,partition: 'persist:' + me.record.get('type') + '_' + me.id.replace('tab_', '') + (localStorage.getItem('id_token') ? '_' + Ext.decode(localStorage.getItem('profile')).sub : '')
+					,partition: 'persist:' + me.record.get('type') + '_' + me.id.replace('tab_', '')
 					,plugins: 'true'
 					,allowtransparency: 'on'
 					,autosize: 'on'
@@ -277,7 +277,7 @@ Ext.define('Rambox.ux.WebView',{
 		// Notifications in Webview
 		me.setNotifications(localStorage.getItem('locked') || JSON.parse(localStorage.getItem('dontDisturb')) ? false : me.record.get('notifications'));
 
-		require('@electron/remote').session.fromPartition('persist:' + me.record.get('type') + '_' + me.id.replace('tab_', '') + (localStorage.getItem('id_token') ? '_' + Ext.decode(localStorage.getItem('profile')).sub : '')).webRequest.onBeforeSendHeaders((details, callback) => {
+		require('@electron/remote').session.fromPartition('persist:' + me.record.get('type') + '_' + me.id.replace('tab_', '')).webRequest.onBeforeSendHeaders((details, callback) => {
 			const change = details.url.match(/^https:\/\/accounts\.google\.com(\/|$)/);
 			if ( change ) details.requestHeaders['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0';
 			callback({ cancel: false, requestHeaders: details.requestHeaders });

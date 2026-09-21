@@ -6,17 +6,11 @@ Ext.define('Rambox.Application', {
 	,requires: [
 		'Rambox.util.MD5'
 		,'Ext.window.Toast'
-		,'Ext.util.Cookies'
 	]
 
 	,stores: [
 		 'ServicesList'
 		,'Services'
-	]
-
-	,profiles: [
-		 'Offline'
-		,'Online'
 	]
 
 	,config: {
