@@ -29,6 +29,7 @@
 	"license": "GPL-3.0",
 	"scripts": {
 		"start": "electron electron/main.js",
+		"bootstrap": "node scripts/gen-bootstrap.js",
 		"start:debug": "electron electron/main.js --enable-logging",
 		"dev": "electron electron/main.js",
 		"test": "./node_modules/.bin/mocha test/tests/**/*.spec.js",
