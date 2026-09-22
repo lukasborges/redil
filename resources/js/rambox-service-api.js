@@ -1,96 +1,38 @@
 /**
- * This file is loaded in the service web views to provide a Rambox API.
- */
-
-const { ipcRenderer } = require('electron');
-
-/**
- * Make the Rambox API available via a global "rambox" variable.
+ * Loaded into every service webview.
  *
- * @type {{}}
+ * Electron will not let a guest be less isolated than its embedder, so once the
+ * host window became contextIsolated this preload did too, sandboxed and in a
+ * world of its own. Nothing it writes on `window` is the page's window, and
+ * `require` reaches only electron. Two globals this used to patch in place had
+ * to move somewhere they can still touch the page: the Notification wrapper is
+ * injected by app/ux/WebView.js, and screen sharing is answered by the main
+ * process through setDisplayMediaRequestHandler, which needs no page code at
+ * all. The history shortcut moved to the main process too, because a sandboxed
+ * preload cannot require Mousetrap.
  */
-window.rambox = {};
 
-/**
- * Sets the unread count of the tab.
- *
- * @param {*} count	The unread count
- */
-window.rambox.setUnreadCount = function(count) {
-	ipcRenderer.sendToHost('rambox.setUnreadCount', count);
-};
+const { contextBridge, ipcRenderer } = require('electron');
 
-/**
- * Clears the unread count.
- */
-window.rambox.clearUnreadCount = function() {
-	ipcRenderer.sendToHost('rambox.clearUnreadCount');
-}
+// The js_unread snippets in the catalogue, and the custom code a user writes per
+// service, run in the page's main world through executeJavaScript. This is the
+// window.rambox they call.
+contextBridge.exposeInMainWorld('rambox', {
+	/**
+	 * Sets the unread count of the tab.
+	 *
+	 * @param {*} count	The unread count
+	 */
+	 setUnreadCount: count => ipcRenderer.sendToHost('rambox.setUnreadCount', count)
 
-/**
- * Override to add notification click event to display Rambox window and activate service tab
- */
-var NativeNotification = Notification;
-Notification = function(title, options) {
-	var notification = new NativeNotification(title, options);
+	/**
+	 * Clears the unread count.
+	 */
+	,clearUnreadCount: () => ipcRenderer.sendToHost('rambox.clearUnreadCount')
 
-	notification.addEventListener('click', function() {
-		ipcRenderer.sendToHost('rambox.showWindowAndActivateTab');
-	});
-
-	//It seems that gmail is checking if such event handler func are available. Just remplacing them by a void function that is always returning true is making the thing right!
-	notification.addEventListener = function() {return true};
-	notification.attachEvent = function() {return true};
-	notification.addListener = function() {return true};
-
-	return notification;
-}
-
-Notification.prototype = NativeNotification.prototype;
-Notification.permission = NativeNotification.permission;
-Notification.requestPermission = NativeNotification.requestPermission.bind(Notification);
-
-const mousetrap = require('mousetrap');
-mousetrap.bind(process.platform === 'darwin' ? ['command+left', 'command+right'] : ['alt+left', 'alt+right'], e => {
-	if (location.href.indexOf('slack.com') !== -1) return; 
-	e.key === 'ArrowLeft' ? history.back() : history.forward();
+	/**
+	 * Brings the window forward and activates this service's tab. Called by the
+	 * notification wrapper the panel injects.
+	 */
+	,showWindowAndActivateTab: () => ipcRenderer.sendToHost('rambox.showWindowAndActivateTab')
 });
-
-
-// ScreenShare
-window.navigator.mediaDevices.getDisplayMedia = () =>
-  new Promise(async (resolve, reject) => {
-    try {
-      const unlisten = () => {
-        ipcRenderer.removeAllListeners('screenShare:cancel');
-        ipcRenderer.removeAllListeners('screenShare:share');
-      };
-
-      ipcRenderer.on('screenShare:cancel', () => {
-        unlisten();
-        reject(new Error('Cancelled by user'));
-      });
-
-      ipcRenderer.on('screenShare:share', (_, shareId) => {
-        unlisten();
-        window.navigator.mediaDevices
-          .getUserMedia({
-            audio: false,
-            video: {
-              mandatory: {
-                chromeMediaSource: 'desktop',
-                chromeMediaSourceId: shareId,
-              },
-            },
-          })
-          .then(stream => resolve(stream));
-      });
-
-      // The main process enumerates the screens and serialises the thumbnails.
-      const sources = await ipcRenderer.invoke('screenShare:listSources');
-
-      ipcRenderer.send('screenShare:show', sources);
-    } catch (err) {
-      reject(err);
-    }
-  });

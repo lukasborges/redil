@@ -553,6 +553,17 @@ app.on('web-contents-created', (webContentsCreatedEvent, contents) => {
 	if (contents.getType() !== 'webview') return;
 	contextMenu.attach(contents);
 
+	// A service calling getDisplayMedia used to be answered by a patch the
+	// preload wrote over navigator.mediaDevices. An isolated preload cannot
+	// reach the page's navigator, and this is the API meant for the job: it
+	// needs no code in the page at all.
+	contents.session.setDisplayMediaRequestHandler(async (request, callback) => {
+		const sources = await desktopCapturer.getSources({ types: ['screen', 'window'] });
+		const chosen = await pickScreenShareSource(sources);
+		// Answering with nothing is how a request is refused.
+		chosen ? callback({ video: chosen }) : callback();
+	}, { useSystemPicker: false });
+
 	// Held on its own, because reading it back off a destroyed webContents throws.
 	const contentsId = contents.id;
 
@@ -594,6 +605,16 @@ app.on('web-contents-created', (webContentsCreatedEvent, contents) => {
 		if (input.isAutoRepeat) modifiers.push('isAutoRepeat');
 
 		if ( input.key === 'Tab' && !modifiers.length ) return;
+
+		// History navigation, which the preload drove with Mousetrap until it was
+		// sandboxed. Slack is left alone, as it was, because it routes its own.
+		const historyKey = process.platform === 'darwin' ? 'meta' : 'alt';
+		if ( modifiers.length === 1 && modifiers[0] === historyKey && ['ArrowLeft', 'ArrowRight'].includes(input.key) ) {
+			if ( contents.getURL().indexOf('slack.com') !== -1 ) return;
+			const history = contents.navigationHistory;
+			input.key === 'ArrowLeft' ? history.canGoBack() && history.goBack() : history.canGoForward() && history.goForward();
+			return;
+		}
 
 		// Maps special keys to fire the correct event in Mac OS
 		let key = input.key;
@@ -740,60 +761,52 @@ ipcMain.on('toggleWin', (event, allwaysShow) => toggleWindow(allwaysShow));
 // Enumerating screens belongs to the main process: desktopCapturer stopped being
 // reachable from renderers, so the service preload asks for the list over IPC.
 // Thumbnails are serialised here because a NativeImage cannot cross the boundary.
-ipcMain.handle('screenShare:listSources', async () => {
-	const sources = await desktopCapturer.getSources({ types: ['screen', 'window'] });
-	return sources.map(source => ({
-		 id: source.id
-		,name: source.name
-		,thumbnail: source.thumbnail.toDataURL()
-	}));
-});
+// Opens screenselector.html over the screens and windows on offer and settles
+// on the one the user picks, or on nothing if they close it or cancel.
+function pickScreenShareSource(sources) {
+	return new Promise(resolve => {
+		const offered = sources.map(source => ({
+			 id: source.id
+			,name: source.name
+			,thumbnail: source.thumbnail.toDataURL()
+		}));
 
-ipcMain.on('screenShare:show', (event, screenList) => {
-	let tmpWindow = new BrowserWindow({
-		title: 'Redil - Select screen',
-		width: 600,
-		height: 500,
-		icon: __dirname + '/../resources/Icon.ico',
-		autoHideMenuBar: true,
-		transparent: true,
-		show: true,
-		frame: false,
-		hasShadow: true,
-		webPreferences: {
-			preload: path.join(__dirname, 'preload.js'),
-			nodeIntegration: false,
-			contextIsolation: true,
-		},
+		let picker = new BrowserWindow({
+			title: 'Redil - Select screen',
+			width: 600,
+			height: 500,
+			icon: __dirname + '/../resources/Icon.ico',
+			autoHideMenuBar: true,
+			transparent: true,
+			show: true,
+			frame: false,
+			hasShadow: true,
+			webPreferences: {
+				preload: path.join(__dirname, 'preload.js'),
+				nodeIntegration: false,
+				contextIsolation: true,
+			},
+		});
+
+		const settle = chosenId => {
+			ipcMain.removeHandler('screenShare:getSources');
+			ipcMain.removeAllListeners('screenShare:cancelSelection');
+			ipcMain.removeAllListeners('screenShare:selectScreen');
+			const window = picker;
+			picker = null;
+			if ( window && !window.isDestroyed() ) window.close();
+			resolve(chosenId ? sources.find(source => source.id === chosenId) : null);
+		};
+
+		ipcMain.handle('screenShare:getSources', () => offered);
+		ipcMain.once('screenShare:cancelSelection', () => settle(null));
+		ipcMain.once('screenShare:selectScreen', (event, chosenId) => settle(chosenId));
+		// Closing the window with no choice counts as cancelling.
+		picker.on('closed', () => settle(null));
+
+		picker.loadFile(__dirname + '/../screenselector.html');
 	});
-
-	const close = () => {
-		tmpWindow.close();
-		tmpWindow = null;
-	};
-
-	const onCancel = () => {
-		event.sender.send('screenShare:cancel');
-		close();
-	};
-
-	const onShare = (_, shareId) => {
-		event.sender.send('screenShare:share', shareId);
-		close();
-	};
-
-	ipcMain.handle('screenShare:getSources', () => screenList);
-	ipcMain.on('screenShare:cancelSelection', onCancel);
-	ipcMain.on('screenShare:selectScreen', onShare);
-
-	tmpWindow.on('closed', () => {
-		ipcMain.removeHandler('screenShare:getSources');
-		ipcMain.removeAllListeners('screenShare:cancelSelection');
-		ipcMain.removeAllListeners('screenShare:selectScreen');
-	});
-
-	tmpWindow.loadFile(__dirname + '/../screenselector.html');
-});
+}
 
 
 // Proxy

@@ -417,6 +417,24 @@ Ext.define('Redil.ux.WebView',{
 
 			console.groupEnd();
 
+			// Wraps Notification so clicking one brings the window forward and
+			// activates this tab. The preload used to patch the global directly;
+			// it now runs in an isolated world, so this has to be injected, which
+			// puts it in the page's own world alongside the js_unread snippets.
+			js_inject += 'if(!window.__ramboxNotification&&window.rambox){window.__ramboxNotification=true;'
+				+ 'var __native=Notification;'
+				+ 'window.Notification=function(t,o){var n=new __native(t,o);'
+				+ 'n.addEventListener("click",function(){window.rambox.showWindowAndActivateTab()});'
+				// Gmail checks that these exist before using notifications, so they
+				// are replaced by something that always says yes.
+				+ 'n.addEventListener=function(){return true};'
+				+ 'n.attachEvent=function(){return true};'
+				+ 'n.addListener=function(){return true};'
+				+ 'return n};'
+				+ 'window.Notification.prototype=__native.prototype;'
+				+ 'window.Notification.permission=__native.permission;'
+				+ 'window.Notification.requestPermission=__native.requestPermission.bind(__native);}';
+
 			// Scroll always to top (bug)
 			js_inject += 'document.body.scrollTop=0;';
 
