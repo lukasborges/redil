@@ -39,7 +39,6 @@
 		"build:linux": "npm run bootstrap && electron-builder --linux",
 		"build:win": "npm run bootstrap && electron-builder --win",
 		"build:mac": "npm run bootstrap && electron-builder --mac",
-		"translations:download": "node languages.js download",
 		"translations:generate": "node languages.js generate"
 	},
 	"build": {
@@ -172,7 +171,6 @@
 	"devDependencies": {
 		"@electron/notarize": "3.1.1",
 		"@playwright/test": "1.63.0",
-		"crowdin": "1.0.0",
 		"csvjson": "4.3.3",
 		"electron": "44.4.3",
 		"electron-builder": "26.0.12"

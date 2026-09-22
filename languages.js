@@ -1,50 +1,28 @@
 const fs = require('fs');
 const path = require('path');
 const csvjson = require('csvjson');
-// crowdin is required inside the download branch on purpose. The package
-// predates modern Node and throws while loading, which used to break the
-// generate command too even though it never touches the API.
 
-var deleteFolderRecursive = function(path) {
-	if( fs.existsSync(path) ) {
-		fs.readdirSync(path).forEach(function(file,index){
-			var curPath = path + "/" + file;
-			if(fs.lstatSync(curPath).isDirectory()) { // recurse
-				deleteFolderRecursive(curPath);
-			} else { // delete file
-				fs.unlinkSync(curPath);
-			}
-		});
-		fs.rmdirSync(path);
-	}
-};
+// Collapses a folder of Crowdin CSV exports into one resources/languages/<locale>.js
+// per locale, each assigning into a global `locale[]` array that index.html injects
+// before the app boots.
+//
+// The download half of this pipeline is gone. It called Crowdin's v1 API, which
+// answers 301 now, through a package that throws `primordials is not defined` on
+// a modern Node, against api.crowdin.net/api/project/rambox -- upstream's project,
+// which this fork does not own. Nothing here could have worked. Until a Crowdin
+// project is set up for this fork, the generated .js files are the only source
+// there is, so a correction goes into them directly. Drop CSV exports into
+// resources/languages/<locale>/ and this rebuilds that locale from them.
 
 var args = process.argv.slice(2);
 
-if ( args.indexOf('download') >= 0 ) {
-	// The key was written here in plain text. Removing it does not un-leak it:
-	// it is still in this repository's history and in the archived upstream, so
-	// it has to be revoked on Crowdin rather than trusted because of this change.
-	const apiKey = process.env.CROWDIN_API_KEY;
-	if ( !apiKey ) {
-		console.error('Set CROWDIN_API_KEY in the environment to download translations.');
-		process.exit(1);
-	}
-
-	const Crowdin = require('crowdin');
-	const crowdin = new Crowdin({
-		 apiKey: apiKey
-		,endpointUrl: 'https://api.crowdin.net/api/project/rambox'
-	});
-	crowdin.downloadToPath('resources/languages').then(function() { console.info('Download finished!') });
-}
-
 if ( args.indexOf('generate') >= 0 ) {
-	fs.readdirSync(__dirname+'/resources/languages').filter(file => fs.lstatSync(path.join(__dirname+'/resources/languages', file)).isDirectory()).forEach(function(locale) {
+	const languages = path.join(__dirname, 'resources', 'languages');
+	fs.readdirSync(languages).filter(file => fs.lstatSync(path.join(languages, file)).isDirectory()).forEach(function(locale) {
 		var result = 'var locale=[];';
-		var path = __dirname+'/resources/languages/'+locale;
-		fs.readdirSync(path).forEach(function(file) {
-			var data = fs.readFileSync(path+'/'+file, { encoding : 'utf8'});
+		var localeDir = path.join(languages, locale);
+		fs.readdirSync(localeDir).forEach(function(file) {
+			var data = fs.readFileSync(path.join(localeDir, file), { encoding : 'utf8'});
 			csvjson.toObject(data, {
 				 headers: 'prop,text'
 				,delimiter: ','
@@ -54,10 +32,10 @@ if ( args.indexOf('generate') >= 0 ) {
 			});
 		});
 		result += 'module.exports = locale;';
-		fs.writeFileSync(path+'/../'+locale+'.js', result);
+		fs.writeFileSync(path.join(languages, locale + '.js'), result);
 		console.log(locale, "File was generated!");
-		deleteFolderRecursive(path);
+		fs.rmSync(localeDir, { recursive: true, force: true });
 	});
 }
 
-if ( args.length === 0 ) console.error('No arguments passed');
+if ( args.length === 0 ) console.error('Pass generate to rebuild the locale files from CSV exports.');

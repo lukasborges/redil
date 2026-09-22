@@ -102,9 +102,11 @@ The `validateMasterPassword` handler in `electron/main.js` assigns `event.return
 
 ## Localization
 
-Translations come from Crowdin. `npm run translations:download` reads the API key from `CROWDIN_API_KEY` and fetches CSVs into `resources/languages/<locale>/`, and `npm run translations:generate` collapses each locale folder into a single `resources/languages/<locale>.js` that assigns into a global `locale[]` array and deletes the folder. `index.html` injects the file for the configured locale before the app boots, which is why `locale['key']` is available at class-definition time in models and views. Do not hand-edit the generated `.js` files.
+Translations were imported from Crowdin. `npm run translations:generate` collapses a folder of CSV exports at `resources/languages/<locale>/` into a single `resources/languages/<locale>.js` that assigns into a global `locale[]` array, then deletes the folder. `index.html` injects the file for the configured locale before the app boots, which is why `locale['key']` is available at class-definition time in models and views.
 
-The key used to sit in `languages.js` in plain text. It is still in this repository's history and in the archived upstream, so it has to be revoked on Crowdin; deleting it from the working tree does not un-leak it. The `crowdin` package is also old enough to throw while loading on a modern Node, which is why it is required inside the download branch rather than at the top of the file: the generate command does not need it and used to break along with it.
+The download half is gone, and it could never have run here. It called Crowdin's v1 API, which answers 301 today, through the `crowdin` package, which throws `primordials is not defined` on a modern Node, against `api.crowdin.net/api/project/rambox` -- upstream's project, which this fork does not own. So there are no CSV folders in the tree and `translations:generate` has no input: the generated `.js` files are the only source of translations there is, and a correction goes into them by hand until a Crowdin project is set up for this fork.
+
+The API key used to sit in `languages.js` in plain text. It is still in this repository's history and in the archived upstream, so it has to be revoked on Crowdin; deleting it from the working tree does not un-leak it.
 
 ## Conventions
 
