@@ -176,20 +176,19 @@
 		"csvjson": "4.3.3",
 		"electron": "44.4.3",
 		"electron-builder": "26.0.12",
-		"electron-notarize": "1.0.0",
+		"@electron/notarize": "3.1.1",
 		"mocha": "5.2.0",
 		"spectron": "^15.0.0"
 	},
 	"dependencies": {
 		"auto-launch-patched": "5.0.2",
-		"electron-is-dev": "1.2.0",
-		"electron-store": "6.0.1",
-		"electron-updater": "4.5.2",
-		"is-online": "8.2.0",
-		"mousetrap": "1.6.3"
+		"electron-store": "8.2.0",
+		"electron-updater": "6.8.9",
+		"is-online": "9.0.1",
+		"mousetrap": "1.6.5"
 	},
 	"volta": {
-		"node": "14.16.1"
+		"node": "24.19.0"
 	},
 	"allowScripts": {
 		"electron@44.4.3": true

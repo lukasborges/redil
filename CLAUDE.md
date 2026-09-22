@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Redil is a fork of Rambox Community Edition, which upstream archived in 2022. It was renamed on 2026-09-21; the product, the app id, the Ext namespace and the repository all carry the new name. Version 0.9.0, GPL-3.0, Electron 44.
 
-Upstream shipped Electron 13. The renderer has since been moved off three APIs that later releases removed, which is what allowed the jump: `remote` became `@electron/remote`, the `new-window` event became `setWindowOpenHandler`, and `desktopCapturer` moved to the main process behind the `screenShare:listSources` channel. The `volta` pin in `package.json` still names Node 14 and is stale; Node 24 installs and runs the project fine.
+Upstream shipped Electron 13. The renderer has since been moved off three APIs that later releases removed, which is what allowed the jump: `remote` became `@electron/remote`, the `new-window` event became `setWindowOpenHandler`, and `desktopCapturer` moved to the main process behind the `screenShare:listSources` channel. The `volta` pin in `package.json` named Node 14 until it was moved to 24.19.0, which is what this works on; CI builds on 22.
 
 ## Build and run
 
@@ -43,7 +43,7 @@ Each one regenerates `bootstrap.js` first, because it is gitignored and the pack
 
 The `files` list in the build config is an allowlist rather than the default catch-all, because `ext/` is 121 MB and the app needs about 14 MB of it. If the renderer starts loading an Ext class that is not in `ext-all-rtl-debug.js` or under `ext/src`, add its path there or it will only fail in a packaged build.
 
-Only Linux has been built and run end to end. Windows and macOS are configured but untested, and the macOS signing and notarisation path needs credentials plus a move to the renamed `@electron/notarize`.
+Only Linux has been built and run end to end. Windows and macOS are configured but untested. The notarisation hook now uses the renamed `@electron/notarize`, whose v3 drops the legacy altool path, so it takes a `teamId` and no `appBundleId` or `ascProvider`; it reads `APPLE_ID`, `APPLE_ID_PWD` and `APPLE_TEAM_ID` from the environment and skips itself when they are absent, where upstream hardcoded its own Apple ID and team.
 
 There is no linter or formatter configured.
 
@@ -102,5 +102,7 @@ The key used to sit in `languages.js` in plain text. It is still in this reposit
 ## Conventions
 
 `.editorconfig` mandates tabs (width 2) and LF. The ExtJS sources use Sencha's leading-comma style, with the comma starting each continuation line; match the surrounding file. `.npmrc` sets `save-exact=true` and disables `package-lock`, so dependency versions are pinned literally in `package.json` and no lockfile is committed.
+
+Two dependencies are held below their latest on purpose: `electron-store` at 8.2.0 and `is-online` at 9.0.1 are the last CommonJS releases of each, and the main process and the renderer both `require` them. `auto-launch-patched` stays because Electron's own `app.setLoginItemSettings` is still darwin and win32 only, so it cannot cover Linux.
 
 `CONTRIBUTING.md` is upstream's and asks for `fix/xxx` or `feature/xxx` branches and no commits to the default branch, which `README.md` repeats. That was written for a project taking outside contributions; this fork has one maintainer, who works directly on `main`. Commit there rather than opening a branch per change. The rest of that file still holds, including that pull request titles carry no issue number.

@@ -9,8 +9,8 @@ const contextMenu = require('./contextmenu');
 var AutoLaunch = require('auto-launch-patched');
 // Configuration
 const Config = require('electron-store');
-// Development
-const isDev = require('electron-is-dev');
+// Development. electron-is-dev was one line wrapping this, and went ESM-only.
+const isDev = !app.isPackaged;
 // Updater
 const updater = require('./updater');
 // File System
