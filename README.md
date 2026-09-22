@@ -26,7 +26,7 @@ That is fixed. The app builds and runs from this repository with nothing but npm
 - **A third-party tracker and a hardcoded API key** were removed from the renderer, along with the dead Auth0 sign-in and profile sync, which pointed at infrastructure this fork cannot use.
 - **The catalogue is maintained here.** Seven entries pointed at services that no longer answer and were dropped; ten were added, among them Google Meet, Zoom, ChatGPT, Claude and Bluesky. `npm run check:services` reports what has rotted.
 - **A new interface.** Services sit in a rail of icons down the left; the home tab opens on what is waiting for you rather than on a catalogue; adding a service is an overlay behind one button; preferences are five sections instead of one scroll of fourteen controls; and a dark theme follows the desktop.
-- **A mark of its own.** A sheepdog in a gradient circle. `resources/logo/Logo.svg` is the source every icon in the repository is generated from.
+- **A mark of its own**, drawn to the GNOME app icon guidelines: a sheepdog on the template's square, in Adwaita blue. `npm run icons` renders every PNG and ICO in the tree from the three SVGs in `resources/logo`.
 - **Tests and a linter.** A Playwright suite launches the real app and drives it; `npm test` runs ESLint first.
 
 ## Install

@@ -2,7 +2,8 @@
   <!--
     Redil, drawn to the GNOME app icon guidelines.
 
-    The application icon.
+    The tray icon while something is unread: the same mark with the animal
+    in the palette's red, which is the convention the icons before it used.
 
     The shape is the template's square guide: 104 by 104 with a radius of 8,
     centred on a 128 canvas, everything on the 2px grid. The base is flat
@@ -21,8 +22,8 @@
   -->
   <defs>
     <linearGradient id="coat" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#ffffff"/>
-      <stop offset="1" stop-color="#c0bfbc"/>
+      <stop offset="0" stop-color="#f66151"/>
+      <stop offset="1" stop-color="#c01c28"/>
     </linearGradient>
   </defs>
   <rect x="12" y="12" width="104" height="104" rx="8" fill="#1a5fb4"/>

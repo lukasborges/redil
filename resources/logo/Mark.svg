@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <!--
+    The mark without its box, for the places inside the app that already have a
+    background of their own: the lock screen paints the rail's navy, and an app
+    icon dropped on it reads as a square on a rectangle rather than as a mark.
+  -->
+  <g transform="translate(14 14) scale(1)">
+    <path fill="#ffffff" d="M50 86 C44 86, 39 79, 38 71 C32 67, 28 59, 28 49 L25.2 18.5 C24.9 16, 27.2 15, 28.7 16.8 L44 33 C46 31, 54 31, 56 33 L71.3 16.8 C72.8 15, 75.1 16, 74.8 18.5 L72 49 C72 59, 68 67, 62 71 C61 79, 56 86, 50 86 Z"/>
+  </g>
+</svg>

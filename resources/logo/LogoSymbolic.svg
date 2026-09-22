@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+  <!--
+    The symbolic mark: 16px, monochrome, recoloured by whoever draws it, which
+    is what GNOME asks for in a notification or a header bar. Only the head
+    survives at this size, and it is a filled silhouette rather than a 2px
+    outline because the outline closes up at 16.
+  -->
+  <g transform="translate(2.25 2.25) scale(0.115)">
+    <path fill="currentColor" d="M50 86 C44 86, 39 79, 38 71 C32 67, 28 59, 28 49 L25.2 18.5 C24.9 16, 27.2 15, 28.7 16.8 L44 33 C46 31, 54 31, 56 33 L71.3 16.8 C72.8 15, 75.1 16, 74.8 18.5 L72 49 C72 59, 68 67, 62 71 C61 79, 56 86, 50 86 Z"/>
+  </g>
+</svg>

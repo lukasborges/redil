@@ -36,6 +36,7 @@
 		"bootstrap": "node scripts/gen-bootstrap.js",
 		"check:services": "node scripts/check-services.js",
 		"check:recipes": "node scripts/check-recipes.js",
+		"icons": "node scripts/gen-icons.js",
 		"clean": "rm -rf ./dist",
 		"build": "npm run bootstrap && electron-builder",
 		"build:linux": "npm run bootstrap && electron-builder --linux",
