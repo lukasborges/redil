@@ -1,0 +1,50 @@
+name: Build
+
+# Proves the app builds from the repository rather than from somebody's laptop.
+# Packaging is where this project is most likely to break silently, because the
+# renderer boots from a generated bootstrap.js that is not committed.
+
+on:
+  push:
+    branches: [master, 'feature/**', 'fix/**']
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # The Electron binary is ~120 MB and the same for every run on a version.
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/electron
+            ~/.cache/electron-builder
+          key: electron-${{ runner.os }}-${{ hashFiles('package.json') }}
+          restore-keys: electron-${{ runner.os }}-
+
+      # .npmrc disables the lockfile, so this resolves versions fresh every run.
+      # package.json pins them exactly, which is the only thing holding it steady.
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Generate bootstrap.js
+        run: npm run bootstrap
+
+      - name: Package
+        run: npx electron-builder --linux --publish never
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rambox-linux
+          if-no-files-found: error
+          path: |
+            dist/*.AppImage
+            dist/*.deb
+            dist/*.tar.gz
