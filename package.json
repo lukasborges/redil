@@ -1,7 +1,7 @@
 {
 	"name": "Redil",
 	"productName": "Redil",
-	"version": "0.8.0",
+	"version": "0.9.0",
 	"description": "Free and Open Source messaging and emailing app that combines common web applications into one.",
 	"main": "electron/main.js",
 	"repository": {
@@ -149,7 +149,8 @@
 				"provider": "github",
 				"owner": "lukasborges",
 				"repo": "redil",
-				"vPrefixedTagName": false
+				"vPrefixedTagName": false,
+				"releaseType": "draft"
 			}
 		],
 		"files": [

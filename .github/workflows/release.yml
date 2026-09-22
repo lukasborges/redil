@@ -1,0 +1,48 @@
+name: Release
+
+# Builds and uploads the artifacts when a version tag is pushed.
+#
+# The tag carries no "v": the publish config sets vPrefixedTagName to false, and
+# electron-updater looks the release up by the bare version. Tag 0.9.0, not v0.9.0.
+#
+# electron-builder uploads into a draft release, so nothing reaches anyone until
+# the draft is published by hand. That also means the auto-updater sees nothing
+# until then, since it only reads published releases.
+
+on:
+  push:
+    tags: ['[0-9]+.[0-9]+.[0-9]+']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/electron
+            ~/.cache/electron-builder
+          key: electron-${{ runner.os }}-${{ hashFiles('package.json') }}
+          restore-keys: electron-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Generate bootstrap.js
+        run: npm run bootstrap
+
+      # Also writes latest-linux.yml, which is what the auto-updater reads.
+      - name: Package and upload
+        run: npx electron-builder --linux --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
