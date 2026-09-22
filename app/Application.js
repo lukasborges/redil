@@ -238,6 +238,33 @@ Ext.define('Redil.Application', {
 				document.title = 'Redil';
 			}
 		}
+
+		this.updateUnreadSummary(newValue);
+	}
+
+	/*
+	 * The home tab opens on how much is waiting, in words. Called from the
+	 * updater above rather than from its own hook: totalNotifications already
+	 * had one, and a second entry of the same name in this object literal would
+	 * simply have been overwritten by the first.
+	 */
+	,updateUnreadSummary: function( total ) {
+		var aba = Ext.getCmp('redilTab');
+		var resumo = aba && aba.down('#unreadSummary');
+		if ( !resumo ) return;
+
+		if ( total < 1 ) {
+			resumo.update('<h1>No unread messages</h1><p>Nothing is waiting in your services.</p>');
+			return;
+		}
+
+		var servicos = Ext.getStore('Services').getCount();
+		var comNaoLidas = Redil.util.UnreadCounter.getServicesWithUnread();
+
+		resumo.update(
+			'<h1>' + total + (total === 1 ? ' unread message' : ' unread messages') + '</h1>'
+			+ '<p>in ' + comNaoLidas + ' of your ' + servicos + (servicos === 1 ? ' service' : ' services') + '</p>'
+		);
 	}
 
 	,checkUpdate: function(silence) {

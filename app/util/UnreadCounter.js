@@ -41,6 +41,18 @@ Ext.define('Redil.util.UnreadCounter', {
 		};
 
 		/**
+		 * How many services are holding something unread. The home tab says this
+		 * beside the total, and only the map knows it.
+		 *
+		 * @return {number}
+		 */
+		this.getServicesWithUnread = function() {
+			var quantos = 0;
+			unreadCountByService.forEach(function(contagem) { if (contagem > 0) quantos++; });
+			return quantos;
+		};
+
+		/**
 		 * Sets the global unread count for a specific service.
 		 *
 		 * @param {*} id				Id of the service to set the global unread count for.

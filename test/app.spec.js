@@ -130,7 +130,9 @@ test('puts the service bar on the left, as a rail of icons', async () => {
 			 posicao: Ext.cq1('app-main').getTabPosition()
 			,largura: Math.round(bar.el.dom.getBoundingClientRect().width)
 			// Ext.tab.Tab extends Ext.button.Button, so the tabs answer to that too.
-			,botoes: bar.items.items.filter(item => item.isXType && item.isXType('button') && !item.isXType('tab')).length
+			,botoes: bar.items.items
+				.filter(item => item.isXType && item.isXType('button') && !item.isXType('tab'))
+				.map(item => item.handler)
 			,rotulos: bar.el.dom.querySelectorAll('.x-tab-inner').length
 			,rotulosVisiveis: [...bar.el.dom.querySelectorAll('.x-tab-inner')]
 				.filter(el => el.offsetParent !== null).length
@@ -139,9 +141,10 @@ test('puts the service bar on the left, as a rail of icons', async () => {
 
 	expect(rail.posicao).toBe('left');
 	expect(rail.largura).toBe(68);
-	// Don't disturb, lock and preferences. They were the home tab's own toolbar
-	// until they moved here, which meant they vanished whenever a service was open.
-	expect(rail.botoes).toBe(3);
+	// Add a service, then don't disturb, lock and preferences. The last three were
+	// the home tab's own toolbar until they moved here, which meant they vanished
+	// whenever a service was open.
+	expect(rail.botoes).toEqual(['openCatalogue', 'dontDisturb', 'lockRedil', 'openPreferences']);
 	// Icons only: the label elements exist, and none of them is shown.
 	expect(rail.rotulos).toBeGreaterThan(0);
 	expect(rail.rotulosVisiveis).toBe(0);
@@ -177,4 +180,40 @@ test('splits the preferences into sections without unbinding a field', async () 
 	expect(prefs.temMasterPassword).toBe(true);
 	expect(prefs.temTheme).toBe(true);
 	expect(prefs.alturaDoCancelar).toBeGreaterThan(0);
+});
+
+test('opens on the unread summary, with the catalogue behind a button', async () => {
+	const inicio = await redil.window.evaluate(() => {
+		const catalogo = Ext.getCmp('redilTab').down('#catalogue');
+		return {
+			 flutuante: !!catalogo.floating
+			,oculto: catalogo.isHidden()
+			,resumo: Ext.getCmp('redilTab').down('#unreadSummary').el.dom.innerText.trim()
+		};
+	});
+
+	// The catalogue used to be two thirds of this screen, which made a list of
+	// 104 services the app's front door.
+	expect(inicio.flutuante).toBe(true);
+	expect(inicio.oculto).toBe(true);
+	expect(inicio.resumo).toContain('No unread messages');
+
+	// The summary is written from the totalNotifications config, which
+	// UnreadCounter drives, so a count set anywhere reaches it.
+	const comNaoLidas = await redil.window.evaluate(() => {
+		Redil.util.UnreadCounter.setUnreadCountForService(99, 4);
+		const texto = Ext.getCmp('redilTab').down('#unreadSummary').el.dom.innerText.trim();
+		Redil.util.UnreadCounter.clearUnreadCountForService(99);
+		return texto;
+	});
+	expect(comNaoLidas).toContain('4 unread messages');
+
+	const aberto = await redil.window.evaluate(() => {
+		Ext.cq1('app-main').getController().openCatalogue();
+		const catalogo = Ext.getCmp('redilTab').down('#catalogue');
+		const visivel = catalogo.isVisible();
+		catalogo.hide();
+		return visivel;
+	});
+	expect(aberto).toBe(true);
 });

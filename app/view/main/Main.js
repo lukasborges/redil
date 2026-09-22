@@ -36,7 +36,14 @@ Ext.define('Redil.view.main.Main', {
 		,items: [
 			// A tab bar is a Header, not a Toolbar: the '->' shorthand resolves to
 			// null there, and each item needs its xtype spelled out.
-			{ xtype: 'tbfill' }
+			{
+				 xtype: 'button'
+				,glyph: 'xf067@FontAwesome'
+				,tooltip: locale['app.main[0]']
+				,handler: 'openCatalogue'
+				,itemId: 'addService'
+			}
+			,{ xtype: 'tbfill' }
 			,{
 				 xtype: 'button'
 				,glyph: JSON.parse(localStorage.getItem('dontDisturb')) ? 'xf1f7@FontAwesome' : 'xf0f3@FontAwesome'
@@ -71,12 +78,38 @@ Ext.define('Redil.view.main.Main', {
 			,autoScroll: true
 			,layout: 'hbox'
 			,tabConfig: {} // Created empty for Keyboard Shortcuts
+			/*
+			 * The one thing only this app can tell you, said in words at the top
+			 * of its own tab. Application.updateTotalNotifications writes it: the
+			 * Ext config of the same name already fires on every change.
+			 */
+			,dockedItems: [
+				{
+					 xtype: 'component'
+					,dock: 'top'
+					,itemId: 'unreadSummary'
+					,cls: 'rx-summary'
+					,html: '<h1>No unread messages</h1><p>Nothing is waiting in your services.</p>'
+				}
+			]
 			,items: [
 				{
 					 xtype: 'panel'
 					,title: locale['app.main[0]']
-					,margin: '0 5 0 0'
-					,flex: 2
+					/*
+					 * The catalogue used to take two thirds of the home tab, which
+					 * made a list of 104 services the app's front door. It is an
+					 * overlay now, opened by the + in the rail. Floating keeps it
+					 * out of the hbox while leaving it a child of this view, so the
+					 * string handlers below still resolve against MainController.
+					 */
+					,itemId: 'catalogue'
+					,floating: true
+					,hidden: true
+					,modal: true
+					,closable: true
+					,width: 900
+					,height: 620
 					,header: { height: 50 }
 					,tools: [
 						{
@@ -151,6 +184,7 @@ Ext.define('Redil.view.main.Main', {
 				,{
 					 xtype: 'grid'
 					,title: locale['app.main[4]']
+					// The catalogue floats now, so this is the whole of the tab.
 					,store: 'Services'
 					,hideHeaders: true
 					,margin: '0 0 0 5'

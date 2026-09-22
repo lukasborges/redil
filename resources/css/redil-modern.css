@@ -242,6 +242,31 @@ body {
 	padding: 8px 12px;
 }
 
+/* ------------------------------------------------------ home summary */
+
+/*
+ * The home tab opens on what the app alone knows: how much is waiting. The
+ * catalogue that used to fill two thirds of this screen is an overlay now.
+ */
+
+.rx-summary {
+	padding: 28px 30px 20px;
+	background-color: var(--rx-surface);
+}
+
+.rx-summary h1 {
+	margin: 0;
+	font-size: 24px;
+	font-weight: 700;
+	color: var(--rx-ink);
+}
+
+.rx-summary p {
+	margin: 4px 0 0;
+	font-size: 14px;
+	color: var(--rx-muted);
+}
+
 /* -------------------------------------------- preferences navigation */
 
 /*

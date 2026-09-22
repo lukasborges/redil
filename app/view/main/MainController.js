@@ -123,6 +123,17 @@ Ext.define('Redil.view.main.MainController', {
 		}
 	}
 
+	/*
+	 * The catalogue lives in the home tab as a hidden floating panel rather than
+	 * in a window of its own, so that its filters, its search and its item click
+	 * keep resolving to the methods below without a second controller.
+	 */
+	,openCatalogue: function() {
+		var catalogo = Ext.getCmp('redilTab').down('#catalogue');
+		catalogo.show();
+		catalogo.center();
+	}
+
 	,onNewServiceSelect: function( view, record, item, index, e ) {
 		Ext.create('Redil.view.add.Add', {
 			record: record
