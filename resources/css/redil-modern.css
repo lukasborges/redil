@@ -1159,6 +1159,15 @@ body {
 	padding: 6px;
 }
 
+/*
+ * The items sit in a body element of their own, which crisp paints white. In
+ * the dark theme that left light grey text on white -- the menu read as
+ * disabled -- because only the frame around it followed the tokens.
+ */
+.x-menu-body-default {
+	background-color: var(--rx-raised);
+}
+
 .x-menu-item-link {
 	border-radius: var(--rx-radius);
 	padding: 3px 6px;
