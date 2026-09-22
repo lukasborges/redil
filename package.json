@@ -25,7 +25,7 @@
 		"hangouts",
 		"skype"
 	],
-	"author": "Lucas Borges",
+	"author": "Lucas Borges <lukasborges@users.noreply.github.com>",
 	"license": "GPL-3.0",
 	"scripts": {
 		"start": "electron electron/main.js",
