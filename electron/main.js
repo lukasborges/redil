@@ -512,15 +512,15 @@ app.on('web-contents-created', (webContentsCreatedEvent, contents) => {
 
 		// Protocol rules used to live on the webview's own 'new-window' DOM event,
 		// which was removed alongside this one.
-		let protocol;
+		let target;
 		try {
-			protocol = new URL(url).protocol;
+			target = new URL(url);
 		} catch (e) {
 			return { action: 'deny' };
 		}
 		// Block deep links that would hand the session to a native app (Ex: Slack)
-		if (protocol === 'slack:') return { action: 'deny' };
-		if (!['http:', 'https:'].includes(protocol)) {
+		if (target.protocol === 'slack:') return { action: 'deny' };
+		if (!['http:', 'https:'].includes(target.protocol)) {
 			shell.openExternal(url);
 			return { action: 'deny' };
 		}
@@ -530,6 +530,22 @@ app.on('web-contents-created', (webContentsCreatedEvent, contents) => {
 		let allow = false;
 		allowPopUp.forEach(allowed => url.indexOf(allowed) > -1 && (allow = true));
 		if (allow) return { action: 'allow' };
+
+		// Google's full page sign-in reaches this handler because the link that
+		// starts it carries target="_blank", but the flow ends by following its
+		// `continue` back to the service, so a window of its own would leave the
+		// user signed in beside the tab instead of inside it. Navigate the tab.
+		// The list above names paths and Google moves them: ServiceLogin now
+		// redirects to /v3/signin/identifier, which is how Chat and Calendar
+		// ended up in the default browser. `continue` is what marks a login that
+		// comes back; the OAuth handshakes carry redirect_uri instead, and the
+		// list matches them first, so they stay popups for the opener waiting on
+		// them.
+		if (target.hostname === 'accounts.google.com' && target.searchParams.has('continue')) {
+			setImmediate(() => contents.loadURL(url));
+			return { action: 'deny' };
+		}
+
 		shell.openExternal(url);
 		return { action: 'deny' };
 	});
@@ -544,10 +560,10 @@ app.on('web-contents-created', (webContentsCreatedEvent, contents) => {
 			if (['about:blank', 'about:blank#blocked'].includes(nextURL)) return;
 			once = true;
 			let allow = false;
-			allowPopUp.forEach(url => nextURL.indexOf(url) > -1 && (allow = true));
+			allowPopUp.forEach(allowed => nextURL.indexOf(allowed) > -1 && (allow = true));
 			// If the url is in aboutBlankOnlyWindow we handle this as a popup window
 			if (allow) return win.show();
-			shell.openExternal(url);
+			shell.openExternal(nextURL);
 			win.close();
 		});
 	});
