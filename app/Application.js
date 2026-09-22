@@ -257,29 +257,35 @@ Ext.define('Redil.Application', {
 		var resumo = aba && aba.down('#unreadSummary');
 		if ( !resumo ) return;
 
-		if ( total < 1 ) {
+		// Naming them is the only thing this line can say that the rail and the
+		// list below do not; counting them again is not. Services that can only
+		// say "something is waiting" -- Google Chat, from its favicon -- are
+		// named here too, or the line would read "no unread messages" beside a
+		// rail with a red dot on it.
+		var aguardando = Redil.util.UnreadCounter.getUnreadServiceIds()
+			.concat(Redil.util.UnreadCounter.getServiceIdsWithSomething());
+
+		var nomes = Ext.Array.unique(aguardando).map(function(id) {
+			var registro = Ext.getStore('Services').getById(id);
+			return registro ? Ext.String.htmlEncode(registro.get('name')) : null;
+		}).filter(function(nome) { return !!nome; });
+
+		if ( total < 1 && !nomes.length ) {
 			resumo.update('<h1>No unread messages</h1><p>Nothing is waiting in your services.</p>');
 			return;
 		}
 
 		var servicos = Ext.getStore('Services').getCount();
-		var comNaoLidas = Redil.util.UnreadCounter.getServicesWithUnread();
-
-		// Naming them is the only thing this line can say that the rail and the
-		// list below do not; counting them again is not.
-		var nomes = Redil.util.UnreadCounter.getUnreadServiceIds().map(function(id) {
-			var registro = Ext.getStore('Services').getById(id);
-			return registro ? Ext.String.htmlEncode(registro.get('name')) : null;
-		}).filter(function(nome) { return !!nome; });
-
 		var onde = nomes.length === 1 ? 'in ' + nomes[0]
 			: nomes.length === 2 ? 'in ' + nomes[0] + ' and ' + nomes[1]
-			: 'in ' + comNaoLidas + ' of your ' + servicos + (servicos === 1 ? ' service' : ' services');
+			: 'in ' + nomes.length + ' of your ' + servicos + (servicos === 1 ? ' service' : ' services');
 
-		resumo.update(
-			'<h1>' + total + (total === 1 ? ' unread message' : ' unread messages') + '</h1>'
-			+ '<p>' + onde + '</p>'
-		);
+		// A service that gives no number leaves the headline without one too.
+		var titulo = total < 1
+			? 'Unread messages'
+			: total + (total === 1 ? ' unread message' : ' unread messages');
+
+		resumo.update('<h1>' + titulo + '</h1><p>' + onde + '</p>');
 	}
 
 	,checkUpdate: function(silence) {

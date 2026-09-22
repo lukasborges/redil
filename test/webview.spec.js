@@ -182,3 +182,36 @@ test('says where each service is getting its count from', async () => {
 		tab.reportSnippetUnread(0);
 	});
 });
+
+test('marks a service that can only say there is something, without a number', async () => {
+	// Google Chat puts no count in its title and none in markup worth reading,
+	// but it swaps its favicon when messages arrive. '•' is how a service says
+	// "something is waiting": it cannot be added to a total, so it is a dot on
+	// the rail and a word in the list, and the total is left alone.
+	const marcado = await redil.window.evaluate(() => {
+		const tab = Ext.cq1('app-main').items.items.find(item => item.id === 'tab_4242');
+		tab.reportSnippetUnread('•');
+
+		return {
+			 selo: tab.tab.el.dom.getAttribute('data-badge-text')
+			,algo: Redil.util.UnreadCounter.hasSomethingUnread(tab.record.get('id'))
+			,total: Redil.util.UnreadCounter.getTotalUnreadCount()
+			,resumo: Ext.getCmp('redilTab').down('#unreadSummary').el.dom.innerText
+				.split('\n').map(line => line.trim()).filter(Boolean)
+		};
+	});
+
+	expect(marcado.selo).toBe('•');
+	expect(marcado.algo).toBe(true);
+	expect(marcado.total).toBe(0);
+	expect(marcado.resumo[0]).toBe('Unread messages');
+	expect(marcado.resumo[1]).toBe('in Fixture');
+
+	const limpo = await redil.window.evaluate(() => {
+		const tab = Ext.cq1('app-main').items.items.find(item => item.id === 'tab_4242');
+		tab.reportSnippetUnread(0);
+		return Redil.util.UnreadCounter.hasSomethingUnread(tab.record.get('id'));
+	});
+
+	expect(limpo).toBe(false);
+});

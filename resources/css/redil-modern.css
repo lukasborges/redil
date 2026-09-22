@@ -715,6 +715,21 @@ body {
 	display: none;
 }
 
+/*
+ * A service that can only say "there is something" -- Google Chat, which counts
+ * nothing anywhere but swaps its favicon -- reports '\2022'. That is a dot, so
+ * it is drawn as one rather than as a character in a pill.
+ */
+.x-badge[data-badge-text="\2022"]:after {
+	content: '';
+	width: 10px;
+	height: 10px;
+	padding: 0;
+	top: 6px;
+	left: calc(50% + 7px);
+	border-radius: 999px;
+}
+
 .x-badge.green-badge[data-badge-text]:after {
 	background-image: none;
 	background-color: var(--rx-ok);

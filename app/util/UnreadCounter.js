@@ -18,6 +18,16 @@ Ext.define('Redil.util.UnreadCounter', {
 		var unreadCountByService = new Map();
 
 		/**
+		 * Services that can say there is something waiting but not how much.
+		 * Google Chat is the case: it puts no count in its title and its own
+		 * markup is generated class names, but it swaps its favicon for one
+		 * named favicon_chat_new_notif_*.ico, which is a yes or no.
+		 *
+		 * @type {Set}
+		 */
+		var servicesWithSomething = new Set();
+
+		/**
 		 * Holds the global unread count for internal usage.
 		 *
 		 * @type {number}
@@ -48,6 +58,37 @@ Ext.define('Redil.util.UnreadCounter', {
 		 */
 		this.getUnreadCountForService = function(id) {
 			return unreadCountByService.get(id) || 0;
+		};
+
+		/**
+		 * Whether a service is saying "there is something" without a number.
+		 *
+		 * @param {*} id	Id of the service.
+		 * @return {boolean}
+		 */
+		this.hasSomethingUnread = function(id) {
+			return servicesWithSomething.has(id);
+		};
+
+		/**
+		 * Records that answer. It is deliberately outside the total: a dot cannot
+		 * be added to a number, and the taskbar badge is a number.
+		 *
+		 * @param {*} id		Id of the service.
+		 * @param {boolean} on	Whether it has something waiting.
+		 */
+		this.setSomethingUnreadForService = function(id, on) {
+			on ? servicesWithSomething.add(id) : servicesWithSomething.delete(id);
+			if ( Redil.app && Redil.app.updateUnreadSummary ) Redil.app.updateUnreadSummary(totalUnreadCount);
+		};
+
+		/**
+		 * The ids of the services saying "something", for the home tab's line.
+		 *
+		 * @return {Array}
+		 */
+		this.getServiceIdsWithSomething = function() {
+			return Array.from(servicesWithSomething);
 		};
 
 		/**

@@ -552,7 +552,7 @@
 		"type": "messaging",
 		"allow_popups": false,
 		"manual_notifications": false,
-		"js_unread": "function pill(section){var root=document.querySelector('div[data-section-type=\"'+section+'\"]');if(!root)return 0;var badge=root.querySelector('div.TeR7uc');if(!badge){var leaves=root.querySelectorAll('div,span');for(var i=0;i<leaves.length&&i<400;i++){var leaf=leaves[i];if(leaf.children.length)continue;var text=leaf.textContent.trim();if(!/^[0-9]{1,3}$/.test(text))continue;var depth=0,up=leaf;while((up=up.parentElement)&&up!==root)depth++;if(depth<=4){badge=leaf;break}}}return badge?parseInt(badge.textContent,10)||0:0}function checkUnread(){rambox.setUnreadCount(pill(1)+pill(2))}setInterval(checkUnread,3e3);",
+		"js_unread": "function checkUnread(){var notif=document.querySelector('link[rel*=\"icon\"][href*=\"favicon_chat_new_notif_\"]');rambox.setUnreadCount(notif?'•':0)}setInterval(checkUnread,3e3);",
 		"userAgent": "",
 		"note": "",
 		"titleBlink": true,

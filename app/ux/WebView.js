@@ -633,6 +633,10 @@ Ext.define('Redil.ux.WebView',{
 			Redil.util.UnreadCounter.clearUnreadCountForService(me.record.get('id'));
 		}
 
+		// '•' is a service saying there is something without saying how much. It
+		// is not a number, so it stays out of the total and is remembered apart.
+		Redil.util.UnreadCounter.setSomethingUnreadForService(me.record.get('id'), newUnreadCount === '•');
+
 		me.setTabBadgeText(Redil.util.Format.formatNumber(newUnreadCount));
 
 		me.doManualNotification(parseInt(newUnreadCount));

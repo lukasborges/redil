@@ -269,6 +269,8 @@ Ext.define('Redil.view.main.Main', {
 										, '<span class="rx-service-name">{name:htmlEncode}</span>'
 										, '<tpl if="this.naoLidas(values.id) &gt; 0">'
 											, '<em class="rx-unread">{[ this.naoLidas(values.id) ]} unread</em>'
+										, '<tpl elseif="this.temAlgo(values.id)">'
+											, '<em class="rx-unread">unread</em>'
 										, '</tpl>'
 										, '<i class="rx-dot rx-dot-{[ this.estado(values) ]}"></i>'
 										, '<span class="rx-state">{[ this.rotulo(values) ]}</span>'
@@ -288,6 +290,10 @@ Ext.define('Redil.view.main.Main', {
 									}
 									,naoLidas: function(id) {
 										return Redil.util.UnreadCounter.getUnreadCountForService(id);
+									}
+									// a service that says there is something but not how much
+									,temAlgo: function(id) {
+										return Redil.util.UnreadCounter.hasSomethingUnread(id);
 									}
 									,estado: function(v) {
 										if ( !v.enabled ) return 'disabled';
