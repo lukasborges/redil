@@ -15,6 +15,7 @@ Ext.define('Redil.view.preferences.Preferences',{
 	}
 
 	,title: locale['preferences[0]']
+	,cls: 'rx-prefs'
 	,width: 760
 	,height: 560
 	,layout: 'fit'
@@ -50,366 +51,393 @@ Ext.define('Redil.view.preferences.Preferences',{
 			});
 		});
 
+		/*
+		 * One label column for every section, so a control sits in the same
+		 * place whichever section you are looking at.
+		 */
+		var linha = {
+			 labelAlign: 'left'
+			,labelWidth: 168
+			,labelSeparator: ''
+			,margin: '0 0 14 0'
+		};
+		var LARGURA = 468; // 168 of label and 300 of control, as in the mockup
+
 		this.items = [
 			{
 				 xtype: 'form'
 				,bodyPadding: 0
 				,layout: 'fit'
 				,items: [
-				/*
-				 * Five sections instead of one scroll of fourteen controls. The
-				 * fields stay inside this one form, so Save still reads them all
-				 * in a single getFieldValues -- deferredRender is what guarantees
-				 * that, by rendering every section whether or not it is on screen.
-				 *
-				 * Section titles are English and untranslated, like every string
-				 * added since the Crowdin pipeline stopped working.
-				 */
-				{
-					 xtype: 'tabpanel'
-					,tabPosition: 'left'
-					,tabRotation: 0
-					,deferredRender: false
-					,cls: 'rx-prefs-nav'
-					,items: [
-{
-						 title: 'Appearance'
-						,bodyPadding: 18
-						,scrollable: 'vertical'
+					/*
+					 * Five sections instead of one scroll of fourteen controls. The
+					 * fields stay inside this one form, so Save still reads them all
+					 * in a single getFieldValues -- deferredRender is what guarantees
+					 * that, by rendering every section whether or not it is on screen.
+					 *
+					 * Section titles are English and untranslated, like every string
+					 * added since the Crowdin pipeline stopped working.
+					 */
+					{
+						 xtype: 'tabpanel'
+						,tabPosition: 'left'
+						,tabRotation: 0
+						,deferredRender: false
+						,cls: 'rx-prefs-nav'
 						,items: [
 							{
-							xtype: 'container'
-							,layout: 'hbox'
-							,items: [
-							{
-							 xtype: 'combo'
-							,name: 'locale'
-							,fieldLabel: 'Language'
-							,labelAlign: 'left'
-							,flex: 1
-							,labelWidth: 80
-							,value: config.locale
-							,displayField: 'label'
-							,valueField: 'value'
-							,editable: false
-							,store: Ext.create('Ext.data.Store', {
-							 fields: ['value', 'label']
-							,data: [
-							 { 'value': 'af', 'extjs': 'af', 'label': 'Afrikaans' }
-							,{ 'value': 'ar', 'extjs': 'en', 'label': 'Arabic' }
-							,{ 'value': 'bs2', 'extjs': 'en', 'label': 'Barndutsch, Switzerland' }
-							,{ 'value': 'bn', 'extjs': 'en', 'label': 'Bengali' }
-							,{ 'value': 'bg', 'extjs': 'en', 'label': 'Bulgarian' }
-							,{ 'value': 'ca', 'extjs': 'ca', 'label': 'Catalan' }
-							,{ 'value': 'ceb', 'extjs': 'en', 'label': 'Cebuano' }
-							,{ 'value': 'zh-CN', 'extjs': 'zh', 'label': 'Chinese Simplified' }
-							,{ 'value': 'zh-TW', 'extjs': 'zh-tw', 'label': 'Chinese Traditional' }
-							,{ 'value': 'hr', 'extjs': 'en', 'label': 'Croatian' }
-							,{ 'value': 'cs', 'extjs': 'cs', 'label': 'Czech' }
-							,{ 'value': 'da', 'extjs': 'da', 'label': 'Danish' }
-							,{ 'value': 'nl', 'extjs': 'nl', 'label': 'Dutch' }
-							,{ 'value': 'en', 'extjs': 'en', 'label': 'English' }
-							,{ 'value': 'fi', 'extjs': 'fi', 'label': 'Finnish' }
-							,{ 'value': 'fil', 'extjs': 'en', 'label': 'Filipino' }
-							,{ 'value': 'fr', 'extjs': 'fr', 'label': 'French' }
-							,{ 'value': 'de', 'extjs': 'de', 'label': 'German' }
-							,{ 'value': 'de-CH', 'extjs': 'de', 'label': 'German, Switzerland' }
-							,{ 'value': 'el', 'extjs': 'el', 'label': 'Greek' }
-							,{ 'value': 'he', 'extjs': 'en', 'label': 'Hebrew' }
-							,{ 'value': 'hi', 'extjs': 'en', 'label': 'Hindi' }
-							,{ 'value': 'hu', 'extjs': 'hu', 'label': 'Hungarian' }
-							,{ 'value': 'id', 'extjs': 'en', 'label': 'Indonesian' }
-							,{ 'value': 'it', 'extjs': 'it', 'label': 'Italian' }
-							,{ 'value': 'ja', 'extjs': 'ja', 'label': 'Japanese' }
-							,{ 'value': 'ko', 'extjs': 'ko', 'label': 'Korean' }
-							,{ 'value': 'no', 'extjs': 'no', 'label': 'Norwegian' }
-							,{ 'value': 'fa', 'extjs': 'fa', 'label': 'Persian' }
-							,{ 'value': 'pl', 'extjs': 'pl', 'label': 'Polish' }
-							,{ 'value': 'pt-PT', 'extjs': 'pt-br', 'label': 'Portuguese' }
-							,{ 'value': 'pt-BR', 'extjs': 'pt-br', 'label': 'Portuguese (Brazilian)' }
-							,{ 'value': 'ro', 'extjs': 'ro', 'label': 'Romanian' }
-							,{ 'value': 'ru', 'extjs': 'ru', 'label': 'Russian' }
-							,{ 'value': 'sr', 'extjs': 'en', 'label': 'Serbian (Cyrillic)' }
-							,{ 'value': 'sk', 'extjs': 'sk', 'label': 'Slovak' }
-							,{ 'value': 'es-ES', 'extjs': 'es', 'label': 'Spanish' }
-							,{ 'value': 'sv-SE', 'extjs': 'sv', 'label': 'Swedish' }
-							,{ 'value': 'tl', 'extjs': 'en', 'label': 'Tagalog' }
-							,{ 'value': 'th', 'extjs': 'en', 'label': 'Thai' }
-							,{ 'value': 'tr', 'extjs': 'tr', 'label': 'Turkish' }
-							,{ 'value': 'uk', 'extjs': 'en', 'label': 'Ukrainian' }
-							,{ 'value': 'ur-PK', 'extjs': 'en', 'label': 'Urdu (Pakistan)' }
-							,{ 'value': 'vi', 'extjs': 'en', 'label': 'Vietnamese' }
-							]
-							})
+								 title: 'Appearance'
+								,bodyPadding: '22 26'
+								,scrollable: 'vertical'
+								,defaults: linha
+								,items: [
+									{
+										 xtype: 'combo'
+										,name: 'theme'
+										// English, and untranslated, like every string added since
+										// the Crowdin pipeline stopped working. See CLAUDE.md.
+										,fieldLabel: 'Theme'
+										,width: LARGURA
+										,value: config.theme
+										,displayField: 'label'
+										,valueField: 'value'
+										,editable: false
+										,store: Ext.create('Ext.data.Store', {
+											 fields: ['value', 'label']
+											,data: [
+												 { 'value': 'system', 'label': 'Follow the system' }
+												,{ 'value': 'light', 'label': 'Light' }
+												,{ 'value': 'dark', 'label': 'Dark' }
+											]
+										})
+									}
+									,{
+										 xtype: 'combo'
+										,name: 'locale'
+										,fieldLabel: 'Language'
+										,width: LARGURA
+										,value: config.locale
+										,displayField: 'label'
+										,valueField: 'value'
+										,editable: false
+										,store: Ext.create('Ext.data.Store', {
+											 fields: ['value', 'label']
+											,data: [
+										 { 'value': 'af', 'extjs': 'af', 'label': 'Afrikaans' }
+												,{ 'value': 'ar', 'extjs': 'en', 'label': 'Arabic' }
+												,{ 'value': 'bs2', 'extjs': 'en', 'label': 'Barndutsch, Switzerland' }
+												,{ 'value': 'bn', 'extjs': 'en', 'label': 'Bengali' }
+												,{ 'value': 'bg', 'extjs': 'en', 'label': 'Bulgarian' }
+												,{ 'value': 'ca', 'extjs': 'ca', 'label': 'Catalan' }
+												,{ 'value': 'ceb', 'extjs': 'en', 'label': 'Cebuano' }
+												,{ 'value': 'zh-CN', 'extjs': 'zh', 'label': 'Chinese Simplified' }
+												,{ 'value': 'zh-TW', 'extjs': 'zh-tw', 'label': 'Chinese Traditional' }
+												,{ 'value': 'hr', 'extjs': 'en', 'label': 'Croatian' }
+												,{ 'value': 'cs', 'extjs': 'cs', 'label': 'Czech' }
+												,{ 'value': 'da', 'extjs': 'da', 'label': 'Danish' }
+												,{ 'value': 'nl', 'extjs': 'nl', 'label': 'Dutch' }
+												,{ 'value': 'en', 'extjs': 'en', 'label': 'English' }
+												,{ 'value': 'fi', 'extjs': 'fi', 'label': 'Finnish' }
+												,{ 'value': 'fil', 'extjs': 'en', 'label': 'Filipino' }
+												,{ 'value': 'fr', 'extjs': 'fr', 'label': 'French' }
+												,{ 'value': 'de', 'extjs': 'de', 'label': 'German' }
+												,{ 'value': 'de-CH', 'extjs': 'de', 'label': 'German, Switzerland' }
+												,{ 'value': 'el', 'extjs': 'el', 'label': 'Greek' }
+												,{ 'value': 'he', 'extjs': 'en', 'label': 'Hebrew' }
+												,{ 'value': 'hi', 'extjs': 'en', 'label': 'Hindi' }
+												,{ 'value': 'hu', 'extjs': 'hu', 'label': 'Hungarian' }
+												,{ 'value': 'id', 'extjs': 'en', 'label': 'Indonesian' }
+												,{ 'value': 'it', 'extjs': 'it', 'label': 'Italian' }
+												,{ 'value': 'ja', 'extjs': 'ja', 'label': 'Japanese' }
+												,{ 'value': 'ko', 'extjs': 'ko', 'label': 'Korean' }
+												,{ 'value': 'no', 'extjs': 'no', 'label': 'Norwegian' }
+												,{ 'value': 'fa', 'extjs': 'fa', 'label': 'Persian' }
+												,{ 'value': 'pl', 'extjs': 'pl', 'label': 'Polish' }
+												,{ 'value': 'pt-PT', 'extjs': 'pt-br', 'label': 'Portuguese' }
+												,{ 'value': 'pt-BR', 'extjs': 'pt-br', 'label': 'Portuguese (Brazilian)' }
+												,{ 'value': 'ro', 'extjs': 'ro', 'label': 'Romanian' }
+												,{ 'value': 'ru', 'extjs': 'ru', 'label': 'Russian' }
+												,{ 'value': 'sr', 'extjs': 'en', 'label': 'Serbian (Cyrillic)' }
+												,{ 'value': 'sk', 'extjs': 'sk', 'label': 'Slovak' }
+												,{ 'value': 'es-ES', 'extjs': 'es', 'label': 'Spanish' }
+												,{ 'value': 'sv-SE', 'extjs': 'sv', 'label': 'Swedish' }
+												,{ 'value': 'tl', 'extjs': 'en', 'label': 'Tagalog' }
+												,{ 'value': 'th', 'extjs': 'en', 'label': 'Thai' }
+												,{ 'value': 'tr', 'extjs': 'tr', 'label': 'Turkish' }
+												,{ 'value': 'uk', 'extjs': 'en', 'label': 'Ukrainian' }
+												,{ 'value': 'ur-PK', 'extjs': 'en', 'label': 'Urdu (Pakistan)' }
+												,{ 'value': 'vi', 'extjs': 'en', 'label': 'Vietnamese' }
+											]
+										})
+										,margin: '0 0 4 0'
+									}
+									,{
+										 xtype: 'component'
+										,cls: 'rx-prefs-hint'
+										,margin: '0 0 14 168'
+										// target=_blank is what sends a link to the browser: the main
+										// window denies a foreground-tab open and hands it to the shell.
+										,html: 'English is the only language with a full translation. The others are partial &mdash; <a href="https://crowdin.com/project/rambox/invite" target="_blank">help us translate</a>.'
+									}
+								]
 							}
 							,{
-							 xtype: 'button'
-							,text: 'Help us Translate'
-							,style: 'border-top-left-radius:0;border-bottom-left-radius:0;'
-							,href: 'https://crowdin.com/project/rambox/invite'
-							}
-							]
+								 title: 'Window'
+								,bodyPadding: '22 26'
+								,scrollable: 'vertical'
+								,defaults: linha
+								,items: [
+									{
+										 xtype: 'combo'
+										,name: 'window_display_behavior'
+										,fieldLabel: locale['preferences[13]']
+										,width: LARGURA
+										,value: config.window_display_behavior
+										,displayField: 'label'
+										,valueField: 'value'
+										,editable: false
+										,store: Ext.create('Ext.data.Store', {
+											 fields: ['value', 'label']
+											,data: [
+												 { 'value': 'show_taskbar', 'label': locale['preferences[14]'] }
+												,{ 'value': 'show_trayIcon', 'label': locale['preferences[15]'] }
+												,{ 'value': 'taskbar_tray', 'label': locale['preferences[16]'] }
+											]
+										})
+										,hidden: redil.platform === 'darwin'
+									}
+									,{
+										 xtype: 'combo'
+										,name: 'window_close_behavior'
+										,fieldLabel: locale['preferences[17]']
+										,width: LARGURA
+										,value: config.window_close_behavior
+										,displayField: 'label'
+										,valueField: 'value'
+										,editable: false
+										,store: Ext.create('Ext.data.Store', {
+											 fields: ['value', 'label']
+											,data: [
+												 { 'value': 'keep_in_tray', 'label': locale['preferences[18]'] }
+												,{ 'value': 'keep_in_tray_and_taskbar', 'label': locale['preferences[19]'] }
+												,{ 'value': 'quit', 'label': locale['preferences[20]'] }
+											]
+										})
+										,hidden: redil.platform === 'darwin'
+									}
+									,{
+										/*
+										 * Six checkboxes with nothing in the label column read as a
+										 * list of unrelated switches; under one word they read as
+										 * the window's behaviour, which is what they are.
+										 */
+										 xtype: 'fieldcontainer'
+										,fieldLabel: 'Behaviour'
+										,layout: { type: 'vbox', align: 'stretch' }
+										,defaults: { margin: '0 0 9 0' }
+										,items: [
+											{
+												 xtype: 'checkbox'
+												,name: 'always_on_top'
+												,boxLabel: locale['preferences[21]']
+												,value: config.always_on_top
+											}
+											,{
+												 xtype: 'checkbox'
+												,name: 'systemtray_indicator'
+												,boxLabel: locale['preferences[22]']
+												,value: config.systemtray_indicator
+												,hidden: redil.platform === 'darwin'
+											}
+											,{
+												 xtype: 'checkbox'
+												,name: 'flash_frame'
+												,boxLabel: redil.platform === 'darwin' ? locale['preferences[10]'] : locale['preferences[9]']
+												,value: config.flash_frame
+											}
+											,{
+												 xtype: 'checkbox'
+												,name: 'hide_menu_bar'
+												,boxLabel: locale['preferences[1]']+' (<code>Alt</code> key to display)'
+												,value: config.hide_menu_bar
+												,hidden: redil.platform === 'darwin'
+											}
+											,{
+												 xtype: 'checkbox'
+												,name: 'start_minimized'
+												,boxLabel: locale['preferences[4]']
+												,value: config.start_minimized
+											}
+											,{
+												 xtype: 'checkbox'
+												,name: 'auto_launch'
+												,boxLabel: locale['preferences[5]']
+												,value: config.auto_launch
+												,margin: 0
+											}
+										]
+									}
+								]
 							}
 							,{
-							 xtype: 'label'
-							,text: 'English is the only language that has full translation. We are working with all the others, help us!'
-							,style: 'display:block;font-size:10px;line-height:15px;'
-							,margin: '0 0 10 0'
+								 title: 'Services'
+								,bodyPadding: '22 26'
+								,scrollable: 'vertical'
+								,defaults: linha
+								,items: [
+									{
+										 xtype: 'combo'
+										,name: 'default_service'
+										,fieldLabel: locale['preferences[12]']
+										,width: LARGURA
+										,value: config.default_service
+										,displayField: 'label'
+										,valueField: 'value'
+										,editable: false
+										,store: Ext.create('Ext.data.Store', {
+											 fields: ['value', 'label']
+											,data: defaultServiceOptions
+										})
+									}
+									,{
+										 xtype: 'textfield'
+										,name: 'user_agent'
+										,fieldLabel: 'Override the user agent'
+										,width: LARGURA
+										,value: config.user_agent
+										,margin: '0 0 4 0'
+										,emptyText: 'Leave blank for the default'
+									}
+									,{
+										 xtype: 'component'
+										,cls: 'rx-prefs-hint'
+										,margin: '0 0 14 168'
+										,html: 'Applies to every service, in place of the one each of them pins. Needs a relaunch.'
+									}
+								]
 							}
 							,{
-							 xtype: 'combo'
-							,name: 'theme'
-							// English, and untranslated, like every string added since the
-							// Crowdin pipeline stopped working. See CLAUDE.md on localization.
-							,fieldLabel: 'Theme'
-							,labelAlign: 'left'
-							,width: 380
-							,labelWidth: 180
-							,value: config.theme
-							,displayField: 'label'
-							,valueField: 'value'
-							,editable: false
-							,store: Ext.create('Ext.data.Store', {
-							 fields: ['value', 'label']
-							,data: [
-							 { 'value': 'system', 'label': 'Follow the system' }
-							,{ 'value': 'light', 'label': 'Light' }
-							,{ 'value': 'dark', 'label': 'Dark' }
-							]
-							})
+								 title: 'Security'
+								,bodyPadding: '22 26'
+								,scrollable: 'vertical'
+								,defaults: linha
+								,items: [
+									{
+										 xtype: 'fieldset'
+										,title: locale['preferences[24]']
+										,collapsed: !config.master_password
+										,checkboxToggle: true
+										,checkboxName: 'master_password'
+										,margin: '0 0 14 0'
+										,padding: 14
+										,layout: 'hbox'
+										,defaults: { labelAlign: 'top', labelSeparator: '' }
+										,items: [
+											{
+												 xtype: 'textfield'
+												,inputType: 'password'
+												,fieldLabel: locale['preferences[25]']
+												,name: 'master_password1'
+												,itemId: 'pass'
+												,flex: 1
+												,listeners: {
+													 validitychange: function(field) {
+														field.next().validate();
+													}
+													,blur: function(field) {
+														field.next().validate();
+													}
+												}
+											}
+											,{
+												 xtype: 'textfield'
+												,inputType: 'password'
+												,fieldLabel: locale['preferences[26]']
+												,name: 'master_password2'
+												,margin: '0 0 0 14'
+												,vtype: 'password'
+												,initialPassField: 'pass'
+												,flex: 1
+											}
+										]
+									}
+								]
+							}
+							,{
+								 title: 'Advanced'
+								,bodyPadding: '22 26'
+								,scrollable: 'vertical'
+								,defaults: linha
+								,items: [
+									{
+										 xtype: 'fieldcontainer'
+										,fieldLabel: 'Rendering'
+										,layout: { type: 'vbox', align: 'stretch' }
+										,defaults: { margin: '0 0 9 0' }
+										,items: [
+											{
+												 xtype: 'checkbox'
+												,name: 'disable_gpu'
+												,boxLabel: locale['preferences[23]']
+												,value: config.disable_gpu
+											}
+											,{
+												 xtype: 'checkbox'
+												,name: 'enable_hidpi_support'
+												,boxLabel: locale['preferences[8]']
+												,value: config.enable_hidpi_support
+												,hidden: redil.platform !== 'win32'
+												,margin: 0
+											}
+										]
+									}
+									,{
+										 xtype: 'fieldset'
+										,title: 'Proxy (needs to relaunch) - <a href="https://github.com/saenzramiro/rambox/wiki/FREE-PROXY-SERVERS" target="_blank">Free Proxy Servers</a>'
+										,collapsed: !config.proxy
+										,checkboxToggle: true
+										,checkboxName: 'proxy'
+										,margin: '0 0 14 0'
+										,padding: 14
+										,layout: { type: 'vbox', align: 'stretch' }
+										,defaults: { labelAlign: 'left', labelWidth: 90, labelSeparator: '', margin: '0 0 10 0', width: 390 }
+										,items: [
+											{
+												 xtype: 'textfield'
+												,vtype: 'url'
+												,fieldLabel: 'Host'
+												,name: 'proxyHost'
+												,value: config.proxyHost
+											}
+											,{
+												 xtype: 'numberfield'
+												,fieldLabel: 'Port'
+												,name: 'proxyPort'
+												,value: config.proxyPort
+											}
+											,{
+												 xtype: 'textfield'
+												,fieldLabel: 'Login'
+												,name: 'proxyLogin'
+												,value: config.proxyLogin
+												,emptyText: 'Optional'
+											}
+											,{
+												 xtype: 'textfield'
+												,fieldLabel: 'Password'
+												,name: 'proxyPassword'
+												,value: config.proxyPassword
+												,emptyText: 'Optional'
+												,inputType: 'password'
+												,margin: 0
+											}
+										]
+									}
+								]
 							}
 						]
 					}
-					,{
-						 title: 'Window'
-						,bodyPadding: 18
-						,scrollable: 'vertical'
-						,items: [
-							{
-							 xtype: 'checkbox'
-							,name: 'auto_launch'
-							,boxLabel: locale['preferences[5]']
-							,value: config.auto_launch
-							}
-							,{
-							 xtype: 'checkbox'
-							,name: 'start_minimized'
-							,boxLabel: locale['preferences[4]']
-							,value: config.start_minimized
-							}
-							,{
-							 xtype: 'checkbox'
-							,name: 'hide_menu_bar'
-							,boxLabel: locale['preferences[1]']+' (<code>Alt</code> key to display)'
-							,value: config.hide_menu_bar
-							,hidden: redil.platform === 'darwin'
-							}
-							,{
-							 xtype: 'combo'
-							,name: 'window_display_behavior'
-							,fieldLabel: locale['preferences[13]']
-							,labelAlign: 'left'
-							,width: 380
-							,labelWidth: 105
-							,value: config.window_display_behavior
-							,displayField: 'label'
-							,valueField: 'value'
-							,editable: false
-							,store: Ext.create('Ext.data.Store', {
-							 fields: ['value', 'label']
-							,data: [
-							 { 'value': 'show_taskbar', 'label': locale['preferences[14]'] }
-							,{ 'value': 'show_trayIcon', 'label': locale['preferences[15]'] }
-							,{ 'value': 'taskbar_tray', 'label': locale['preferences[16]'] }
-							]
-							})
-							,hidden: redil.platform === 'darwin'
-							}
-							,{
-							 xtype: 'combo'
-							,name: 'window_close_behavior'
-							,fieldLabel: locale['preferences[17]']
-							,labelAlign: 'left'
-							,width: 380
-							,labelWidth: 180
-							,value: config.window_close_behavior
-							,displayField: 'label'
-							,valueField: 'value'
-							,editable: false
-							,store: Ext.create('Ext.data.Store', {
-							 fields: ['value', 'label']
-							,data: [
-							 { 'value': 'keep_in_tray', 'label': locale['preferences[18]'] }
-							,{ 'value': 'keep_in_tray_and_taskbar', 'label': locale['preferences[19]'] }
-							,{ 'value': 'quit', 'label': locale['preferences[20]'] }
-							]
-							})
-							,hidden: redil.platform === 'darwin'
-							}
-							,{
-							 xtype: 'checkbox'
-							,name: 'always_on_top'
-							,boxLabel: locale['preferences[21]']
-							,value: config.always_on_top
-							}
-							,{
-							 xtype: 'checkbox'
-							,name: 'systemtray_indicator'
-							,boxLabel: locale['preferences[22]']
-							,value: config.systemtray_indicator
-							,hidden: redil.platform === 'darwin'
-							}
-							,{
-							 xtype: 'checkbox'
-							,name: 'flash_frame'
-							,boxLabel: redil.platform === 'darwin' ? locale['preferences[10]'] : locale['preferences[9]']
-							,value: config.flash_frame
-							}
-						]
-					}
-					,{
-						 title: 'Services'
-						,bodyPadding: 18
-						,scrollable: 'vertical'
-						,items: [
-							{
-							 xtype: 'combo'
-							,name: 'default_service'
-							,fieldLabel: locale['preferences[12]']
-							,labelAlign: 'top'
-							//,width: 380
-							//,labelWidth: 105
-							,value: config.default_service
-							,displayField: 'label'
-							,valueField: 'value'
-							,editable: false
-							,store: Ext.create('Ext.data.Store', {
-							 fields: ['value', 'label']
-							,data: defaultServiceOptions
-							})
-							}
-							,{
-							 xtype: 'textfield'
-							,fieldLabel: 'Override User-Agent for all services (needs to relaunch)'
-							,labelAlign: 'top'
-							,name: 'user_agent'
-							,value: config.user_agent
-							,width: 360
-							,emptyText: 'Leave blank for default user agent'
-							}
-						]
-					}
-					,{
-						 title: 'Security'
-						,bodyPadding: 18
-						,scrollable: 'vertical'
-						,items: [
-							{
-							 xtype: 'fieldset'
-							,title: locale['preferences[24]']
-							,collapsed: !config.master_password
-							,checkboxToggle: true
-							,checkboxName: 'master_password'
-							,margin: '10 0 0 0'
-							,padding: 10
-							,layout: 'hbox'
-							,defaults: { labelAlign: 'top' }
-							,items: [
-							{
-							 xtype: 'textfield'
-							,inputType: 'password'
-							,fieldLabel: locale['preferences[25]']
-							,name: 'master_password1'
-							,itemId: 'pass'
-							,flex: 1
-							,listeners: {
-							validitychange: function(field) {
-							field.next().validate();
-							},
-							blur: function(field) {
-							field.next().validate();
-							}
-							}
-							}
-							,{
-							 xtype: 'textfield'
-							,inputType: 'password'
-							,fieldLabel: locale['preferences[26]']
-							,name: 'master_password2'
-							,margin: '0 0 0 10'
-							,vtype: 'password'
-							,initialPassField: 'pass'
-							,flex: 1
-							}
-							]
-							}
-						]
-					}
-					,{
-						 title: 'Advanced'
-						,bodyPadding: 18
-						,scrollable: 'vertical'
-						,items: [
-							{
-							 xtype: 'checkbox'
-							,name: 'disable_gpu'
-							,boxLabel: locale['preferences[23]']
-							,value: config.disable_gpu
-							}
-							,{
-							 xtype: 'checkbox'
-							,name: 'enable_hidpi_support'
-							,boxLabel: locale['preferences[8]']
-							,value: config.enable_hidpi_support
-							,hidden: redil.platform !== 'win32'
-							}
-							,{
-							 xtype: 'fieldset'
-							,title: 'Proxy (needs to relaunch) - <a href="https://github.com/saenzramiro/rambox/wiki/FREE-PROXY-SERVERS" target="_blank">Free Proxy Servers</a>'
-							,collapsed: !config.proxy
-							,checkboxToggle: true
-							,checkboxName: 'proxy'
-							,margin: '10 0 0 0'
-							,padding: 10
-							,layout: 'vbox'
-							,defaults: { labelAlign: 'left' }
-							,items: [
-							{
-							 xtype: 'textfield'
-							,vtype: 'url'
-							,fieldLabel: 'Host'
-							,name: 'proxyHost'
-							,value: config.proxyHost
-							//,flex: 1
-							}
-							,{
-							 xtype: 'numberfield'
-							,fieldLabel: 'Port'
-							,name: 'proxyPort'
-							,value: config.proxyPort
-							}
-							,{
-							 xtype: 'textfield'
-							,fieldLabel: 'Login'
-							,name: 'proxyLogin'
-							,value: config.proxyLogin
-							,emptyText: 'Optional'
-							}
-							,{
-							 xtype: 'textfield'
-							,fieldLabel: 'Password'
-							,name: 'proxyPassword'
-							,value: config.proxyPassword
-							,emptyText: 'Optional'
-							,inputType: 'password'
-							}
-							]
-							}
-						]
-					}
-					]
-				}
-			]
+				]
 			}
 		];
 

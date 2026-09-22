@@ -117,12 +117,15 @@ Ext.define('Redil.view.main.Main', {
 							 xtype: 'container'
 							,dock: 'top'
 							,cls: 'rx-catalogue-head'
+							// Without a layout the field keeps its own width and the
+							// search ends up a 170px box in a 900px window.
+							,layout: { type: 'vbox', align: 'stretch' }
 							,items: [
 								{
 									 xtype: 'textfield'
 									,itemId: 'catalogueSearch'
-									,emptyText: locale['app.main[0]']
-									,anchor: '100%'
+									// The title above already says what the window is for.
+									,emptyText: 'Search services'
 									,triggers: {
 										 clear: {
 											 weight: 0

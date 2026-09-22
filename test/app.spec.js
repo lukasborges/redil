@@ -253,3 +253,49 @@ test('draws the service list from a template, one node per service', async () =>
 	expect(lista.ponto).toContain('rx-dot-active');
 	expect(lista.acoes).toEqual(['edit', 'remove', 'toggle']);
 });
+
+test('filters the catalogue by type and by name at the same time', async () => {
+	// The two controls used to filter the store independently, so typing a name
+	// replaced the type filter and vice versa. They are one filter now, and the
+	// tally under them counts what is left, minus the synthetic custom entry.
+	const filtro = await redil.window.evaluate(() => {
+		const controlador = Ext.cq1('app-main').getController();
+		const catalogo = Ext.getCmp('redilTab').down('#catalogue');
+		controlador.openCatalogue();
+
+		const contagem = () => catalogo.down('#catalogueCount').el.dom.textContent;
+		const nomes = () => {
+			const lista = [];
+			Ext.getStore('ServicesList').each(r => { if ( r.get('type') !== 'custom' ) lista.push(r.get('name')); });
+			return lista;
+		};
+
+		const resultado = { aberto: contagem() };
+
+		// pressing the button, not setValue: Ext suppresses the toggle event while
+		// it applies a value, so setValue would change the control and filter nothing
+		const porTipo = valor => catalogo.down('#catalogueFilter').items.findBy(b => b.value === valor).setPressed(true);
+		porTipo('email');
+		resultado.email = nomes().length;
+		const tipos = [];
+		Ext.getStore('ServicesList').each(r => { if ( !tipos.includes(r.get('type')) ) tipos.push(r.get('type')); });
+		resultado.tipos = tipos.sort();
+
+		catalogo.down('#catalogueSearch').setValue('gm');
+		resultado.emailEGm = nomes();
+		resultado.rotulo = contagem();
+
+		catalogo.down('#catalogueSearch').setValue('');
+		porTipo('all');
+		catalogo.hide();
+		return resultado;
+	});
+
+	expect(filtro.aberto).toMatch(/^\d+ services$/);
+	expect(filtro.email).toBeGreaterThan(3);
+	// the custom entry stays whatever the filter says, since it is how a service
+	// the catalogue does not carry gets added
+	expect(filtro.tipos).toEqual(['custom', 'email']);
+	expect(filtro.emailEGm).toEqual(['Gmail']);
+	expect(filtro.rotulo).toBe('1 service');
+});

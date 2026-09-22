@@ -154,6 +154,10 @@ Ext.define('Redil.view.main.MainController', {
 		var catalogo = Ext.getCmp('redilTab').down('#catalogue');
 		catalogo.show();
 		catalogo.center();
+		// Nothing has filtered the store the first time the overlay opens, and
+		// the tally is written by the filter, so it would sit empty.
+		this.updateCatalogueCount();
+		catalogo.down('#catalogueSearch').focus(false, 100);
 	}
 
 	,onNewServiceSelect: function( view, record, item, index, e ) {
@@ -264,26 +268,46 @@ Ext.define('Redil.view.main.MainController', {
 	}
 
 	,onSearchEnter: function( field, e ) {
-		var me = this;
+		if ( e.getKey() !== e.ENTER ) return;
 
-		if ( e.getKey() == e.ENTER && Ext.getStore('ServicesList').getCount() === 2 ) { // Two because we always shows Custom Service option
-			me.onNewServiceSelect(field.up().down('dataview'), Ext.getStore('ServicesList').getAt(0));
-			me.onClearClick(field);
-		}
+		// Enter adds the one service left standing. The custom entry is always
+		// among the visible records, so it is not what "one left" counts.
+		var visiveis = [];
+		Ext.getStore('ServicesList').each(function(record) {
+			if ( record.get('type') !== 'custom' ) visiveis.push(record);
+		});
+		if ( visiveis.length !== 1 ) return;
+
+		this.onNewServiceSelect(null, visiveis[0]);
+		this.onClearClick(field);
 	}
 
-	,doTypeFilter: function( segmentado ) {
-		var valor = segmentado.getValue() || 'all';
+	/*
+	 * The type buttons and the search box are one filter, not two. Each handler
+	 * writes its value and this reads both, so typing a name no longer forgets
+	 * which type is selected, and picking a type no longer clears the search.
+	 */
+	,applyCatalogueFilter: function() {
+		var catalogo = Ext.getCmp('redilTab').down('#catalogue');
+		if ( !catalogo ) return;
+
+		var tipo = catalogo.down('#catalogueFilter').getValue() || 'all';
+		var termo = (catalogo.down('#catalogueSearch').getValue() || '').toLowerCase();
 
 		Ext.getStore('ServicesList').getFilters().replaceAll({
 			fn: function(record) {
-				var tipo = record.get('type');
 				// The synthetic custom entry belongs to every view of the list.
-				return tipo === 'custom' || valor === 'all' || tipo === valor;
+				if ( record.get('type') === 'custom' ) return true;
+				if ( tipo !== 'all' && record.get('type') !== tipo ) return false;
+				return termo === '' || record.get('name').toLowerCase().indexOf(termo) > -1;
 			}
 		});
 
 		this.updateCatalogueCount();
+	}
+
+	,doTypeFilter: function() {
+		this.applyCatalogueFilter();
 	}
 
 	,updateCatalogueCount: function() {
@@ -291,43 +315,25 @@ Ext.define('Redil.view.main.MainController', {
 		var contagem = catalogo && catalogo.down('#catalogueCount');
 		if ( !contagem ) return;
 
-		var total = Ext.getStore('ServicesList').getCount();
+		var total = 0;
+		Ext.getStore('ServicesList').each(function(record) {
+			if ( record.get('type') !== 'custom' ) total++;
+		});
+
 		contagem.setHtml(total + (total === 1 ? ' service' : ' services'));
 	}
 
-	,onSearchServiceChange: function(field, newValue, oldValue) {
-		var me = this;
-
-		var cg = field.up().up().down('segmentedbutton');
-		if ( !Ext.isEmpty(newValue) && newValue.length > 0 ) {
-			field.getTrigger('clear').show();
-
-			Ext.getStore('ServicesList').getFilters().replaceAll({
-				fn: function(record) {
-					if ( record.get('type') === 'custom' ) return true;
-					if ( !Ext.Array.contains(Ext.Object.getKeys(cg.getValue()), record.get('type')) ) return false;
-					return record.get('name').toLowerCase().indexOf(newValue.toLowerCase()) > -1 ? true : false;
-				}
-			});
-		} else {
-			field.getTrigger('clear').hide();
-			Ext.getStore('ServicesList').getFilters().removeAll();
-			me.doTypeFilter(cg);
-		}
+	,onSearchServiceChange: function(field, newValue) {
+		field.getTrigger('clear')[ Ext.isEmpty(newValue) ? 'hide' : 'show' ]();
 		field.updateLayout();
+		this.applyCatalogueFilter();
 	}
 
-	,onClearClick: function(field, trigger, e) {
-		var me = this;
-
-		var cg = field.up().up().down('segmentedbutton');
-
+	,onClearClick: function(field) {
 		field.reset();
 		field.getTrigger('clear').hide();
 		field.updateLayout();
-
-		Ext.getStore('ServicesList').getFilters().removeAll();
-		me.doTypeFilter(cg);
+		this.applyCatalogueFilter();
 	}
 
 	,dontDisturb: function(btn, e, called) {

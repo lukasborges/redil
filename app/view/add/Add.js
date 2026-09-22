@@ -36,7 +36,11 @@ Ext.define('Redil.view.add.Add',{
 					{
 						 xtype: 'textfield'
 						,fieldLabel: locale['app.window[2]']
-						,labelWidth: 40
+						// the label sits over the field, as in the mockup, so the name
+						// gets the whole width and no colon
+						,labelAlign: 'top'
+						,labelSeparator: ''
+						,anchor: '100%'
 						,value: me.record.get('type') === 'custom' ? (me.edit ? me.record.get('name') : '') : me.record.get('name')
 						,name: 'serviceName'
 						,allowBlank: true
@@ -139,8 +143,10 @@ Ext.define('Redil.view.add.Add',{
 						,value: me.record.get('type') === 'custom' ? (me.edit ? me.record.get('logo') : '') : me.record.get('logo')
 						,allowBlank: true
 						,hidden: me.record.get('type') !== 'custom'
-						,labelWidth: 40
-						,margin: '5 0 0 0'
+						,labelAlign: 'top'
+						,labelSeparator: ''
+						,anchor: '100%'
+						,margin: '10 0 0 0'
 						,listeners: { specialkey: 'onEnter' }
 					}
 					,{
@@ -258,10 +264,10 @@ Ext.define('Redil.view.add.Add',{
 						,hidden: me.serviceNote() === ''
 						,data: { note: me.serviceNote() }
 						,margin: '10 0 0 0'
-						,style: 'background-color:#93CFE0;color:#053767;border-radius:6px;'
+						,cls: 'rx-note'
 						,tpl: [
-							 '<i class="fa fa-info-circle" aria-hidden="true" style="font-size:40px;margin:20px;"></i>'
-							,'<span style="font-size: 15px;position: absolute;padding: 10px 10px 10px 0;">{note}</span>'
+							 '<i class="fa fa-info-circle" aria-hidden="true"></i>'
+							,'<span>{note}</span>'
 						]
 					}
 				]
