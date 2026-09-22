@@ -20,7 +20,7 @@ Read `CLAUDE.md` before changing much. It covers the architecture and, more usef
 
 ## Branches and commits
 
-Never commit to `master`. Branch as `fix/short-description` or `feature/short-description`.
+Never commit to `main`. Branch as `fix/short-description` or `feature/short-description`.
 
 Keep the commit subject on one line and say what changed rather than what you touched.
 

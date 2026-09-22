@@ -56,7 +56,7 @@ Sessions belong to the services themselves. Redil is a frame around their web ap
 
 ## Contributing
 
-Work on a branch, never on `master`, and see [CONTRIBUTING.md](./CONTRIBUTING.md). The prerequisites listed there are out of date: Sencha Cmd and Ruby are no longer needed.
+Work on a branch, never on `main`, and see [CONTRIBUTING.md](./CONTRIBUTING.md). The prerequisites listed there are out of date: Sencha Cmd and Ruby are no longer needed.
 
 Translations come from Crowdin and are generated into `resources/languages`. The download path needs migrating to Crowdin's current API client; the version pinned here predates modern Node.
 
