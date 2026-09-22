@@ -20,6 +20,16 @@ const path = require('path');
 // Disk usage:
 // const disk = require('diskusage');
 
+// Launched from a desktop entry, stdout and stderr are pipes whose reader can
+// go away while the app runs. The next console call then fails with EPIPE, and
+// an unhandled error on a stream is an uncaught exception that Electron shows
+// as a dialog. Losing a log line is the right outcome there.
+[process.stdout, process.stderr].forEach(function(stream) {
+	stream.on('error', function(err) {
+		if ( err.code !== 'EPIPE' ) throw err;
+	});
+});
+
 if ( isDev ) app.getVersion = function() { return require('../package.json').version; }; // FOR DEV ONLY, BECAUSE IN DEV RETURNS ELECTRON'S VERSION
 
 // Initial Config
