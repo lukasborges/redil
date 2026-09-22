@@ -14,9 +14,9 @@
 
 :root {
 	/* $base-color in the original theme */
-	--rambox-base: #2E658E;
-	--rambox-base-light-20: #5999c9;
-	--rambox-base-light-55: #e0ecf5;
+	--redil-base: #2E658E;
+	--redil-base-light-20: #5999c9;
+	--redil-base-light-55: #e0ecf5;
 }
 
 /* ------------------------------------------------------------------ base */
@@ -29,7 +29,7 @@
  */
 body {
 	margin: 0;
-	background-color: var(--rambox-base);
+	background-color: var(--redil-base);
 	font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 	overflow: hidden;
 }
@@ -97,8 +97,8 @@ body {
 /* $tabbar-strip-background-color, $tabbar-strip-height */
 .x-tab-bar-strip-default,
 .x-tab-bar-top > .x-tab-bar-strip {
-	background-color: var(--rambox-base);
-	border-color: var(--rambox-base);
+	background-color: var(--redil-base);
+	border-color: var(--redil-base);
 	height: 3px;
 }
 
@@ -145,7 +145,7 @@ body {
 .x-tab-inner-default {
 	font-size: 18px;
 	line-height: 22px;
-	color: var(--rambox-base);
+	color: var(--redil-base);
 }
 
 /* $tab-color-active */
@@ -226,8 +226,8 @@ body {
 /* extjs-toolbar-ui($ui: 'main') */
 .x-toolbar-main {
 	background-image: none;
-	background-color: var(--rambox-base);
-	border-color: var(--rambox-base);
+	background-color: var(--redil-base);
+	border-color: var(--redil-base);
 }
 
 /* extjs-toolbar-ui($ui: 'newversion') */
@@ -258,7 +258,7 @@ body {
 }
 
 .x-btn-inner-decline-small {
-	color: var(--rambox-base);
+	color: var(--redil-base);
 }
 
 .x-btn-inner-decline-small:hover {
@@ -272,14 +272,14 @@ body {
 
 .x-btn-icon-el-default-small.x-btn-glyph {
 	cursor: pointer;
-	color: var(--rambox-base);
+	color: var(--redil-base);
 }
 
 /* ------------------------------------------------------------ status bar */
 
 .x-statusbar {
 	padding: 0 !important;
-	background-color: var(--rambox-base) !important;
+	background-color: var(--redil-base) !important;
 }
 
 .x-statusbar.x-docked-bottom {
@@ -298,11 +298,11 @@ body {
 	line-height: 16px;
 	width: 16px;
 	margin: 0 5px;
-	color: var(--rambox-base-light-20);
+	color: var(--redil-base-light-20);
 }
 
 .x-action-col-glyph:hover {
-	color: var(--rambox-base);
+	color: var(--redil-base);
 }
 
 .x-grid-item-over .x-hidden-display,
@@ -342,7 +342,7 @@ body {
 }
 
 .service:hover {
-	background-color: var(--rambox-base-light-55);
+	background-color: var(--redil-base-light-55);
 }
 
 /* -------------------------------------------------------------- load mask */

@@ -13,10 +13,10 @@ describe('Redil window', function() {
 	 *
 	 * @type {module.exports}
 	 */
-	var ramboxTestHelper = new RedilTestHelper();
+	var redilTestHelper = new RedilTestHelper();
 
 	it('should have "Redil" in the title', function () {
-		return ramboxTestHelper.app.client.browserWindow.getTitle().then(function(title) {
+		return redilTestHelper.app.client.browserWindow.getTitle().then(function(title) {
 			expect(title).to.contain('Redil');
 			return Promise.resolve();
 		});

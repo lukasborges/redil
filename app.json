@@ -251,7 +251,7 @@
      *
      */
     "output": {
-        "base": "../rambox-build",
+        "base": "../redil-build",
         "appCache": {
             "enable": true
         }

@@ -67,7 +67,7 @@ ipc.on('autoUpdater:update-downloaded', function(e, info) {
 				 xtype: 'button'
 				,text: 'Changelog'
 				,ui: 'decline'
-				,href: 'https://github.com/ramboxapp/download/releases/latest'
+				,href: 'https://github.com/lukasborges/redil/releases/latest'
 			}
 			,'->'
 			,{
@@ -132,13 +132,13 @@ ipc.on('setBadge', function(event, messageCount) {
 // Reload Current Service
 ipc.on('reloadCurrentService', function(e) {
 	var tab = Ext.cq1('app-main').getActiveTab();
-	if ( tab.id !== 'ramboxTab' ) tab.reloadService();
+	if ( tab.id !== 'redilTab' ) tab.reloadService();
 });
 // Toggle Status Bar
 ipc.on('toggleStatusBar', function() {
 	var tab = Ext.cq1('app-main').getActiveTab();
 
-	if ( tab.id !== 'ramboxTab' ) {
+	if ( tab.id !== 'redilTab' ) {
 		tab.down('statusbar').closed ? tab.setStatusBar(tab.record.get('statusbar')) : tab.closeStatusBar();
 	}
 });
