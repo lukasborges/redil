@@ -11,7 +11,7 @@ const { autoUpdater } = require("electron-updater");
 autoUpdater.setFeedURL({
 	"provider": "github",
 	"owner": "lukasborges",
-	"repo": "rambox-ce",
+	"repo": "redil",
 	"vPrefixedTagName": false
 });
 

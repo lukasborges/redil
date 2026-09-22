@@ -2,7 +2,7 @@
  * Rambox's own look, expressed as plain CSS on top of the stock ext-theme-crisp
  * stylesheet that bootstrap.js loads before this file.
  *
- * Upstream this lived in packages/local/rambox-default-theme as Sass compiled by
+ * Upstream this lived in packages/local/redil-default-theme as Sass compiled by
  * Sencha Cmd. That toolchain is gone, so the rules below restate the same design
  * against the class names the crisp build actually emits. Where the original set
  * a Sass variable and let a theme mixin expand it, the visible result is written
@@ -319,7 +319,7 @@ body {
 	line-height: 44px !important;
 }
 
-#ramboxTab .x-grid-cell-inner-checkcolumn {
+#redilTab .x-grid-cell-inner-checkcolumn {
 	padding: 13px 10px 14px 10px !important;
 }
 

@@ -1,4 +1,4 @@
-Ext.define('Rambox.view.preferences.PreferencesController', {
+Ext.define('Redil.view.preferences.PreferencesController', {
 	 extend: 'Ext.app.ViewController'
 	,alias: 'controller.preferences-preferences'
 
@@ -26,7 +26,7 @@ Ext.define('Rambox.view.preferences.PreferencesController', {
 			Ext.isEmpty(values.master_password1) === false &&
 			Ext.isEmpty(values.master_password2) === false) {
 
-			values.master_password = Rambox.util.MD5.encypt(values.master_password1);
+			values.master_password = Redil.util.MD5.encypt(values.master_password1);
 			delete values.master_password1;
 			delete values.master_password2;
 		}
@@ -47,7 +47,7 @@ Ext.define('Rambox.view.preferences.PreferencesController', {
 
 		// User Agent
 		if ( values.user_agent !== ipc.sendSync('getConfig').user_agent ) {
-			Ext.Msg.confirm('Action required', 'To change the user agent of Rambox, you need to reload the app. Do you want to do it now?', function(btnId) {
+			Ext.Msg.confirm('Action required', 'To change the user agent of Redil, you need to reload the app. Do you want to do it now?', function(btnId) {
 				if ( btnId === 'yes' ) ipc.send('relaunchApp');
 			});
 		}
@@ -56,7 +56,7 @@ Ext.define('Rambox.view.preferences.PreferencesController', {
 		if ( values.locale !== ipc.sendSync('getConfig').locale ) {
 			localStorage.setItem('locale', values.locale);
 			localStorage.setItem('locale-extjs', me.getView().down('form').down('combo[name="locale"]').getSelection().get('extjs'));
-			Ext.Msg.confirm('Action required', 'To change the language of Rambox, you need to reload the app. Do you want to do it now?', function(btnId) {
+			Ext.Msg.confirm('Action required', 'To change the language of Redil, you need to reload the app. Do you want to do it now?', function(btnId) {
 				if ( btnId === 'yes' ) ipc.send('relaunchApp');
 			});
 		}

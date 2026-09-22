@@ -1,19 +1,19 @@
 {
-	"name": "Rambox",
-	"productName": "Rambox",
+	"name": "Redil",
+	"productName": "Redil",
 	"version": "0.8.0",
 	"description": "Free and Open Source messaging and emailing app that combines common web applications into one.",
 	"main": "electron/main.js",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/ramboxapp/community-edition.git"
+		"url": "https://github.com/lukasborges/redil.git"
 	},
 	"bugs": {
-		"url": "https://github.com/ramboxapp/community-edition/issues"
+		"url": "https://github.com/lukasborges/redil/issues"
 	},
-	"homepage": "https://rambox.app",
+	"homepage": "https://github.com/lukasborges/redil",
 	"keywords": [
-		"Rambox",
+		"Redil",
 		"messaging",
 		"app",
 		"slack",
@@ -25,7 +25,7 @@
 		"hangouts",
 		"skype"
 	],
-	"author": "Rambox LLC <support@rambox.app>",
+	"author": "Lucas Borges",
 	"license": "GPL-3.0",
 	"scripts": {
 		"start": "electron electron/main.js",
@@ -43,8 +43,8 @@
 		"translations:generate": "node languages.js generate"
 	},
 	"build": {
-		"productName": "Rambox",
-		"appId": "com.grupovrs.ramboxce",
+		"productName": "Redil",
+		"appId": "io.github.lukasborges.redil",
 		"afterSign": "resources/installer/notarize.js",
 		"asar": true,
 		"electronVersion": "44.4.3",
@@ -53,7 +53,7 @@
 		},
 		"mac": {
 			"category": "public.app-category.productivity",
-			"artifactName": "Rambox-${version}-mac-${arch}.${ext}",
+			"artifactName": "Redil-${version}-mac-${arch}.${ext}",
 			"target": [
 				{
 					"target": "default",
@@ -67,12 +67,12 @@
 			"entitlements": "resources/installer/entitlements.mac.plist",
 			"entitlementsInherit": "resources/installer/entitlements.mac.plist",
 			"extendInfo": {
-				"NSMicrophoneUsageDescription": "Apps inside Rambox CE may need access to your microphone. Please, grant access to have a better experience.",
-				"NSCameraUsageDescription": "Apps inside Rambox CE may need access to your camera. Please, grant access to have a better experience."
+				"NSMicrophoneUsageDescription": "Apps inside Redil may need access to your microphone. Please, grant access to have a better experience.",
+				"NSCameraUsageDescription": "Apps inside Redil may need access to your camera. Please, grant access to have a better experience."
 			}
 		},
 		"dmg": {
-			"title": "Rambox",
+			"title": "Redil",
 			"iconSize": 128,
 			"sign": false,
 			"contents": [
@@ -90,13 +90,13 @@
 			]
 		},
 		"win": {
-			"artifactName": "Rambox-${version}-win-${arch}.${ext}",
+			"artifactName": "Redil-${version}-win-${arch}.${ext}",
 			"target": [
 				"nsis",
 				"zip"
 			],
 			"signtoolOptions": {
-				"publisherName": "Rambox LLC"
+				"publisherName": "Lucas Borges"
 			}
 		},
 		"nsis": {
@@ -115,7 +115,7 @@
 					"Categories": "GTK;GNOME;Network;Email;Chat;InstantMessaging;"
 				}
 			},
-			"artifactName": "Rambox-${version}-linux-${arch}.${ext}",
+			"artifactName": "Redil-${version}-linux-${arch}.${ext}",
 			"executableArgs": [
 				"--no-sandbox"
 			],
@@ -148,7 +148,7 @@
 			{
 				"provider": "github",
 				"owner": "lukasborges",
-				"repo": "rambox-ce",
+				"repo": "redil",
 				"vPrefixedTagName": false
 			}
 		],

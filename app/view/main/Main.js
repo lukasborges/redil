@@ -1,11 +1,11 @@
-Ext.define('Rambox.view.main.Main', {
+Ext.define('Redil.view.main.Main', {
 	 extend: 'Ext.tab.Panel'
 	,requires: [
-		 'Rambox.view.main.MainController'
-		,'Rambox.view.main.MainModel'
-		,'Rambox.ux.WebView'
-		,'Rambox.ux.mixin.Badge'
-		,'Rambox.view.add.Add'
+		 'Redil.view.main.MainController'
+		,'Redil.view.main.MainModel'
+		,'Redil.ux.WebView'
+		,'Redil.ux.mixin.Badge'
+		,'Redil.view.add.Add'
 		,'Ext.ux.TabReorderer'
 	]
 
@@ -32,7 +32,7 @@ Ext.define('Rambox.view.main.Main', {
 	,items: [
 		{
 			 icon: 'resources/IconTray@2x.png'
-			,id: 'ramboxTab'
+			,id: 'redilTab'
 			,closable: false
 			,reorderable: false
 			,autoScroll: true
@@ -247,8 +247,8 @@ Ext.define('Rambox.view.main.Main', {
 						 glyph: 'xf023@FontAwesome'
 						,text: locale['app.main[19]']
 						,tooltip: locale['app.main[20]']+'<br/><b>'+locale['app.main[18]']+(require('@electron/remote').process.platform === 'darwin' ? ': Cmd + Alt + L</b>' : ': Alt + Shift + L</b>')
-						,handler: 'lockRambox'
-						,id: 'lockRamboxBtn'
+						,handler: 'lockRedil'
+						,id: 'lockRedilBtn'
 					}
 					,'->'
 					,{

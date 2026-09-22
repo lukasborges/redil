@@ -2,15 +2,15 @@
  * Default config for all webviews created
  */
 
-Ext.define('Rambox.ux.WebView',{
+Ext.define('Redil.ux.WebView',{
 	 extend: 'Ext.panel.Panel'
 	,xtype: 'webview'
 
 	,requires: [
-		 'Rambox.util.Format'
-		,'Rambox.util.Notifier'
-		,'Rambox.util.UnreadCounter'
-		,'Rambox.util.IconLoader'
+		 'Redil.util.Format'
+		,'Redil.util.Notifier'
+		,'Redil.util.UnreadCounter'
+		,'Redil.util.IconLoader'
 	]
 
 	// private
@@ -233,7 +233,7 @@ Ext.define('Rambox.ux.WebView',{
 		var pinned = catalogEntry ? catalogEntry.get('userAgent') : '';
 
 		if ( !pinned ) {
-			return window.clientInformation.userAgent.replace(/Rambox\/([0-9]\.?)+\s/ig,'').replace(/Electron\/([0-9]\.?)+\s/ig,'');
+			return window.clientInformation.userAgent.replace(/Redil\/([0-9]\.?)+\s/ig,'').replace(/Electron\/([0-9]\.?)+\s/ig,'');
 		}
 
 		// The agents pinned in resources/services.json name whatever Chrome was
@@ -312,7 +312,7 @@ Ext.define('Rambox.ux.WebView',{
 		});
 
 		webview.addEventListener("did-finish-load", function(e) {
-			Rambox.app.setTotalServicesLoaded( Rambox.app.getTotalServicesLoaded() + 1 );
+			Redil.app.setTotalServicesLoaded( Redil.app.getTotalServicesLoaded() + 1 );
 
 			// Apply saved zoom level
 			webview.setZoomLevel(me.record.get('zoomLevel'));
@@ -324,7 +324,7 @@ Ext.define('Rambox.ux.WebView',{
 				webview.focus();
 			}
 			// Set special icon for some service (like Slack)
-			Rambox.util.IconLoader.loadServiceIconUrl(me, webview);
+			Redil.util.IconLoader.loadServiceIconUrl(me, webview);
 		});
 
 		// On search text
@@ -483,7 +483,7 @@ Ext.define('Rambox.ux.WebView',{
 				});
 				eventsOnDom = true;
 
-				Rambox.app.config.googleURLs.forEach((loginURL) => {	if ( webview.getURL().indexOf(loginURL) > -1 ) webview.reload() })
+				Redil.app.config.googleURLs.forEach((loginURL) => {	if ( webview.getURL().indexOf(loginURL) > -1 ) webview.reload() })
 			}
 			webview.executeJavaScript(js_inject).then(result => {} ).catch(err => { console.log(err) })
 		});
@@ -564,12 +564,12 @@ Ext.define('Rambox.ux.WebView',{
 		var me = this;
 
 		if ( !isNaN(newUnreadCount) && (function(x) { return (x | 0) === x; })(parseFloat(newUnreadCount)) && me.record.get('includeInGlobalUnreadCounter') === true) {
-			Rambox.util.UnreadCounter.setUnreadCountForService(me.record.get('id'), newUnreadCount);
+			Redil.util.UnreadCounter.setUnreadCountForService(me.record.get('id'), newUnreadCount);
 		} else {
-			Rambox.util.UnreadCounter.clearUnreadCountForService(me.record.get('id'));
+			Redil.util.UnreadCounter.clearUnreadCountForService(me.record.get('id'));
 		}
 
-		me.setTabBadgeText(Rambox.util.Format.formatNumber(newUnreadCount));
+		me.setTabBadgeText(Redil.util.Format.formatNumber(newUnreadCount));
 
 		me.doManualNotification(parseInt(newUnreadCount));
 	}
@@ -580,7 +580,7 @@ Ext.define('Rambox.ux.WebView',{
 
 	/**
 	 * Dispatch manual notification if
-	 * • service doesn't have notifications, so Rambox does them
+	 * • service doesn't have notifications, so Redil does them
 	 * • count increased
 	 * • not in dnd mode
 	 * • notifications enabled
@@ -591,7 +591,7 @@ Ext.define('Rambox.ux.WebView',{
 		var me = this;
 		var manualNotifications = Ext.getStore('ServicesList').getById(me.type) ? Ext.getStore('ServicesList').getById(me.type).get('manual_notifications') : false;
 		if ( manualNotifications && me.currentUnreadCount < count && me.record.get('notifications') && !JSON.parse(localStorage.getItem('dontDisturb'))) {
-			Rambox.util.Notifier.dispatchNotification(me, count);
+			Redil.util.Notifier.dispatchNotification(me, count);
 		}
 
 		me.currentUnreadCount = count;
@@ -619,7 +619,7 @@ Ext.define('Rambox.ux.WebView',{
 	,clearUnreadCounter: function() {
 		var me = this;
 		me.tab.setBadgeText('');
-		Rambox.util.UnreadCounter.clearUnreadCountForService(me.record.get('id'));
+		Redil.util.UnreadCounter.clearUnreadCountForService(me.record.get('id'));
 	}
 
 	,reloadService: function(btn) {

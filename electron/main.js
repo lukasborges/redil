@@ -47,7 +47,7 @@ const config = new Config({
 		,locale: 'en'
 		,enable_hidpi_support: false
 		,user_agent: ''
-		,default_service: 'ramboxTab'
+		,default_service: 'redilTab'
 		,sendStatistics: false
 
 		,x: undefined
@@ -72,7 +72,7 @@ app.commandLine.appendSwitch('disable-features', 'CrossOriginOpenerPolicy');
 
 // Because we build it using Squirrel, it will assign UserModelId automatically, so we match it here to display notifications correctly.
 // https://github.com/electron-userland/electron-builder/issues/362
-app.setAppUserModelId('com.grupovrs.ramboxce');
+app.setAppUserModelId('io.github.lukasborges.redil');
 
 // Menu
 const appMenu = require('./menu')(config);
@@ -81,7 +81,7 @@ const appMenu = require('./menu')(config);
 let appLauncher;
 if ( !isDev ) {
 	appLauncher = new AutoLaunch({
-		 name: 'Rambox'
+		 name: 'Redil'
 		,isHidden: config.get('start_minimized')
 	});
 	config.get('auto_launch') ? appLauncher.enable() : appLauncher.disable();
@@ -95,7 +95,7 @@ let isQuitting = false;
 function createWindow () {
 	// Create the browser window using the state information
 	mainWindow = new BrowserWindow({
-		 title: 'Rambox'
+		 title: 'Redil'
 		,icon: __dirname + '/../resources/Icon.' + (process.platform === 'linux' ? 'png' : 'ico')
 		,backgroundColor: '#FFF'
 		,x: config.get('x')
@@ -109,7 +109,8 @@ function createWindow () {
 		,acceptFirstMouse: true
 		,webPreferences: {
 			 plugins: true
-			,partition: 'persist:rambox'
+			,partition: 'persist:rambox' // storage key, not a name: renaming it empties
+			// the local storage that holds everyone's configured services
 			,nodeIntegration: true
 			,webviewTag: true
 			,contextIsolation: false
@@ -274,7 +275,7 @@ function formatBytes(bytes, decimals = 2) {
 }
 
 /* async function availableSpaceWatchDog() {
-	// optionally render this information also in rambox window
+	// optionally render this information also in Redil window
 	try {
 		const { available } = await disk.check(appPath);
 		if (available < 1073741824) { // 1 GB
@@ -282,9 +283,9 @@ function formatBytes(bytes, decimals = 2) {
 				type: 'warning',
 				buttons: ['OK, quit'],
 				defaultId: 0,
-				title: `Running out of disk space! - Rambox shutting down`,
-				detail: `You've got just ${formatBytes(available)} space left.\n\nRambox has been frozen to prevent settings corruption.\n\nOnce you quit this dialog, Rambox will shutdown.\n\n1 GB of avalable disk space is required.\nFree up space on partition where Rambox is installed then start the app again.\n\nRambox path: \n${appPath}`,
-				message: `Running out of disk space! - Rambox shutting down`,
+				title: `Running out of disk space! - Redil shutting down`,
+				detail: `You've got just ${formatBytes(available)} space left.\n\nRedil has been frozen to prevent settings corruption.\n\nOnce you quit this dialog, Redil will shutdown.\n\n1 GB of avalable disk space is required.\nFree up space on partition where Redil is installed then start the app again.\n\nRedil path: \n${appPath}`,
+				message: `Running out of disk space! - Redil shutting down`,
 			};
 		
 			dialog.showMessageBoxSync(null, options);
@@ -355,7 +356,7 @@ ipcMain.on('validateMasterPassword', function(event, pass) {
 // Service permissions
 //
 // A webview runs somebody else's web app, so a permission it asks for is that
-// site's request and not Rambox's. This used to answer callback(true) to
+// site's request and not Redil's. This used to answer callback(true) to
 // everything that was not a notification, which silently handed every service
 // the camera, the microphone and the user's location. Anything not named below
 // is now refused.
@@ -398,7 +399,7 @@ function askAboutPermission(partition, permission, callback) {
 		,cancelId: 1
 		,title: 'Permission request'
 		,message: serviceNameFor(partition) + ' wants to ' + PROMPTED_PERMISSIONS[permission] + '.'
-		,detail: 'Rambox remembers this answer for this service. Remove and add the service again to be asked once more.'
+		,detail: 'Redil remembers this answer for this service. Remove and add the service again to be asked once more.'
 	}).then(function(result) {
 		const allowed = result.response === 0;
 		const decisions = config.get('permissions') || {};
@@ -671,7 +672,7 @@ ipcMain.handle('screenShare:listSources', async () => {
 
 ipcMain.on('screenShare:show', (event, screenList) => {
 	let tmpWindow = new BrowserWindow({
-		title: 'Rambox - Select screen',
+		title: 'Redil - Select screen',
 		width: 600,
 		height: 500,
 		icon: __dirname + '/../resources/Icon.ico',

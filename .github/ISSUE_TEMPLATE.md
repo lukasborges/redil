@@ -18,7 +18,7 @@
 
 <!-- Complete your environment -->
 
-> Rambox: v0.X.X
+> Redil: v0.X.X
 
 > OS: XXXX
 

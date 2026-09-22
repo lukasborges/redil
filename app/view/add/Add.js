@@ -1,9 +1,9 @@
-Ext.define('Rambox.view.add.Add',{
+Ext.define('Redil.view.add.Add',{
 	 extend: 'Ext.window.Window'
 
 	,requires: [
-		 'Rambox.view.add.AddController'
-		,'Rambox.view.add.AddModel'
+		 'Redil.view.add.AddController'
+		,'Redil.view.add.AddModel'
 	]
 
 	,controller: 'add-add'

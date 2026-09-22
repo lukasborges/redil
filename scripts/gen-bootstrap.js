@@ -7,9 +7,9 @@
  * Ext JS build already vendored in ext/ and the theme CSS already compiled in
  * ext/packages/. That makes `npm start` work with nothing but npm installed.
  *
- * The Sass in packages/local/rambox-default-theme is not compiled either. The app
+ * The Sass in packages/local/redil-default-theme is not compiled either. The app
  * loads the stock ext-theme-crisp CSS that the custom theme extends, and then
- * resources/css/rambox-theme.css restates Rambox's own look as plain CSS on top.
+ * resources/css/redil-theme.css restates the original look as plain CSS on top.
  */
 
 'use strict';
@@ -21,11 +21,11 @@ const root = path.join(__dirname, '..');
 
 const STYLESHEETS = [
 	'ext/packages/ext-theme-crisp/build/resources/ext-theme-crisp-all-debug.css',
-	'packages/local/rambox-default-theme/resources/fonts/font-awesome/css/font-awesome.css',
-	// Rambox's own look, layered over crisp.
-	'resources/css/rambox-theme.css',
+	'packages/local/redil-default-theme/resources/fonts/font-awesome/css/font-awesome.css',
+	// The app's own look, layered over crisp.
+	'resources/css/redil-theme.css',
 	// The modernisation pass. Drop this line to get the original look back.
-	'resources/css/rambox-modern.css',
+	'resources/css/redil-modern.css',
 ];
 
 const FRAMEWORK = ['ext/build/ext-all-rtl-debug.js'];
@@ -38,7 +38,7 @@ const FRAMEWORK = ['ext/build/ext-all-rtl-debug.js'];
  */
 function filesAfterFramework() {
 	return [
-		'packages/local/rambox-default-theme/overrides/init.js',
+		'packages/local/redil-default-theme/overrides/init.js',
 		...collectScripts('overrides'),
 		// Ext.ux classes the app pulls in by xtype or plugin alias. Preloaded
 		// because Ext.Loader would otherwise resolve them with a synchronous
@@ -94,7 +94,7 @@ function render(stylesheets, framework, rest) {
 		Ext.Loader.setConfig({
 			enabled: true,
 			disableCaching: false,
-			paths: { Rambox: 'app', Ext: 'ext/src' }
+			paths: { Redil: 'app', Ext: 'ext/src' }
 		});
 	}
 

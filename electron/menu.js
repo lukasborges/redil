@@ -23,25 +23,25 @@ module.exports = function(config) {
 		{
 			label: `&`+locale['menu.help[0]'],
 			click() {
-				shell.openExternal('https://rambox.app');
+				shell.openExternal('https://github.com/lukasborges/redil');
 			}
 		},
 		{
 			label: `&Facebook`,
 			click() {
-				shell.openExternal('https://www.facebook.com/ramboxapp');
+				shell.openExternal('https://github.com/lukasborges/redil/discussions');
 			}
 		},
 		{
 			label: `&Twitter`,
 			click() {
-				shell.openExternal('https://www.twitter.com/ramboxapp');
+				shell.openExternal('https://github.com/lukasborges/redil/issues');
 			}
 		},
 		{
 			label: `&GitHub`,
 			click() {
-				shell.openExternal('https://github.com/ramboxapp/community-edition');
+				shell.openExternal('https://github.com/lukasborges/redil');
 			}
 		},
 		{

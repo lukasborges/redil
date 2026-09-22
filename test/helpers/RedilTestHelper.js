@@ -3,21 +3,21 @@ var Application = require('spectron').Application;
 var electron = require('electron-prebuilt');
 
 /**
- * The RamboxTestHelper contains common stuff for tests.
+ * The RedilTestHelper contains common stuff for tests.
  */
 module.exports = function() {
 
 	var self = this;
 
 	/**
-	 * Makes the Rambox Application available.
+	 * Makes the Redil Application available.
 	 *
 	 * @type {Application}
 	 */
 	self.app = null;
 
 	/**
-	 * Starts Rambox from '/electron/main.js/'.
+	 * Starts Redil from '/electron/main.js/'.
 	 */
 	beforeEach(function() {
 		self.app = new Application({
@@ -28,7 +28,7 @@ module.exports = function() {
 	});
 
 	/**
-	 * Stops Rambox.
+	 * Stops Redil.
 	 */
 	afterEach(function() {
 		if (self.app && self.app.isRunning()) {

@@ -1,11 +1,11 @@
 // Sencha App
 Ext.setGlyphFontFamily('FontAwesome');
 Ext.application({
-	 name: 'Rambox'
+	 name: 'Redil'
 
-	,extend: 'Rambox.Application'
+	,extend: 'Redil.Application'
 
-	,autoCreateViewport: 'Rambox.view.main.Main'
+	,autoCreateViewport: 'Redil.view.main.Main'
 });
 
 // auto update logic
@@ -18,22 +18,22 @@ const contextMenuListener = new ContextMenuListener(function(event, info) {
 });
 
 ipc.on('showAbout', function(event, message) {
-	!Ext.cq1('about') ? Ext.create('Rambox.view.main.About') : '';
+	!Ext.cq1('about') ? Ext.create('Redil.view.main.About') : '';
 });
 ipc.on('showPreferences', function(event, message) {
-	!Ext.cq1('preferences') ? Ext.create('Rambox.view.preferences.Preferences').show() : '';
+	!Ext.cq1('preferences') ? Ext.create('Redil.view.preferences.Preferences').show() : '';
 });
 ipc.on('grantPermissions', async function() {
 	await require('@electron/remote').systemPreferences.askForMediaAccess('microphone');
 	await require('@electron/remote').systemPreferences.askForMediaAccess('camera');
 });
 ipc.on('autoUpdater:check-update', function() {
-	Rambox.app.checkUpdate();
+	Redil.app.checkUpdate();
 });
 ipc.on('autoUpdater:update-not-available', function() {
 	Ext.Msg.show({
 		 title: 'You are up to date!'
-		,message: 'You have the latest version of Rambox.'
+		,message: 'You have the latest version of Redil.'
 		,icon: Ext.Msg.INFO
 		,buttons: Ext.Msg.OK
 	});
@@ -41,7 +41,7 @@ ipc.on('autoUpdater:update-not-available', function() {
 ipc.on('autoUpdater:update-available', function() {
 	Ext.Msg.show({
 		 title: 'New Version available!'
-		,message: 'Please wait until Rambox download the new version and ask you for install it.'
+		,message: 'Please wait until Redil download the new version and ask you for install it.'
 		,icon: Ext.Msg.INFO
 		,buttons: Ext.Msg.OK
 	});

@@ -1,7 +1,7 @@
 /*
- * A light modernisation layer, loaded after rambox-theme.css.
+ * A light modernisation layer, loaded after redil-theme.css.
  *
- * rambox-theme.css restates the 2015 theme faithfully and stays traceable to the
+ * redil-theme.css restates the 2015 theme faithfully and stays traceable to the
  * original Sass. This file is the opinionated part and is meant to be readable
  * on its own: drop it from the STYLESHEETS list in scripts/gen-bootstrap.js and
  * the app returns to the original look, unchanged.

@@ -1,4 +1,4 @@
-Ext.define('Rambox.view.main.About', {
+Ext.define('Redil.view.main.About', {
 	 extend: 'Ext.window.Window'
 	,xtype: 'about'
 	,title: locale['app.about[0]']

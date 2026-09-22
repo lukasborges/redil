@@ -1,11 +1,11 @@
 <div align="center">
-  <img src="./resources/Icon.png" width="160" alt="Rambox CE" />
-  <h1>Rambox CE</h1>
+  <img src="./resources/Icon.png" width="160" alt="Redil" />
+  <h1>Redil</h1>
   <p>One window for the messaging and email apps you already use in the browser.</p>
   <p><a href="https://www.gnu.org/licenses/gpl-3.0.en.html">GNU GPL v3</a></p>
 </div>
 
-![Rambox CE running on Linux](./resources/screenshots/linux.png)
+![Redil running on Linux](./resources/screenshots/linux.png)
 
 ---
 
@@ -52,7 +52,7 @@ npm run check:services  # report catalogue entries whose URLs have rotted
 
 No account is needed and none is offered. The app stores nothing remotely: your list of services lives in the renderer's local storage, and each service keeps its own session in a persistent Electron partition, so you stay signed in between launches until you remove the service.
 
-Sessions belong to the services themselves. Rambox is a frame around their web apps and does not see inside them.
+Sessions belong to the services themselves. Redil is a frame around their web apps and does not see inside them.
 
 ## Contributing
 
@@ -62,7 +62,7 @@ Translations come from Crowdin and are generated into `resources/languages`. The
 
 ## Disclosure
 
-Rambox CE is not affiliated with any of the messaging services it opens, nor with Rambox LLC or its current commercial product.
+Redil is not affiliated with any of the messaging services it opens, nor with Rambox LLC or its product.
 
 ## Licence
 
