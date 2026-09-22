@@ -5,7 +5,10 @@
   <p><a href="https://www.gnu.org/licenses/gpl-3.0.en.html">GNU GPL v3</a></p>
 </div>
 
-![Redil running on Linux](./resources/screenshots/linux.png)
+<p align="center">
+  <img src="./resources/screenshots/linux.png" width="49%" alt="Redil on Linux, light theme" />
+  <img src="./resources/screenshots/linux-dark.png" width="49%" alt="Redil on Linux, dark theme" />
+</p>
 
 ---
 
@@ -16,16 +19,19 @@ That is fixed. The app builds and runs from this repository with nothing but npm
 ## What changed since upstream
 
 - **Electron 13 to 44.** The renderer was moved off three APIs Electron has since removed: the `remote` module, the `new-window` event, and `desktopCapturer` in the renderer.
-- **Builds without Sencha Cmd.** `scripts/gen-bootstrap.js` boots the app from the Ext JS build and theme CSS already vendored in the repository.
+- **Builds without Sencha Cmd.** `scripts/gen-bootstrap.js` boots the app from the Ext JS build and theme CSS already vendored here. The Sencha workspace, the build files and the Sass that only that toolchain could read are gone.
+- **The renderer is isolated.** `contextIsolation` is on and `nodeIntegration` off; the page reaches the main process through a single preload with a closed list of channels. Service pages are isolated and sandboxed with it, because Electron will not let a guest be less isolated than the window hosting it.
 - **Packaging rebuilt** on electron-builder, straight from the repository, with no dependency on the archived artifact repo that upstream's CI cloned.
-- **Service permissions are refused by default.** The old handler granted camera, microphone and location to every loaded service without asking. Sensitive permissions now prompt once per service.
+- **Service permissions are refused by default.** The old handler granted camera, microphone and location to every service that asked. Camera, microphone and screen capture are now answered once per service and the answer is kept — except for the apps whose purpose is calls, which the catalogue marks and the service's own settings can change.
 - **A third-party tracker and a hardcoded API key** were removed from the renderer, along with the dead Auth0 sign-in and profile sync, which pointed at infrastructure this fork cannot use.
-- **The catalogue is maintained here.** Thirteen entries pointed at services that no longer exist. `npm run check:services` reports what has rotted.
-- **The interface was refreshed**, lightly, without changing the layout.
+- **The catalogue is maintained here.** Seven entries pointed at services that no longer answer and were dropped; ten were added, among them Google Meet, Zoom, ChatGPT, Claude and Bluesky. `npm run check:services` reports what has rotted.
+- **A new interface.** Services sit in a rail of icons down the left; the home tab opens on what is waiting for you rather than on a catalogue; adding a service is an overlay behind one button; preferences are five sections instead of one scroll of fourteen controls; and a dark theme follows the desktop.
+- **A mark of its own.** A sheepdog in a gradient circle. `resources/logo/Logo.svg` is the source every icon in the repository is generated from.
+- **Tests and a linter.** A Playwright suite launches the real app and drives it; `npm test` runs ESLint first.
 
 ## Install
 
-Builds are produced for Linux as an AppImage, a deb and a tarball. See [Releases](https://github.com/lukasborges/rambox-ce/releases).
+Builds are produced for Linux as an AppImage, a deb and a tarball. See [Releases](https://github.com/lukasborges/redil/releases).
 
 The AppImage needs FUSE 2, which some distributions no longer install by default. On Fedora that is `fuse-libs`; on Debian and Ubuntu, `libfuse2`. Without it, run the AppImage with `--appimage-extract-and-run`.
 
@@ -42,6 +48,7 @@ npm start
 On Linux, `npm start` may abort with a fatal GPU error, because the Electron installed by npm ships its sandbox helper without the setuid bit. Start it with `--no-sandbox`, which is what the packaged Linux builds already do.
 
 ```bash
+npm test                # ESLint, then the Playwright suite
 npm run build:linux     # AppImage, deb and tar.gz into dist/
 npm run check:services  # report catalogue entries whose URLs have rotted
 ```
@@ -56,9 +63,9 @@ Sessions belong to the services themselves. Redil is a frame around their web ap
 
 ## Contributing
 
-Work on a branch, never on `main`, and see [CONTRIBUTING.md](./CONTRIBUTING.md). The prerequisites listed there are out of date: Sencha Cmd and Ruby are no longer needed.
+This fork has one maintainer, who commits to `main`. Contributions are welcome as pull requests from a branch; [CONTRIBUTING.md](./CONTRIBUTING.md) is upstream's and still describes how to write one, except for its prerequisites: Sencha Cmd and Ruby are no longer needed.
 
-Translations come from Crowdin and are generated into `resources/languages`. The download path needs migrating to Crowdin's current API client; the version pinned here predates modern Node.
+Translations live generated in `resources/languages`. The download half of that pipeline is gone — it called a Crowdin API version that now answers 301, through a client that no longer loads on a modern Node, against a project this fork does not own. Until there is a Crowdin project for Redil, those generated files are the only source there is, and strings added since ship in English.
 
 ## Disclosure
 
