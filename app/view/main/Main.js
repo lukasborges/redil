@@ -49,6 +49,23 @@ Ext.define('Redil.view.main.Main', {
 			}
 			,{ xtype: 'tbfill', reorderable: false }
 			,{
+				/*
+				 * The home tab used to be the first icon in the rail, wearing the
+				 * app's own mark among other people's. The mark says nothing about
+				 * where the button goes, and the top of the rail now belongs to
+				 * services alone: this is that tab, as a glyph, among the other
+				 * things that are the app rather than a service. The tab itself is
+				 * hidden; see tabConfig on the card.
+				 */
+				 xtype: 'button'
+				,reorderable: false
+				,glyph: 'xf015@FontAwesome'
+				,tooltip: 'Home'
+				,itemId: 'homeButton'
+				,handler: 'showHome'
+				,listeners: { afterrender: 'syncHomeButton' }
+			}
+			,{
 				 xtype: 'button'
 				,reorderable: false
 				,glyph: JSON.parse(localStorage.getItem('dontDisturb')) ? 'xf1f7@FontAwesome' : 'xf0f3@FontAwesome'
@@ -78,13 +95,15 @@ Ext.define('Redil.view.main.Main', {
 	}
 	,items: [
 		{
-			 icon: 'resources/IconTray@2x.png'
-			,id: 'redilTab'
+			 id: 'redilTab'
 			,closable: false
 			,reorderable: false
 			,autoScroll: true
 			,layout: 'hbox'
-			,tabConfig: {} // Created empty for Keyboard Shortcuts
+			// Hidden, not absent: the card is still a tab, so the shortcuts and
+			// setActiveTab keep working, but the rail shows services only and the
+			// button at its foot is what brings this one forward.
+			,tabConfig: { hidden: true }
 			/*
 			 * The one thing only this app can tell you, said in words at the top
 			 * of its own tab. Application.updateTotalNotifications writes it: the

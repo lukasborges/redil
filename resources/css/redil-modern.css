@@ -193,6 +193,17 @@ body {
 	color: #FFFFFF;
 }
 
+/* The home button when its card is the one showing: the same mark an active
+   tab carries, because that is what it is. */
+#mainTabBar .x-btn-default-small.rx-rail-on {
+	background-color: rgba(255, 255, 255, 0.14);
+	box-shadow: inset 3px 0 0 0 #FFFFFF;
+}
+
+#mainTabBar .x-btn-default-small.rx-rail-on .x-btn-glyph {
+	color: #FFFFFF;
+}
+
 /* ----------------------------------------------------- the decline ui */
 
 /*
@@ -680,6 +691,15 @@ body {
 .x-badge[data-badge-text]:after {
 	background-image: none;
 	background-color: var(--rx-alert);
+	/*
+	 * The theme pins the badge to the top right of the tab, which in a 68 by 52
+	 * rail cell leaves it floating a centimetre away from a 30px icon. It
+	 * belongs on the icon's own corner, and the icon is centred, so the left
+	 * edge is measured from the middle rather than from the cell.
+	 */
+	top: 4px;
+	right: auto;
+	left: calc(50% + 5px);
 	border-radius: 999px;
 	padding: 1px 5px;
 	font-size: 10px;

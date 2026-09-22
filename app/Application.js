@@ -265,9 +265,20 @@ Ext.define('Redil.Application', {
 		var servicos = Ext.getStore('Services').getCount();
 		var comNaoLidas = Redil.util.UnreadCounter.getServicesWithUnread();
 
+		// Naming them is the only thing this line can say that the rail and the
+		// list below do not; counting them again is not.
+		var nomes = Redil.util.UnreadCounter.getUnreadServiceIds().map(function(id) {
+			var registro = Ext.getStore('Services').getById(id);
+			return registro ? Ext.String.htmlEncode(registro.get('name')) : null;
+		}).filter(function(nome) { return !!nome; });
+
+		var onde = nomes.length === 1 ? 'in ' + nomes[0]
+			: nomes.length === 2 ? 'in ' + nomes[0] + ' and ' + nomes[1]
+			: 'in ' + comNaoLidas + ' of your ' + servicos + (servicos === 1 ? ' service' : ' services');
+
 		resumo.update(
 			'<h1>' + total + (total === 1 ? ' unread message' : ' unread messages') + '</h1>'
-			+ '<p>in ' + comNaoLidas + ' of your ' + servicos + (servicos === 1 ? ' service' : ' services') + '</p>'
+			+ '<p>' + onde + '</p>'
 		);
 	}
 

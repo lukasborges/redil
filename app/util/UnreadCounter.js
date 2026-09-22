@@ -63,6 +63,18 @@ Ext.define('Redil.util.UnreadCounter', {
 		};
 
 		/**
+		 * Which services are waiting, by id. The home tab names them when there
+		 * are few: "in 1 of your 6 services" says nothing you can act on.
+		 *
+		 * @returns {Array} the ids of the services with something unread
+		 */
+		this.getUnreadServiceIds = function() {
+			var ids = [];
+			unreadCountByService.forEach(function(contagem, id) { if (contagem > 0) ids.push(id); });
+			return ids;
+		};
+
+		/**
 		 * Sets the global unread count for a specific service.
 		 *
 		 * @param {*} id				Id of the service to set the global unread count for.

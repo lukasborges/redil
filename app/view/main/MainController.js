@@ -25,6 +25,8 @@ Ext.define('Redil.view.main.MainController', {
 
 		localStorage.setItem('last_active_service', newTab.id);
 
+		me.syncHomeButton();
+
 		if ( newTab.id === 'redilTab' ) {
 			if ( Redil.app.getTotalNotifications() > 0 ) {
 				document.title = 'Redil ('+ Redil.app.getTotalNotifications() +')';
@@ -170,6 +172,27 @@ Ext.define('Redil.view.main.MainController', {
 	 * it brings the home tab forward, and closing it puts the service back,
 	 * unless one was picked, in which case the add window decides where you end.
 	 */
+	/**
+	 * The home tab, from the button at the foot of the rail. Its own tab is
+	 * hidden, so this is the only way in besides the shortcut.
+	 */
+	,showHome: function() {
+		Ext.cq1('app-main').setActiveTab('redilTab');
+	}
+
+	/**
+	 * The home tab has no tab in the rail to light up, so its button wears the
+	 * mark. Called on every tab change and once when the button renders, because
+	 * the home tab is the one already active when that happens.
+	 */
+	,syncHomeButton: function() {
+		var botao = Ext.getCmp('mainTabBar').down('#homeButton');
+		if ( !botao || !botao.el ) return;
+
+		var inicial = Ext.cq1('app-main').getActiveTab();
+		botao.el[inicial && inicial.id === 'redilTab' ? 'addCls' : 'removeCls']('rx-rail-on');
+	}
+
 	,openCatalogue: function() {
 		var painel = Ext.cq1('app-main');
 		var catalogo = Ext.getCmp('redilTab').down('#catalogue');

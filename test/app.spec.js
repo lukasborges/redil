@@ -133,6 +133,7 @@ test('puts the service bar on the left, as a rail of icons', async () => {
 			,botoes: bar.items.items
 				.filter(item => item.isXType && item.isXType('button') && !item.isXType('tab'))
 				.map(item => item.handler)
+			,abaInicialOculta: Ext.getCmp('redilTab').tab.isHidden()
 			,rotulos: bar.el.dom.querySelectorAll('.x-tab-inner').length
 			,rotulosVisiveis: [...bar.el.dom.querySelectorAll('.x-tab-inner')]
 				.filter(el => el.offsetParent !== null).length
@@ -141,10 +142,12 @@ test('puts the service bar on the left, as a rail of icons', async () => {
 
 	expect(rail.posicao).toBe('left');
 	expect(rail.largura).toBe(68);
-	// Add a service, then don't disturb, lock and preferences. The last three were
+	// Add a service above the fill; below it the home tab and the three that were
 	// the home tab's own toolbar until they moved here, which meant they vanished
-	// whenever a service was open.
-	expect(rail.botoes).toEqual(['openCatalogue', 'dontDisturb', 'lockRedil', 'openPreferences']);
+	// whenever a service was open. The top of the rail is services only, so the
+	// home tab is a glyph down here rather than the app's mark up there.
+	expect(rail.botoes).toEqual(['openCatalogue', 'showHome', 'dontDisturb', 'lockRedil', 'openPreferences']);
+	expect(rail.abaInicialOculta).toBe(true);
 	// Icons only: the label elements exist, and none of them is shown.
 	expect(rail.rotulos).toBeGreaterThan(0);
 	expect(rail.rotulosVisiveis).toBe(0);
@@ -452,4 +455,34 @@ test('seeds the media permission from the catalogue and exposes the channel', as
 	});
 
 	expect(exposto).toBe(true);
+});
+
+test('names the services that are waiting instead of counting them again', async () => {
+	// "in 1 of your 6 services" is the one thing on that line the rail and the
+	// list below do not already say -- and it says nothing you can act on.
+	const linhas = await redil.window.evaluate(() => {
+		const store = Ext.getStore('Services');
+		const registros = ['Fixture one', 'Fixture two', 'Fixture three'].map((name, i) => store.add({
+			 id: 7201 + i, type: 'custom', name: name, url: 'file:///probe.html'
+			,align: 'left', enabled: true, notifications: false, muted: false
+		})[0]);
+
+		const ler = () => Ext.getCmp('redilTab').down('#unreadSummary').el.dom.innerText.trim().split('\n').pop();
+
+		Redil.util.UnreadCounter.setUnreadCountForService(7201, 2);
+		const um = ler();
+		Redil.util.UnreadCounter.setUnreadCountForService(7202, 1);
+		const dois = ler();
+		Redil.util.UnreadCounter.setUnreadCountForService(7203, 4);
+		const tres = ler();
+
+		[7201, 7202, 7203].forEach(id => Redil.util.UnreadCounter.clearUnreadCountForService(id));
+		registros.forEach(record => store.remove(record));
+		return { um: um, dois: dois, tres: tres };
+	});
+
+	expect(linhas.um).toBe('in Fixture one');
+	expect(linhas.dois).toBe('in Fixture one and Fixture two');
+	// past two names the line would be a list, so it counts again
+	expect(linhas.tres).toMatch(/^in 3 of your \d+ services$/);
 });
