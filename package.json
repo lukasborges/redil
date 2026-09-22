@@ -31,7 +31,8 @@
 		"start": "electron electron/main.js",
 		"start:debug": "electron electron/main.js --enable-logging",
 		"dev": "electron electron/main.js",
-		"test": "npm run bootstrap && playwright test",
+		"lint": "eslint .",
+		"test": "npm run bootstrap && eslint . && playwright test",
 		"bootstrap": "node scripts/gen-bootstrap.js",
 		"check:services": "node scripts/check-services.js",
 		"clean": "rm -rf ./dist",
@@ -170,10 +171,12 @@
 	},
 	"devDependencies": {
 		"@electron/notarize": "3.1.1",
+		"@eslint/js": "10.0.1",
 		"@playwright/test": "1.63.0",
 		"csvjson": "4.3.3",
 		"electron": "44.4.3",
-		"electron-builder": "26.0.12"
+		"electron-builder": "26.0.12",
+		"eslint": "10.11.0"
 	},
 	"dependencies": {
 		"auto-launch-patched": "5.0.2",

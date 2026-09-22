@@ -8,7 +8,6 @@ const { launchRedil, closeRedil, repoRoot } = require('./helpers/launch');
 const FIXTURE = 'file://' + path.join(repoRoot, 'test', 'fixtures', 'service.html');
 
 let redil;
-let guest;
 
 test.beforeAll(async () => {
 	redil = await launchRedil();
@@ -46,14 +45,13 @@ test.beforeAll(async () => {
 		});
 	}, FIXTURE);
 
-	guest = await test.step('wait for the service webview', async () => {
+	await test.step('wait for the service webview', async () => {
 		for (let attempt = 0; attempt < 150; attempt++) {
-			const found = redil.app.windows();
 			const ready = await redil.window.evaluate(() => {
 				const tab = Ext.cq1('app-main').items.items.find(item => item.id === 'tab_4242');
-				try { return !!(tab && tab.getWebView() && tab.getWebView().getWebContentsId()); } catch (e) { return false; }
+				try { return !!(tab && tab.getWebView() && tab.getWebView().getWebContentsId()); } catch { return false; }
 			});
-			if (ready) return found;
+			if (ready) return;
 			await new Promise(resolve => setTimeout(resolve, 100));
 		}
 		throw new Error('the service webview never attached');

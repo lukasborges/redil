@@ -4,7 +4,6 @@ const app = electron.app;
 // Module to create tray icon
 const Tray = electron.Tray;
 
-const MenuItem = electron.MenuItem;
 var appIcon = null;
 
 // toggleWindow is passed in rather than reached by injecting `ipc.send(...)`

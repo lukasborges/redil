@@ -1,5 +1,4 @@
 'use strict';
-const os = require('os');
 const electron = require('electron');
 const { systemPreferences } = require('electron')
 const app = electron.app;

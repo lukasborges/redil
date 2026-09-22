@@ -45,7 +45,7 @@ The `files` list in the build config is an allowlist rather than the default cat
 
 Only Linux has been built and run end to end. Windows and macOS are configured but untested. The notarisation hook now uses the renamed `@electron/notarize`, whose v3 drops the legacy altool path, so it takes a `teamId` and no `appBundleId` or `ascProvider`; it reads `APPLE_ID`, `APPLE_ID_PWD` and `APPLE_TEAM_ID` from the environment and skips itself when they are absent, where upstream hardcoded its own Apple ID and team.
 
-There is no linter or formatter configured.
+`npm run lint` runs ESLint, and `npm test` runs it before the suite. The config is scoped to the code this fork wrote -- `electron/`, `scripts/`, `test/`, the service preload, `languages.js` -- and ignores `app/`, `overrides/`, `ext/` and `resources/js/loadscreen.js`, which is a minified Modernizr build. Linting a 2016 Sencha application would bury a real finding under thousands nobody will act on. The rules are the ones that catch mistakes; `.editorconfig` settles formatting and there is no formatter to argue with.
 
 ## Tests
 

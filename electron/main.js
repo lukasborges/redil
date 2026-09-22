@@ -15,8 +15,6 @@ const isDev = !app.isPackaged;
 const updater = require('./updater');
 // Connectivity, probed for the renderer's no-connection dialog
 const isOnline = require('is-online');
-// File System
-var fs = require("fs");
 const path = require('path');
 
 // Disk usage:
@@ -266,17 +264,6 @@ function updateBadge(title) {
 	if ( messageCount > 0 && !mainWindow.isFocused() && !config.get('dont_disturb') && config.get('flash_frame') ) mainWindow.flashFrame(true);
 }
 
-function formatBytes(bytes, decimals = 2) {
-	if (bytes === 0) return '0 Bytes';
-
-	const k = 1024;
-	const dm = decimals < 0 ? 0 : decimals;
-	const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-
-	const i = Math.floor(Math.log(bytes) / Math.log(k));
-
-	return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-}
 
 /* async function availableSpaceWatchDog() {
 	// optionally render this information also in Redil window
@@ -661,7 +648,7 @@ app.on('web-contents-created', (webContentsCreatedEvent, contents) => {
 		let target;
 		try {
 			target = new URL(url);
-		} catch (e) {
+		} catch {
 			return { action: 'deny' };
 		}
 		// Block deep links that would hand the session to a native app (Ex: Slack)
@@ -742,8 +729,11 @@ function toggleWindow(allwaysShow) {
 		mainWindow.show();
 	} else if ( !mainWindow.isMinimized() && !mainWindow.isMaximized() && !mainWindow.isVisible() ) { // Closed windowed to tray
 		mainWindow.show();
-	} else if ( mainWindow.isMinimized() && !mainWindow.isMaximized() && !mainWindow.isVisible() ) { // Closed minimized to tray
-		mainWindow.show();
+	// A seventh branch stood here, labelled "closed minimized to tray", asking
+	// exactly what the "minimized" branch above asks, so it never ran. The two
+	// states cannot be told apart by isMinimized, isMaximized and isVisible: a
+	// window hidden to the tray while minimized answers the same as one that is
+	// merely minimized. Distinguishing them needs a fourth fact this does not keep.
 	} else {
 		if ( process.platform === 'linux' ) {
 			mainWindow.minimize();
