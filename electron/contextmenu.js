@@ -51,6 +51,30 @@ function imageItems(contents, params) {
 	];
 }
 
+/*
+ * Chromium marks the word; the suggestions arrive with the click and are only
+ * useful here, at the top of the menu, the way every browser puts them.
+ */
+function spellingItems(contents, params) {
+	if ( !params.misspelledWord ) return [];
+
+	const suggestions = params.dictionarySuggestions || [];
+	const items = suggestions.slice(0, 5).map(word => ({
+		 label: word
+		,click: () => contents.replaceMisspelling(word)
+	}));
+
+	if ( !items.length ) items.push({ label: 'No spelling suggestions', enabled: false });
+
+	items.push({ type: 'separator' });
+	items.push({
+		 label: 'Add to Dictionary'
+		,click: () => contents.session.addWordToSpellCheckerDictionary(params.misspelledWord)
+	});
+	items.push({ type: 'separator' });
+	return items;
+}
+
 function editItem(label, accelerator, enabled, action) {
 	return { label: label, accelerator: accelerator, enabled: enabled, click: action };
 }
@@ -76,7 +100,8 @@ function template(contents, params) {
 
 	if ( params.isEditable || (params.inputFieldType && params.inputFieldType !== 'none') ) {
 		return [
-			 ...searchItems(contents, params)
+			 ...spellingItems(contents, params)
+			,...searchItems(contents, params)
 			,editItem('Cut', 'CommandOrControl+X', params.editFlags.canCut, () => contents.cut())
 			,editItem('Copy', 'CommandOrControl+C', params.editFlags.canCopy, () => contents.copy())
 			,editItem('Paste', 'CommandOrControl+V', params.editFlags.canPaste, () => contents.paste())

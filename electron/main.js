@@ -50,6 +50,10 @@ const config = new Config({
 		// document means the menus and dialogs follow the choice too.
 		,theme: 'system'
 		,enable_hidpi_support: false
+		// Chromium checks spelling itself; every webContents here had it turned
+		// off. Which languages is a list of its own: empty means work it out.
+		,spellcheck: true
+		,spellcheck_languages: []
 		,user_agent: ''
 		,default_service: 'redilTab'
 
@@ -130,11 +134,12 @@ function createWindow () {
 			,nodeIntegration: false
 			,webviewTag: true
 			,contextIsolation: true
-			,spellcheck: false
+			,spellcheck: config.get('spellcheck')
 		}
 	});
 
 	contextMenu.attach(mainWindow.webContents);
+	applySpellChecking(mainWindow.webContents.session);
 
 	// Check if user has defined a custom User-Agent
 	if ( config.get('user_agent').length > 0 ) mainWindow.webContents.setUserAgent( config.get('user_agent') );
@@ -326,6 +331,9 @@ ipcMain.on('setConfig', function(event, values) {
 	updateBadge(mainWindow.getTitle());
 	// theme
 	applyTheme(values.theme);
+	// the languages take effect at once; switching the checker itself on or off
+	// is a webPreference, and that one needs the relaunch the form asks for
+	spellCheckedSessions.forEach(applySpellChecking);
 
 	mainWindow.webContents.executeJavaScript('(function(a){if(a)a.controller.initialize(a)})(Ext.cq1("app-main"))');
 
@@ -354,6 +362,55 @@ ipcMain.on('validateMasterPassword', function(event, pass) {
 		event.returnValue = true;
 	}
 	event.returnValue = false;
+});
+
+// Spell checking
+//
+// Chromium does the checking; Electron only decides the languages, and starts
+// with en-US alone. Anything the person chose comes first, and when they have
+// chosen nothing the app's own language, the desktop's and the locale
+// environment are tried in turn -- a system set to English by someone who
+// writes Portuguese is the case that list exists for. On Linux the dictionaries
+// are fetched once and cached under the user data directory; on macOS the
+// system checker answers and the list is ignored.
+
+const spellCheckedSessions = new Set();
+
+function preferredSpellLanguages(available) {
+	const chosen = config.get('spellcheck_languages');
+	const fromEnvironment = (process.env.LC_ALL || process.env.LC_MESSAGES || process.env.LANG || '')
+		.split('.')[0].replace('_', '-');
+
+	const wanted = chosen && chosen.length
+		? chosen
+		: [config.get('locale'), ...app.getPreferredSystemLanguages(), fromEnvironment, 'en-US'];
+
+	const picked = [];
+	for ( const tag of wanted ) {
+		if ( !tag ) continue;
+		const lower = String(tag).toLowerCase();
+		const match = available.find(lang => lang.toLowerCase() === lower)
+			|| available.find(lang => lang.toLowerCase() === lower.split('-')[0]);
+		if ( match && !picked.includes(match) ) picked.push(match);
+		// Chromium checks against all of them at once; past a few that is noise.
+		if ( picked.length === 3 ) break;
+	}
+	return picked;
+}
+
+function applySpellChecking(target) {
+	if ( !target || process.platform === 'darwin' ) return;
+
+	spellCheckedSessions.add(target);
+	const languages = preferredSpellLanguages(target.availableSpellCheckerLanguages);
+	if ( languages.length ) target.setSpellCheckerLanguages(languages);
+}
+
+ipcMain.on('spellcheck:getLanguages', function(event) {
+	event.returnValue = {
+		 available: session.defaultSession.availableSpellCheckerLanguages
+		,chosen: config.get('spellcheck_languages')
+	};
 });
 
 // Service permissions
@@ -589,6 +646,9 @@ app.on('web-contents-created', (webContentsCreatedEvent, contents) => {
 	// preload wrote over navigator.mediaDevices. An isolated preload cannot
 	// reach the page's navigator, and this is the API meant for the job: it
 	// needs no code in the page at all.
+	// Each service keeps its own session, so each needs the languages set.
+	applySpellChecking(contents.session);
+
 	/*
 	 * Who picks the screen depends on whether the system has a picker of its own.
 	 * macOS 15 does, and useSystemPicker hands the whole request to it. Wayland

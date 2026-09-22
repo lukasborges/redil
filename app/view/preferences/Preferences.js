@@ -41,6 +41,20 @@ Ext.define('Redil.view.preferences.Preferences',{
 	,initComponent: function() {
 		var config = ipc.sendSync('getConfig');
 
+		/*
+		 * The languages Chromium has a dictionary for, named in English by the
+		 * browser itself rather than from a table of a hundred strings that the
+		 * dead Crowdin pipeline could never translate. Empty on macOS, where the
+		 * system checker answers and the list means nothing.
+		 */
+		var spelling = ipc.sendSync('spellcheck:getLanguages');
+		var languageNames = new Intl.DisplayNames(['en'], { type: 'language' });
+		var spellingOptions = spelling.available.map(function(tag) {
+			var name = tag;
+			try { name = languageNames.of(tag) || tag; } catch (e) { /* an odd tag names itself */ }
+			return { value: tag, label: name + ' (' + tag + ')' };
+		}).sort(function(a, b) { return a.label.localeCompare(b.label); });
+
 		var defaultServiceOptions = [];
 		defaultServiceOptions.push({ value: 'redilTab', label: 'Redil Tab' });
 		defaultServiceOptions.push({ value: 'last', label: 'Last Active Service' });
@@ -395,6 +409,44 @@ Ext.define('Redil.view.preferences.Preferences',{
 												,value: config.enable_hidpi_support
 												,hidden: redil.platform !== 'win32'
 												,margin: 0
+											}
+										]
+									}
+									,{
+										 xtype: 'fieldcontainer'
+										,fieldLabel: 'Spelling'
+										,layout: { type: 'vbox', align: 'stretch' }
+										,items: [
+											{
+												 xtype: 'checkbox'
+												,name: 'spellcheck'
+												,boxLabel: 'Check spelling as you type (needs to relaunch)'
+												,value: config.spellcheck
+												,margin: '0 0 9 0'
+											}
+											,{
+												/*
+												 * Nothing chosen means the app works it out from its own
+												 * language, the desktop's and the locale environment --
+												 * which gets it wrong for anyone writing in a language
+												 * their system is not set to, hence the field.
+												 */
+												 xtype: 'tagfield'
+												,name: 'spellcheck_languages'
+												,hideLabel: true
+												,width: 300
+												,margin: 0
+												,hidden: redil.platform === 'darwin'
+												,emptyText: 'Chosen from your system'
+												,displayField: 'label'
+												,valueField: 'value'
+												,queryMode: 'local'
+												,filterPickList: true
+												,value: config.spellcheck_languages
+												,store: Ext.create('Ext.data.Store', {
+													 fields: ['value', 'label']
+													,data: spellingOptions
+												})
 											}
 										]
 									}

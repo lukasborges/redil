@@ -8,9 +8,13 @@ const { repoRoot } = require('./helpers/launch');
 // what the rewrite is allowed to change.
 const { template } = require(path.join(repoRoot, 'electron', 'contextmenu.js'));
 
+const replaced = [];
+const learned = [];
 const contents = {
 	 cut() {}, copy() {}, paste() {}
 	,copyImageAt() {}, showDefinitionForSelection() {}
+	,replaceMisspelling(word) { replaced.push(word); }
+	,session: { addWordToSpellCheckerDictionary(word) { learned.push(word); } }
 };
 const base = { editFlags: { canCut: true, canCopy: true, canPaste: true }, x: 10, y: 20 };
 const labels = params => template(contents, { ...base, ...params })
@@ -72,4 +76,31 @@ test('targets the webContents that reported the click', () => {
 	const spy = { ...contents, cut: () => acted.push('cut'), copy: () => acted.push('copy'), paste: () => acted.push('paste') };
 	template(spy, { ...base, isEditable: true }).forEach(item => item.click());
 	expect(acted).toEqual(['cut', 'copy', 'paste']);
+});
+
+test('puts the spelling suggestions above an editable field, as a browser does', () => {
+	const items = template(contents, {
+		 ...base, isEditable: true
+		,misspelledWord: 'reuniao', dictionarySuggestions: ['reunião', 'reunirão', 'reunia']
+	});
+
+	expect(items.slice(0, 3).map(item => item.label)).toEqual(['reunião', 'reunirão', 'reunia']);
+	expect(items[3].type).toBe('separator');
+	expect(items[4].label).toBe('Add to Dictionary');
+
+	items[0].click();
+	items[4].click();
+	expect(replaced).toEqual(['reunião']);
+	expect(learned).toEqual(['reuniao']);
+});
+
+test('says so when the word is misspelled and nothing comes close', () => {
+	const labels = template(contents, { ...base, isEditable: true, misspelledWord: 'asdfgh', dictionarySuggestions: [] })
+		.map(item => item.type === 'separator' ? '---' : item.label);
+
+	expect(labels.slice(0, 4)).toEqual(['No spelling suggestions', '---', 'Add to Dictionary', '---']);
+});
+
+test('leaves the menu alone when nothing is misspelled', () => {
+	expect(labels({ isEditable: true })).toEqual(['Cut', 'Copy', 'Paste']);
 });

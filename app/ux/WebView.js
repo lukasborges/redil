@@ -216,7 +216,10 @@ Ext.define('Redil.ux.WebView',{
 					,plugins: 'true'
 					,allowtransparency: 'on'
 					,autosize: 'on'
-					,webpreferences: 'spellcheck=no, contextIsolation=no, sandbox=no'
+					// Electron ignores the last two -- a guest cannot be less isolated
+					// than its embedder -- and honours the first, which is why the
+					// preference is read here rather than assumed.
+					,webpreferences: 'spellcheck=' + (ipc.sendSync('getConfig').spellcheck ? 'yes' : 'no') + ', contextIsolation=no, sandbox=no'
 					,allowpopups: 'on'
 					// ,disablewebsecurity: 'on' // Disabled because some services (Like Google Drive) dont work with this enabled
 					,useragent: me.getUserAgent()

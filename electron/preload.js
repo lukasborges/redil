@@ -28,6 +28,7 @@ const TO_MAIN = [
 	,'setDontDisturb'
 	,'service:setMediaAccess'
 	,'setServiceNotifications'
+	,'spellcheck:getLanguages'
 	,'toggleWin'
 	,'validateMasterPassword'
 	,'webview:clearData'
