@@ -33,6 +33,7 @@
 		"dev": "electron electron/main.js",
 		"test": "./node_modules/.bin/mocha test/tests/**/*.spec.js",
 		"bootstrap": "node scripts/gen-bootstrap.js",
+		"check:services": "node scripts/check-services.js",
 		"clean": "rm -rf ./dist",
 		"build": "npm run bootstrap && electron-builder",
 		"build:linux": "npm run bootstrap && electron-builder --linux",
