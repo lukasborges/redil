@@ -552,7 +552,7 @@
 		"type": "messaging",
 		"allow_popups": false,
 		"manual_notifications": false,
-		"js_unread": "function checkUnread(){var direct=document.querySelector('div[data-section-type=\"1\"] div.TeR7uc'),spaces=document.querySelector('div[data-section-type=\"2\"] div.TeR7uc'),total=(direct?parseInt(direct.textContent,10)||0:0)+(spaces?parseInt(spaces.textContent,10)||0:0);rambox.setUnreadCount(total)}setInterval(checkUnread,3e3);",
+		"js_unread": "function sectionCount(section){var root=document.querySelector('div[data-section-type=\"'+section+'\"]');if(!root)return 0;var header=root.firstElementChild;if(!header)return 0;var digits=header.textContent.replace(/[^0-9]/g,'');return digits?parseInt(digits,10)||0:0}function checkUnread(){rambox.setUnreadCount(sectionCount(1)+sectionCount(2))}setInterval(checkUnread,3e3);",
 		"userAgent": "",
 		"note": "",
 		"titleBlink": true,
