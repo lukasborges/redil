@@ -13,6 +13,8 @@ const Config = require('electron-store');
 const isDev = !app.isPackaged;
 // Updater
 const updater = require('./updater');
+// Connectivity, probed for the renderer's no-connection dialog
+const isOnline = require('is-online');
 // File System
 var fs = require("fs");
 const path = require('path');
@@ -113,9 +115,10 @@ function createWindow () {
 			 plugins: true
 			,partition: 'persist:rambox' // storage key, not a name: renaming it empties
 			// the local storage that holds everyone's configured services
-			,nodeIntegration: true
+			,preload: path.join(__dirname, 'preload.js')
+			,nodeIntegration: false
 			,webviewTag: true
-			,contextIsolation: false
+			,contextIsolation: true
 			,spellcheck: false
 		}
 	});
@@ -148,7 +151,7 @@ function createWindow () {
 
 	Menu.setApplicationMenu(appMenu);
 
-	tray.create(mainWindow, config);
+	tray.create(mainWindow, config, toggleWindow);
 
 	updater.initialize(mainWindow);
 
@@ -329,11 +332,11 @@ ipcMain.on('setConfig', function(event, values) {
 			break;
 		case 'show_trayIcon':
 			mainWindow.setSkipTaskbar(true);
-			tray.create(mainWindow, config);
+			tray.create(mainWindow, config, toggleWindow);
 			break;
 		case 'taskbar_tray':
 			mainWindow.setSkipTaskbar(false);
-			tray.create(mainWindow, config);
+			tray.create(mainWindow, config, toggleWindow);
 			break;
 		default:
 			break;
@@ -448,6 +451,10 @@ ipcMain.on('reloadApp', function(event) {
 // What the renderer used to reach through the remote bridge. It runs with
 // nodeIntegration, so anything already on its own `process` stays there; only
 // the calls that genuinely belong to the main process crossed over.
+ipcMain.handle('net:isOnline', async function() {
+	return isOnline();
+});
+
 ipcMain.on('app:getVersion', function(event) {
 	event.returnValue = app.getVersion();
 });
@@ -689,7 +696,7 @@ app.on('web-contents-created', (webContentsCreatedEvent, contents) => {
 });
 
 
-ipcMain.on('toggleWin', function(event, allwaysShow) {
+function toggleWindow(allwaysShow) {
 	if ( config.get('window_display_behavior') !== 'show_trayIcon' ) mainWindow.setSkipTaskbar(false);
 	if ( !mainWindow.isMinimized() && mainWindow.isMaximized() && mainWindow.isVisible() ) { // Maximized
 		!allwaysShow ? mainWindow.close() : mainWindow.show();
@@ -726,7 +733,9 @@ ipcMain.on('toggleWin', function(event, allwaysShow) {
 		}
 		mainWindow.restore();
 	}
-});
+}
+
+ipcMain.on('toggleWin', (event, allwaysShow) => toggleWindow(allwaysShow));
 
 // ScreenShare
 // Enumerating screens belongs to the main process: desktopCapturer stopped being

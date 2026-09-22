@@ -88,7 +88,13 @@ Two processes with very different technology stacks, bridged by IPC.
 
 ## Traps worth knowing
 
-The renderer runs with `nodeIntegration` on and `contextIsolation` off, and calls `require('electron')` freely, including from inline scripts in `index.html` and `masterpassword.html`. Because node is on, its own `process` is the renderer's, so `process.platform`, `process.arch` and `process.versions` are read directly and never over IPC.
+The main window runs with `contextIsolation` on and `nodeIntegration` off. It reaches Electron only through `electron/preload.js`, which exposes one object, `window.redil`: an `ipc` with `send`, `sendSync`, `invoke`, `on` and `removeListener`, plus `platform`, `arch` and `versions`, which the renderer used to read off node's own `process`. There is no `require` in the page.
+
+Both channel lists in that preload are closed. Calling a channel that is not on one throws, which is deliberate: a bridge that forwarded anything would hand back most of the reach the isolation removes. Adding a channel means adding it there too, or it will fail only at runtime. The `IpcRendererEvent` does not cross the bridge, so a listener is called with `undefined` in its first argument; every handler took it and ignored it already.
+
+Two things the renderer could not keep. Mousetrap is a browser library it required as a module, and the generator now loads `node_modules/mousetrap/mousetrap.js` as a plain script, which works packaged because electron-builder keeps `node_modules` in the asar. `is-online` moved to the main process behind `net:isOnline`, where a network probe belonged anyway.
+
+`masterpassword.html` and `screenselector.html` still run with node. So do the service webviews, which set `contextIsolation=no, sandbox=no` explicitly.
 
 `@electron/remote` is gone, and so is `remoteMain`. The renderer reaches main-process APIs through named IPC: `app:getVersion`, `app:quit`, `window:show`, `media:getAccessStatus`, `media:askForAccess` and `webview:clearData`. Three things that used to cross the bridge now live entirely in main, inside the `web-contents-created` handler that filters for webviews: the Google user-agent header rewrite, `certificate-error`, and `before-input-event`, which replays a shortcut typed inside a service into the host window so the app's Mousetrap sees it. Main decides a certificate error but cannot draw the warning, so it sends `webview:certificate-error` with the webContents id and the matching panel shows it; the renderer reports each service's `trust` flag over `webview:setTrust` as the service becomes ready, since the flag lives in its localStorage.
 
@@ -96,7 +102,7 @@ Context menus are built in `electron/contextmenu.js`, which `main.js` attaches t
 
 Service webviews set `sandbox=no`. Their preload script uses `require` to pull in node modules, which a sandboxed preload cannot do.
 
-`electron/tray.js` does not use IPC to reach the renderer. It calls `win.webContents.executeJavaScript('ipc.send("toggleWin", false);')`, which depends on the global `ipc` that `app.js` defines near the top. Renaming that global silently breaks every tray interaction.
+`electron/tray.js` used to reach the window by injecting `ipc.send("toggleWin", false)` into the renderer, which depended on a global that `contextIsolation` removed. The handler it called only ever drove `mainWindow`, so that body is now the `toggleWindow` function in `main.js`, passed to `tray.create` and still served over IPC for the renderer's own buttons.
 
 `disable_gpu` defaults to false. Upstream defaulted it to true on Linux, forcing software rendering on every install since the Electron 13 era; on 44 the app composites and rasterises with no artefact and no GPU process crash, so the workaround is opt-in. Anyone whose driver misbehaves turns it back on in Preferences, or in `~/.config/Redil/config.json` if the window is unusable.
 

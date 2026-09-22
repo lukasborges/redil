@@ -10,12 +10,12 @@ Ext.define('Redil.view.main.About', {
 	,height: 450
 	,bodyPadding: 10
 	,data: {
-		 version: require('electron').ipcRenderer.sendSync('app:getVersion')
-		,platform: process.platform
-		,arch: process.arch
-		,electron: process.versions.electron
-		,chromium: process.versions.chrome
-		,node: process.versions.node
+		 version: redil.ipc.sendSync('app:getVersion')
+		,platform: redil.platform
+		,arch: redil.arch
+		,electron: redil.versions.electron
+		,chromium: redil.versions.chrome
+		,node: redil.versions.node
 	}
 	,tpl: [
 		 '<div style="text-align:center;"><img src="resources/Icon.png" width="100" /></div>'

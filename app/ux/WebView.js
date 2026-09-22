@@ -241,7 +241,7 @@ Ext.define('Redil.ux.WebView',{
 		// and the site now turns away anything below 100. The platform half of each
 		// string is still doing a job, so only the version is moved up to the
 		// Chromium this build actually runs on.
-		return pinned.replace(/Chrome\/[0-9.]+/i, 'Chrome/' + process.versions.chrome);
+		return pinned.replace(/Chrome\/[0-9.]+/i, 'Chrome/' + redil.versions.chrome);
 	}
 
 	,statusBarConstructor: function(floating) {

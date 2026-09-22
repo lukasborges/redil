@@ -16,7 +16,7 @@
 		(function(d, s){
 			var t = d.createElement(s), e = d.getElementsByTagName(s)[0];
 			t.type = "text/javascript"; e.parentNode.insertBefore(t, e);
-			t.src = "resources/languages/"+require('electron').ipcRenderer.sendSync('getConfig').locale+".js";
+			t.src = "resources/languages/"+redil.ipc.sendSync('getConfig').locale+".js";
 		})(document, "script");
 	</script>
 	<!--- Localization -->

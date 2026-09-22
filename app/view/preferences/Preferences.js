@@ -152,7 +152,7 @@ Ext.define('Redil.view.preferences.Preferences',{
 						,name: 'hide_menu_bar'
 						,boxLabel: locale['preferences[1]']+' (<code>Alt</code> key to display)'
 						,value: config.hide_menu_bar
-						,hidden: process.platform === 'darwin'
+						,hidden: redil.platform === 'darwin'
 					}
 					,{
 						 xtype: 'combo'
@@ -216,7 +216,7 @@ Ext.define('Redil.view.preferences.Preferences',{
 								,{ 'value': 'taskbar_tray', 'label': locale['preferences[16]'] }
 							]
 						})
-						,hidden: process.platform === 'darwin'
+						,hidden: redil.platform === 'darwin'
 					}
 					,{
 						 xtype: 'combo'
@@ -237,7 +237,7 @@ Ext.define('Redil.view.preferences.Preferences',{
 								,{ 'value': 'quit', 'label': locale['preferences[20]'] }
 							]
 						})
-						,hidden: process.platform === 'darwin'
+						,hidden: redil.platform === 'darwin'
 					}
 					,{
 						 xtype: 'checkbox'
@@ -250,12 +250,12 @@ Ext.define('Redil.view.preferences.Preferences',{
 						,name: 'systemtray_indicator'
 						,boxLabel: locale['preferences[22]']
 						,value: config.systemtray_indicator
-						,hidden: process.platform === 'darwin'
+						,hidden: redil.platform === 'darwin'
 					}
 					,{
 						 xtype: 'checkbox'
 						,name: 'flash_frame'
-						,boxLabel: process.platform === 'darwin' ? locale['preferences[10]'] : locale['preferences[9]']
+						,boxLabel: redil.platform === 'darwin' ? locale['preferences[10]'] : locale['preferences[9]']
 						,value: config.flash_frame
 					}
 					,{
@@ -269,7 +269,7 @@ Ext.define('Redil.view.preferences.Preferences',{
 						,name: 'enable_hidpi_support'
 						,boxLabel: locale['preferences[8]']
 						,value: config.enable_hidpi_support
-						,hidden: process.platform !== 'win32'
+						,hidden: redil.platform !== 'win32'
 					},
 					{
 						 xtype: 'textfield'

@@ -15,14 +15,14 @@ test('opens a window named after the product', async () => {
 
 test('reports the version from package.json, not Electron\'s', async () => {
 	const version = await redil.window.evaluate(
-		() => require('electron').ipcRenderer.sendSync('app:getVersion'));
+		() => redil.ipc.sendSync('app:getVersion'));
 
 	expect(version).toBe(require(path.join(repoRoot, 'package.json')).version);
 });
 
 test('serves the preference defaults over getConfig', async () => {
 	const config = await redil.window.evaluate(
-		() => require('electron').ipcRenderer.sendSync('getConfig'));
+		() => redil.ipc.sendSync('getConfig'));
 
 	// main.js calls this block the authoritative list of every preference key,
 	// so a rename there should fail here rather than at runtime.
@@ -63,7 +63,7 @@ test('rewrites a pinned user agent to the running Chromium', async () => {
 		// Calls the real method with only the piece of a panel it reads, so the
 		// assertion covers getUserAgent rather than a copy of it.
 		,served: Redil.ux.WebView.prototype.getUserAgent.call({ record: { get: () => 'whatsapp' } })
-		,chrome: process.versions.chrome
+		,chrome: redil.versions.chrome
 	}));
 
 	// The catalogue still names Chrome 70, from 2018, and WhatsApp turns away
@@ -90,4 +90,35 @@ test('wires the two files the theme package still provides', async () => {
 	expect(theme.marker).toBe('redil-default-theme');
 	expect(theme.stylesheet).toBe(true);
 	expect(theme.glyphs).toBe(true);
+});
+
+test('runs the renderer without node', async () => {
+	const reach = await redil.window.evaluate(() => ({
+		 require: typeof require
+		,process: typeof process
+		,module: typeof module
+		,bridge: typeof window.redil
+	}));
+
+	// nodeIntegration is off and contextIsolation is on, so the page cannot pull
+	// in a module; electron/preload.js is the whole of its reach into Electron.
+	expect(reach).toEqual({ require: 'undefined', process: 'undefined', module: 'undefined', bridge: 'object' });
+});
+
+test('refuses a channel the preload does not expose', async () => {
+	const refused = await redil.window.evaluate(() => {
+		try { redil.ipc.send('image:download', 'https://example.com/a.png'); return null; }
+		catch (error) { return error.message; }
+	});
+
+	// A bridge that forwarded anything would hand back most of what the
+	// isolation removes, so both directions are allowlisted.
+	expect(refused).toContain('not exposed to the renderer');
+});
+
+test('keeps the shortcuts working without requiring mousetrap', async () => {
+	// The renderer required it as a node module; it is a plain browser library
+	// and the generator now loads it as a script.
+	const bound = await redil.window.evaluate(() => typeof window.Mousetrap === 'object' || typeof window.Mousetrap === 'function');
+	expect(bound).toBe(true);
 });

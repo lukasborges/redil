@@ -21,10 +21,10 @@ Ext.define('Redil.Application', {
 
 	,launch: function () {
 
-		const isOnline = require('is-online');
-		const Mousetrap = require('mousetrap');
+		// is-online probes the network from the main process now, and Mousetrap is
+		// a browser library the generator loads as a plain script.
 		(async () => {
-			await isOnline().then(res => {
+			await ipc.invoke('net:isOnline').then(res => {
 				var hideNoConnection = ipc.sendSync('getConfig').hideNoConnectionDialog
 				if ( !res && !hideNoConnection ) {
 					Ext.get('spinner') ? Ext.get('spinner').destroy() : null;
@@ -55,7 +55,7 @@ Ext.define('Redil.Application', {
 			})
 		})();
 
-		var mediaAccess = process.platform === 'darwin' ? ipc.sendSync('media:getAccessStatus') : null;
+		var mediaAccess = redil.platform === 'darwin' ? ipc.sendSync('media:getAccessStatus') : null;
 		if ( !localStorage.getItem('hideMacPermissions') && mediaAccess && (mediaAccess.microphone !== 'granted' || mediaAccess.camera !== 'granted') ) {
 			console.info('Checking mac permissions...');
 			Ext.cq1('app-main').addDocked({
@@ -143,7 +143,7 @@ Ext.define('Redil.Application', {
 			];
 
 			// Shortcuts
-			const platform = process.platform;
+			const platform = redil.platform;
 			// Prevents default behaviour of Mousetrap, that prevents shortcuts in textareas
 			Mousetrap.prototype.stopCallback = function(e, element, combo) {
 				return false;
@@ -179,7 +179,7 @@ Ext.define('Redil.Application', {
 				tabPanel.setActiveTab(i);
 			});
 			// Add shortcut to search inside a service
-			Mousetrap.bind(process.platform === 'darwin' ? ['command+alt+f'] : ['shift+alt+f'], (e, combo) => {
+			Mousetrap.bind(redil.platform === 'darwin' ? ['command+alt+f'] : ['shift+alt+f'], (e, combo) => {
 				var currentTab = Ext.cq1('app-main').getActiveTab();
 				if ( currentTab.getWebView ) currentTab.showSearchBox(true);
 			});

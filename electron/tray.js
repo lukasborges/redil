@@ -7,7 +7,10 @@ const Tray = electron.Tray;
 const MenuItem = electron.MenuItem;
 var appIcon = null;
 
-exports.create = function(win, config) {
+// toggleWindow is passed in rather than reached by injecting `ipc.send(...)`
+// into the renderer, which is what this did until contextIsolation removed the
+// global it relied on. The handler it used to reach only ever drove the window.
+exports.create = function(win, config, toggleWindow) {
 	if (process.platform === 'darwin' || appIcon || config.get('window_display_behavior') === 'show_taskbar' ) return;
 
 	const icon = process.platform === 'linux' || process.platform === 'darwin' ? 'IconTray.png' : 'Icon.ico';
@@ -17,7 +20,7 @@ exports.create = function(win, config) {
 		{
 			 label: 'Show/Hide Window'
 			,click() {
-				win.webContents.executeJavaScript('ipc.send("toggleWin", false);');
+				toggleWindow(false);
 			}
 		},
 		{
@@ -44,12 +47,12 @@ exports.create = function(win, config) {
 			// Double click is not supported and Click its only supported when app indicator is not used.
 			// Read more here (Platform limitations): https://github.com/electron/electron/blob/master/docs/api/tray.md
 			appIcon.on('click', function() {
-				win.webContents.executeJavaScript('ipc.send("toggleWin", false);');
+				toggleWindow(false);
 			});
 			break;
 		case 'win32':
 			appIcon.on('double-click', function() {
-				win.webContents.executeJavaScript('ipc.send("toggleWin", false);');
+				toggleWindow(false);
 			});
 			break;
 		default:

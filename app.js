@@ -9,7 +9,8 @@ Ext.application({
 });
 
 // auto update logic
-const ipc = require('electron').ipcRenderer;
+// electron/preload.js exposes this; the renderer has no node of its own.
+const ipc = redil.ipc;
 
 ipc.on('showAbout', function(event, message) {
 	!Ext.cq1('about') ? Ext.create('Redil.view.main.About') : '';

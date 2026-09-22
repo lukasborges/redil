@@ -46,6 +46,11 @@ function filesAfterFramework() {
 		// directory and would otherwise load it a second time.
 		THEME_MARKER,
 		...collectScripts('overrides').filter(file => file !== THEME_MARKER),
+		// A browser library the renderer used to require. With contextIsolation
+		// there is no require in the page, so it is loaded as what it already is:
+		// a script that defines window.Mousetrap. electron-builder keeps
+		// node_modules in the asar, so this path holds in a packaged build too.
+		'node_modules/mousetrap/mousetrap.js',
 		// Ext.ux classes the app pulls in by xtype or plugin alias. Preloaded
 		// because Ext.Loader would otherwise resolve them with a synchronous
 		// XMLHttpRequest, which Chromium refuses on file:// URLs.
