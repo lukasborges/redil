@@ -37,7 +37,11 @@ const config = new Config({
 		,systemtray_indicator: true
 		,master_password: false
 		,dont_disturb: false
-		,disable_gpu: process.platform === 'linux'
+		// Upstream forced software rendering on every Linux install, from the
+		// Electron 13 era. Electron's own default is acceleration, and 44 composites
+		// and rasterises here without artefacts or a GPU process crash, so this is
+		// opt-in now. A driver that misbehaves is still one preference away.
+		,disable_gpu: false
 		,proxy: false
 		,proxyHost: ''
 		,proxyPort: ''

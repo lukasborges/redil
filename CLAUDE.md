@@ -98,6 +98,8 @@ Service webviews set `sandbox=no`. Their preload script uses `require` to pull i
 
 `electron/tray.js` does not use IPC to reach the renderer. It calls `win.webContents.executeJavaScript('ipc.send("toggleWin", false);')`, which depends on the global `ipc` that `app.js` defines near the top. Renaming that global silently breaks every tray interaction.
 
+`disable_gpu` defaults to false. Upstream defaulted it to true on Linux, forcing software rendering on every install since the Electron 13 era; on 44 the app composites and rasterises with no artefact and no GPU process crash, so the workaround is opt-in. Anyone whose driver misbehaves turns it back on in Preferences, or in `~/.config/Redil/config.json` if the window is unusable.
+
 The `validateMasterPassword` handler in `electron/main.js` assigns `event.returnValue` twice, so it reads like it always answers `false`. It does not. Electron dispatches the reply on the first assignment and ignores the second, so a correct password does return `true`. This was verified by calling the channel directly. Leave the redundant line alone unless you retest.
 
 ## Localization
