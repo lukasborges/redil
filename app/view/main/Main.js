@@ -28,6 +28,39 @@ Ext.define('Redil.view.main.Main', {
 	,tabBar: {
 		 id: 'mainTabBar'
 		,cls: JSON.parse(localStorage.getItem('dontDisturb')) ? 'dontdisturb' : ''
+		/*
+		 * These three used to be the home tab's own toolbar, which meant they
+		 * vanished the moment a service was open. In the rail they are always
+		 * there, pinned below the tabs by the fill.
+		 */
+		,items: [
+			// A tab bar is a Header, not a Toolbar: the '->' shorthand resolves to
+			// null there, and each item needs its xtype spelled out.
+			{ xtype: 'tbfill' }
+			,{
+				 xtype: 'button'
+				,glyph: JSON.parse(localStorage.getItem('dontDisturb')) ? 'xf1f7@FontAwesome' : 'xf0f3@FontAwesome'
+				,tooltip: locale['app.main[17]']+'<br/><b>'+locale['app.main[18]']+(redil.platform === 'darwin' ? ': Cmd + Alt + D</b>' : ': Alt + Shift + D</b>')
+				,enableToggle: true
+				,handler: 'dontDisturb'
+				,reference: 'disturbBtn'
+				,id: 'disturbBtn'
+				,pressed: JSON.parse(localStorage.getItem('dontDisturb'))
+			}
+			,{
+				 xtype: 'button'
+				,glyph: 'xf023@FontAwesome'
+				,tooltip: locale['app.main[20]']+'<br/><b>'+locale['app.main[18]']+(redil.platform === 'darwin' ? ': Cmd + Alt + L</b>' : ': Alt + Shift + L</b>')
+				,handler: 'lockRedil'
+				,id: 'lockRedilBtn'
+			}
+			,{
+				 xtype: 'button'
+				,tooltip: locale['preferences[0]']
+				,glyph: 'xf013@FontAwesome'
+				,handler: 'openPreferences'
+			}
+		]
 	}
 	,items: [
 		{
@@ -226,38 +259,6 @@ Ext.define('Redil.view.main.Main', {
 					}
 				}
 			]
-			,tbar: {
-				 xtype: 'toolbar'
-				,height: 42
-				,ui: 'main'
-				,enableOverflow: true
-				,overflowHandler: 'menu'
-				,items: [
-					{
-						 glyph: JSON.parse(localStorage.getItem('dontDisturb')) ? 'xf1f7@FontAwesome' : 'xf0f3@FontAwesome'
-						,text: locale['app.main[16]']+': '+(JSON.parse(localStorage.getItem('dontDisturb')) ? locale['app.window[20]'] : locale['app.window[21]'])
-						,tooltip: locale['app.main[17]']+'<br/><b>'+locale['app.main[18]']+(redil.platform === 'darwin' ? ': Cmd + Alt + D</b>' : ': Alt + Shift + D</b>')
-						,enableToggle: true
-						,handler: 'dontDisturb'
-						,reference: 'disturbBtn'
-						,id: 'disturbBtn'
-						,pressed: JSON.parse(localStorage.getItem('dontDisturb'))
-					}
-					,{
-						 glyph: 'xf023@FontAwesome'
-						,text: locale['app.main[19]']
-						,tooltip: locale['app.main[20]']+'<br/><b>'+locale['app.main[18]']+(redil.platform === 'darwin' ? ': Cmd + Alt + L</b>' : ': Alt + Shift + L</b>')
-						,handler: 'lockRedil'
-						,id: 'lockRedilBtn'
-					}
-					,'->'
-					,{
-						 tooltip: locale['preferences[0]']
-						,glyph: 'xf013@FontAwesome'
-						,handler: 'openPreferences'
-					}
-				]
-			}
 		}
 		,{ id: 'tbfill', tabConfig : { xtype : 'tbfill' } }
 	]

@@ -38,6 +38,8 @@ Ext.define('Redil.model.Service', {
 		,type: 'boolean'
 		,defaultValue: false
 	},{
+		// Nothing reads this any more: the rail shows icons only. The field stays
+		// so records written before that keep their shape.
 		 name: 'tabname'
 		,type: 'boolean'
 		,defaultValue: true

@@ -170,14 +170,6 @@ Ext.define('Redil.view.add.Add',{
 									}
 									,{
 										 xtype: 'checkbox'
-										,boxLabel: 'Show service name in Tab'
-										,name: 'tabname'
-										,checked: me.edit ? me.record.get('tabname') : true
-										,uncheckedValue: false
-										,inputValue: true
-									}
-									,{
-										 xtype: 'checkbox'
 										,boxLabel: locale['app.window[5]']
 										,name: 'notifications'
 										,checked: me.edit ? me.record.get('notifications') : true

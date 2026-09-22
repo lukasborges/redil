@@ -35,10 +35,13 @@ Ext.define('Redil.ux.WebView',{
 			}
 		}
 
-		const prefConfig = ipc.sendSync('getConfig');
 		Ext.apply(me, {
 			 items: me.webViewConstructor()
-			,title: prefConfig.hide_tabbar_labels ? '' : (me.record.get('tabname') ? me.record.get('name') : '')
+			// The rail shows icons only, so the name lives in the tooltip. The
+			// hide_tabbar_labels preference and the per-service tabname option both
+			// went with the labels they used to govern.
+			,title: ''
+			,tooltip: me.record.get('name')
 			,icon: me.record.get('type') === 'custom' ? (me.record.get('logo') === '' ? 'resources/icons/custom.png' : me.record.get('logo')) : 'resources/icons/'+me.record.get('logo')
 			,src: me.record.get('url')
 			,type: me.record.get('type')

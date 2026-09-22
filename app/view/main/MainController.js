@@ -4,9 +4,9 @@ Ext.define('Redil.view.main.MainController', {
 	,alias: 'controller.main'
 
 	,initialize: function( tabPanel ) {
-		const config = ipc.sendSync('getConfig');
-
-		tabPanel.setTabPosition(config.tabbar_location);
+		// Fixed, in the shape Franz and Station settled on: a vertical rail of
+		// icons. The four-sided tabbar_location preference went with it.
+		tabPanel.setTabPosition('left');
 		tabPanel.setTabRotation(0);
 
 		var reorderer = tabPanel.plugins.find(function(plugin) { return plugin.ptype == "tabreorderer"});

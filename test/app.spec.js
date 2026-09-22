@@ -29,7 +29,7 @@ test('serves the preference defaults over getConfig', async () => {
 	expect(config).toMatchObject({
 		 always_on_top: false
 		,hide_menu_bar: false
-		,tabbar_location: 'top'
+		,theme: 'system'
 		,window_display_behavior: 'taskbar_tray'
 		,locale: expect.any(String)
 	});
@@ -121,4 +121,28 @@ test('keeps the shortcuts working without requiring mousetrap', async () => {
 	// and the generator now loads it as a script.
 	const bound = await redil.window.evaluate(() => typeof window.Mousetrap === 'object' || typeof window.Mousetrap === 'function');
 	expect(bound).toBe(true);
+});
+
+test('puts the service bar on the left, as a rail of icons', async () => {
+	const rail = await redil.window.evaluate(() => {
+		const bar = Ext.getCmp('mainTabBar');
+		return {
+			 posicao: Ext.cq1('app-main').getTabPosition()
+			,largura: Math.round(bar.el.dom.getBoundingClientRect().width)
+			// Ext.tab.Tab extends Ext.button.Button, so the tabs answer to that too.
+			,botoes: bar.items.items.filter(item => item.isXType && item.isXType('button') && !item.isXType('tab')).length
+			,rotulos: bar.el.dom.querySelectorAll('.x-tab-inner').length
+			,rotulosVisiveis: [...bar.el.dom.querySelectorAll('.x-tab-inner')]
+				.filter(el => el.offsetParent !== null).length
+		};
+	});
+
+	expect(rail.posicao).toBe('left');
+	expect(rail.largura).toBe(68);
+	// Don't disturb, lock and preferences. They were the home tab's own toolbar
+	// until they moved here, which meant they vanished whenever a service was open.
+	expect(rail.botoes).toBe(3);
+	// Icons only: the label elements exist, and none of them is shown.
+	expect(rail.rotulos).toBeGreaterThan(0);
+	expect(rail.rotulosVisiveis).toBe(0);
 });

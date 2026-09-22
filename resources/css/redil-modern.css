@@ -80,70 +80,111 @@ body {
 	color: var(--rx-ink);
 }
 
-/* ------------------------------------------------------------- tab bar */
-
-.x-tab-bar-default-top {
-	background-color: var(--rx-sunken);
-	border-bottom: 1px solid var(--rx-line);
-}
+/* ---------------------------------------------------------------- rail */
 
 /*
- * The 2015 theme pushed the bar body down 8px and pulled the strip up 10px to
- * clear the strip it drew across the whole width. This layer draws no strip, and
- * the leftover padding made the body taller than the bar it sits in, so the
- * overflow showed as a white band under the tabs. The tabs carry their own
- * padding now, so the body goes back to none, and it also paints the bar colour
- * in case a future layout leaves it taller again.
+ * The service bar is a vertical rail of icons on the left, fixed there, in the
+ * shape Franz and Station settled on. Ext gives us a left tab bar for free --
+ * setTabPosition('left') in MainController -- so all of this is appearance.
+ *
+ * It carries the window's whole chrome now. The three buttons at its foot used
+ * to be the home tab's toolbar, a navy strip across the top that disappeared
+ * the moment a service was open; folding them in here removed that strip and
+ * gave the content back its full height.
  */
-.x-tab-bar-top .x-tab-bar-body {
-	padding: 0 4px !important;
-	background-color: var(--rx-sunken);
+
+.x-tab-bar-default-left {
+	width: 68px !important;
+	background-color: var(--rx-chrome);
+	border: 0;
+	padding: 6px 0 8px;
 }
 
-.x-tab-bar-top .x-tab-bar-strip {
-	margin-top: 0;
+.x-tab-bar-left .x-tab-bar-body {
+	padding: 0 !important;
+	background-color: var(--rx-chrome);
 }
 
-/*
- * The full width strip under the bar goes. A tab that is a lifted white surface
- * sitting on the sunken bar already says which service you are in, and it reads
- * as continuous with the content below it.
- */
-.x-tab-bar-strip-default,
-.x-tab-bar-top > .x-tab-bar-strip {
+/* The strip Ext draws along the active edge; the rail marks the tab instead. */
+.x-tab-bar-strip-default-left,
+.x-tab-bar-left > .x-tab-bar-strip {
 	background-color: transparent;
 	border-color: transparent;
-	height: 0;
+	width: 0;
 }
 
-.x-tab-default-top {
-	padding: 10px 14px;
-	border-radius: var(--rx-radius) var(--rx-radius) 0 0;
+.x-tab-default-left {
+	width: 68px !important;
+	height: 52px !important;
+	padding: 0;
+	background-color: transparent;
+	border: 0;
+	border-radius: 0;
 	transition: background-color 0.12s ease;
 }
 
-.x-tab-default-top:not(.x-tab-active):hover {
-	background-color: var(--rx-hover);
+.x-tab-default-left:not(.x-tab-active):hover {
+	background-color: rgba(255, 255, 255, 0.08);
 }
 
-.x-tab.x-tab-active.x-tab-default-top {
-	background-color: var(--rx-surface);
-	border-color: var(--rx-surface);
-	box-shadow: inset 0 -2px 0 0 var(--rx-brand);
+/* Two classes to outrank crisp, which paints the active tab from its own pair. */
+.x-tab.x-tab-active.x-tab-default-left {
+	background-color: rgba(255, 255, 255, 0.14);
+	border-color: transparent;
+	/* the marker is a bar down the inner edge, not a strip across the bar */
+	box-shadow: inset 3px 0 0 0 #FFFFFF;
 }
 
-/* 18px tab labels were the single most dated thing on screen */
-.x-tab-inner-default {
-	font-size: 14px;
-	line-height: 18px;
-	font-weight: 500;
-	color: var(--rx-muted);
+/* Icons only: the title is empty, and the element would still take up room. */
+.x-tab-default-left .x-tab-inner-default {
+	display: none;
 }
 
-.x-tab.x-tab-active.x-tab-default-top .x-tab-inner-default,
-.x-tab.x-tab-active.x-tab-default-top .x-tab-glyph {
-	color: var(--rx-ink);
-	font-weight: 600;
+.x-tab-default-left .x-tab-icon-el {
+	width: 30px;
+	height: 30px;
+	background-size: 30px 30px;
+	margin: 0;
+	border-radius: 7px;
+	opacity: 0.82;
+	transition: opacity 0.12s ease;
+}
+
+.x-tab-default-left:hover .x-tab-icon-el,
+.x-tab.x-tab-active.x-tab-default-left .x-tab-icon-el {
+	opacity: 1;
+}
+
+/* The three at the foot, pinned there by the fill ahead of them. */
+.x-tab-bar-default-left .x-btn-default-small {
+	background: none;
+	background-image: none;
+	border: 0;
+	box-shadow: none;
+	width: 68px;
+	padding: 9px 0;
+	border-radius: 0;
+	transition: background-color 0.12s ease;
+}
+
+.x-tab-bar-default-left .x-btn-default-small.x-btn-over {
+	background-color: rgba(255, 255, 255, 0.08);
+}
+
+.x-tab-bar-default-left .x-btn-default-small.x-btn-pressed {
+	background-color: rgba(255, 255, 255, 0.18);
+}
+
+.x-tab-bar-default-left .x-btn-glyph,
+.x-tab-bar-default-left .x-btn-icon-el {
+	color: rgba(255, 255, 255, 0.72);
+	font-size: 17px;
+	opacity: 1;
+}
+
+.x-tab-bar-default-left .x-btn-default-small.x-btn-over .x-btn-glyph,
+.x-tab-bar-default-left .x-btn-default-small.x-btn-pressed .x-btn-glyph {
+	color: #FFFFFF;
 }
 
 /* ------------------------------------------------- the one loud thing */
@@ -157,12 +198,8 @@ body {
 	font-weight: 700;
 	line-height: 14px;
 	text-shadow: none;
-	/* a ring in the bar colour lifts the count clear of the tab */
-	box-shadow: 0 0 0 2px var(--rx-sunken);
-}
-
-.x-tab.x-tab-active.x-badge[data-badge-text]:after {
-	box-shadow: 0 0 0 2px var(--rx-surface);
+	/* a ring in the rail's colour lifts the count clear of the icon */
+	box-shadow: 0 0 0 2px var(--rx-chrome);
 }
 
 /* Badge.js leaves the attribute in place and empties it at zero unread */
