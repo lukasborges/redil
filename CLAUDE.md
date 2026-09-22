@@ -60,7 +60,7 @@ Tests are Mocha plus Chai driving the packaged app through Spectron. `test/helpe
 
 Two processes with very different technology stacks, bridged by IPC.
 
-**Main process** lives in `electron/`. `electron/main.js` owns the single `BrowserWindow`, the `electron-store` configuration object (its `defaults` block is the authoritative list of every preference key), tray, menu, auto-launch, proxy, master password window, and the screen-share picker. `electron/menu.js`, `electron/tray.js` and `electron/updater.js` are wired in from there. The updater pulls releases from the separate `ramboxapp/download` GitHub repository, not from this one.
+**Main process** lives in `electron/`. `electron/main.js` owns the single `BrowserWindow`, the `electron-store` configuration object (its `defaults` block is the authoritative list of every preference key), tray, menu, auto-launch, proxy, master password window, and the screen-share picker. `electron/menu.js`, `electron/tray.js` and `electron/updater.js` are wired in from there. The updater reads releases from this repository's own GitHub releases, set as the feed in `electron/updater.js`; upstream pointed at the archived `ramboxapp/download`.
 
 **Renderer** is the ExtJS app: `index.html` loads the generated `bootstrap.js`, `app.js` bootstraps `Redil.Application` (`app/Application.js`) with `Redil.view.main.Main` as the viewport. `app/` follows Sencha MVVM conventions, with view, controller and model files side by side under `app/view/<feature>/`. The bulk of the behavior is in `app/view/main/MainController.js`, `app/view/preferences/`, `app/view/add/`, and `app/ux/WebView.js`.
 
@@ -81,11 +81,15 @@ Two processes with very different technology stacks, bridged by IPC.
 
 ## Traps worth knowing
 
-The renderer runs with `nodeIntegration` on and `contextIsolation` off, and calls `require('electron')` freely, including from inline scripts in `index.html` and `masterpassword.html`. The renderer reaches main-process APIs through `@electron/remote`, which the main process initialises once and then enables per `webContents`. A new window whose renderer needs those APIs must be passed to `remoteMain.enable`, or every `require('@electron/remote')` call in it returns undefined.
+The renderer runs with `nodeIntegration` on and `contextIsolation` off, and calls `require('electron')` freely, including from inline scripts in `index.html` and `masterpassword.html`. Because node is on, its own `process` is the renderer's, so `process.platform`, `process.arch` and `process.versions` are read directly and never over IPC.
+
+The renderer no longer reaches main-process APIs through `@electron/remote`. What it needs is named IPC: `app:getVersion`, `app:quit`, `window:show`, `media:getAccessStatus`, `media:askForAccess` and `webview:clearData`. Three things that used to cross the bridge now live entirely in main, inside the `web-contents-created` handler that filters for webviews: the Google user-agent header rewrite, `certificate-error`, and `before-input-event`, which replays a shortcut typed inside a service into the host window so the app's Mousetrap sees it. Main decides a certificate error but cannot draw the warning, so it sends `webview:certificate-error` with the webContents id and the matching panel shows it; the renderer reports each service's `trust` flag over `webview:setTrust` as the service becomes ready, since the flag lives in its localStorage.
+
+`@electron/remote` survives for one consumer only: `vendor/electron-contextmenu-wrapper`, which builds the context menu in the renderer, both in `app.js` for the host window and in the service preload. That is why `remoteMain.enable` is still called for the main window and for each service `webContents`. Removing the vendored package would remove the dependency; until then, a new window whose renderer needs those APIs must be passed to `remoteMain.enable`, or every `require('@electron/remote')` call in it returns undefined.
 
 Service webviews set `sandbox=no`. Their preload script uses `require` to pull in node modules, which a sandboxed preload cannot do.
 
-`electron/tray.js` does not use IPC to reach the renderer. It calls `win.webContents.executeJavaScript('ipc.send("toggleWin", false);')`, which depends on the global `ipc` that `app.js` defines at line 17. Renaming that global silently breaks every tray interaction.
+`electron/tray.js` does not use IPC to reach the renderer. It calls `win.webContents.executeJavaScript('ipc.send("toggleWin", false);')`, which depends on the global `ipc` that `app.js` defines near the top. Renaming that global silently breaks every tray interaction.
 
 The `validateMasterPassword` handler in `electron/main.js` assigns `event.returnValue` twice, so it reads like it always answers `false`. It does not. Electron dispatches the reply on the first assignment and ignores the second, so a correct password does return `true`. This was verified by calling the channel directly. Leave the redundant line alone unless you retest.
 

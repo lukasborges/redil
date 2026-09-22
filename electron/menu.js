@@ -263,10 +263,12 @@ module.exports = function(config) {
 		helpSubmenu.push({
 			label: 'Grant Microphone and Camera permissions',
 			visible: systemPreferences.getMediaAccessStatus('microphone') !== 'granted' || systemPreferences.getMediaAccessStatus('camera') !== 'granted',
-			click(item, win) {
-				const webContents = win.webContents;
-				const send = webContents.send.bind(win.webContents);
-				send('grantPermissions');
+			// Asked for here rather than sent to the renderer, which could only
+			// ask the main process back over the remote bridge. One at a time,
+			// so macOS does not stack the two prompts.
+			async click() {
+				await systemPreferences.askForMediaAccess('microphone');
+				await systemPreferences.askForMediaAccess('camera');
 			}
 		});
 	} else {

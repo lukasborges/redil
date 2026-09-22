@@ -1,6 +1,6 @@
 'use strict';
 
-const {app, BrowserWindow, shell, Menu, ipcMain, nativeImage, session, desktopCapturer, dialog} = require('electron');
+const {app, BrowserWindow, shell, Menu, ipcMain, nativeImage, session, desktopCapturer, dialog, systemPreferences, webContents} = require('electron');
 // Tray
 const tray = require('./tray');
 // Remote module (replacement for the built-in one removed in Electron 14)
@@ -236,8 +236,6 @@ function createMasterPasswordWindow() {
 		}
 	});
 
-	remoteMain.enable(mainMasterPasswordWindow.webContents);
-
 	// Open the DevTools.
 	if ( isDev ) mainMasterPasswordWindow.webContents.openDevTools();
 
@@ -449,6 +447,58 @@ ipcMain.on('reloadApp', function(event) {
 });
 
 // Relaunch app
+// What the renderer used to reach through @electron/remote. It runs with
+// nodeIntegration, so anything already on its own `process` stays there; only
+// the calls that genuinely belong to the main process crossed over.
+ipcMain.on('app:getVersion', function(event) {
+	event.returnValue = app.getVersion();
+});
+
+ipcMain.on('app:quit', function() {
+	app.quit();
+});
+
+ipcMain.on('window:show', function() {
+	if ( mainWindow ) mainWindow.show();
+});
+
+ipcMain.on('media:getAccessStatus', function(event) {
+	// Only macOS gates the camera and the microphone; elsewhere there is nothing
+	// to ask for, and the renderer only shows its banner when something is not
+	// granted.
+	event.returnValue = process.platform === 'darwin'
+		? {
+			 microphone: systemPreferences.getMediaAccessStatus('microphone')
+			,camera: systemPreferences.getMediaAccessStatus('camera')
+		}
+		: { microphone: 'granted', camera: 'granted' };
+});
+
+ipcMain.handle('media:askForAccess', async function() {
+	if ( process.platform !== 'darwin' ) return;
+	await systemPreferences.askForMediaAccess('microphone');
+	await systemPreferences.askForMediaAccess('camera');
+});
+
+ipcMain.handle('webview:clearData', async function(event, webContentsId) {
+	const contents = webContents.fromId(webContentsId);
+	if ( !contents ) return;
+	contents.clearHistory();
+	contents.session.flushStorageData();
+	await contents.session.clearCache();
+	await contents.session.clearStorageData();
+	await contents.session.cookies.flushStore();
+});
+
+// Which services the user marked as trusted, by webContents id. The flag lives
+// in the renderer's localStorage, so the renderer reports it as each service
+// becomes ready and the certificate handler below reads it from here.
+const trustedWebContents = new Set();
+
+ipcMain.on('webview:setTrust', function(event, webContentsId, trust) {
+	trust ? trustedWebContents.add(webContentsId) : trustedWebContents.delete(webContentsId);
+});
+
 ipcMain.on('relaunchApp', function(event) {
 	app.relaunch();
 	app.exit(0);
@@ -499,6 +549,78 @@ app.on('web-contents-created', (webContentsCreatedEvent, contents) => {
 	if (contents.getType() !== 'webview') return;
 	// The service preload builds its context menu through @electron/remote.
 	remoteMain.enable(contents);
+
+	// Held on its own, because reading it back off a destroyed webContents throws.
+	const contentsId = contents.id;
+
+	// Google turns its sign-in away when it arrives from an embedded Chrome, so
+	// the request that carries it announces Firefox instead. Installed here
+	// rather than from the renderer, which reached the session over the remote
+	// bridge to say something only the main process can act on.
+	contents.session.webRequest.onBeforeSendHeaders((details, callback) => {
+		if ( /^https:\/\/accounts\.google\.com(\/|$)/.test(details.url) ) {
+			details.requestHeaders['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0';
+		}
+		callback({ cancel: false, requestHeaders: details.requestHeaders });
+	});
+
+	// A bad certificate is refused unless the user marked the service trusted.
+	// Either way the renderer is told, because the warning belongs in that
+	// service's status bar and only the renderer can draw it.
+	contents.on('certificate-error', (event, url, error, certificate, callback) => {
+		if ( trustedWebContents.has(contentsId) ) {
+			event.preventDefault();
+			callback(true);
+		} else {
+			callback(false);
+		}
+		if ( mainWindow ) mainWindow.webContents.send('webview:certificate-error', contentsId);
+	});
+
+	// A shortcut typed while a service has the focus never reaches the app's own
+	// Mousetrap, which listens in the host window. Electron reports the key here
+	// first, so it is replayed there.
+	contents.on('before-input-event', (event, input) => {
+		if ( input.type !== 'keyDown' ) return;
+
+		const modifiers = [];
+		if (input.shift) modifiers.push('shift');
+		if (input.control) modifiers.push('control');
+		if (input.alt) modifiers.push('alt');
+		if (input.meta) modifiers.push('meta');
+		if (input.isAutoRepeat) modifiers.push('isAutoRepeat');
+
+		if ( input.key === 'Tab' && !modifiers.length ) return;
+
+		// Maps special keys to fire the correct event in Mac OS
+		let key = input.key;
+		if ( process.platform === 'darwin' ) {
+			const macKeys = {
+				 '\u0192': 'f' // Search
+				,' ': 'l'       // Lock
+				,'\u2202': 'd'  // DND
+			};
+			key = macKeys[key] ? macKeys[key] : key;
+		}
+
+		if (
+			key === 'F11' ||
+			key === 'a' ||
+			key === 'A' ||
+			key === 'F12' ||
+			key === 'q' ||
+			(key === 'F1' && modifiers.includes('control'))
+		)
+			return;
+
+		if ( mainWindow ) mainWindow.webContents.sendInputEvent({
+			 type: input.type
+			,keyCode: key
+			,modifiers: modifiers
+		});
+	});
+
+	contents.on('destroyed', () => trustedWebContents.delete(contentsId));
 	// Without this the session carries no handler until the renderer reports the
 	// service's settings, and Electron's own default is to grant.
 	applyPermissionPolicy(contents.session, null, false);

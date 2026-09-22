@@ -55,7 +55,8 @@ Ext.define('Redil.Application', {
 			})
 		})();
 
-		if ( !localStorage.getItem('hideMacPermissions') && process.platform === 'darwin' && (require('@electron/remote').systemPreferences.getMediaAccessStatus('microphone') !== 'granted' || require('@electron/remote').systemPreferences.getMediaAccessStatus('camera') !== 'granted') ) {
+		var mediaAccess = process.platform === 'darwin' ? ipc.sendSync('media:getAccessStatus') : null;
+		if ( !localStorage.getItem('hideMacPermissions') && mediaAccess && (mediaAccess.microphone !== 'granted' || mediaAccess.camera !== 'granted') ) {
 			console.info('Checking mac permissions...');
 			Ext.cq1('app-main').addDocked({
 				xtype: 'toolbar'
@@ -72,8 +73,7 @@ Ext.define('Redil.Application', {
 						,text: 'Grant permissions'
 						,ui: 'decline'
 						,handler: async function(btn) {
-							await require('@electron/remote').systemPreferences.askForMediaAccess('microphone');
-							await require('@electron/remote').systemPreferences.askForMediaAccess('camera');
+							await ipc.invoke('media:askForAccess');
 							Ext.cq1('app-main').removeDocked(btn.up('toolbar'), true);
 						}
 					}
@@ -143,7 +143,7 @@ Ext.define('Redil.Application', {
 			];
 
 			// Shortcuts
-			const platform = require('@electron/remote').process.platform;
+			const platform = process.platform;
 			// Prevents default behaviour of Mousetrap, that prevents shortcuts in textareas
 			Mousetrap.prototype.stopCallback = function(e, element, combo) {
 				return false;

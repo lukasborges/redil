@@ -159,26 +159,16 @@ Ext.define('Redil.view.main.MainController', {
 		if ( config.default_service === rec.get('id') ) ipc.send('setConfig', Ext.apply(config, { default_service: 'redilTab' }));
 
 		function clearData(webview, tab) {
-			const currentWebView = require('@electron/remote').webContents.fromId(
-				webview.getWebContentsId()
-			);
-
-			currentWebView.clearHistory();
-			currentWebView.session.flushStorageData();
-			currentWebView.session.clearCache().then(() => {
-				currentWebView.session.clearStorageData().then(() => {
-					currentWebView.session.cookies.flushStore().then(() => {
-						// Remove record from localStorage
-						Ext.getStore('Services').remove(rec);
-						// Close tab
-						tab.close();
-						// Close waiting message
-						if ( total === actual ) {
-							Ext.Msg.hide();
-							if ( Ext.isFunction(callback) ) callback();
-						}
-					}).catch(err => { console.log(err) })
-				}).catch(err => { console.log(err) })
+			ipc.invoke('webview:clearData', webview.getWebContentsId()).then(() => {
+				// Remove record from localStorage
+				Ext.getStore('Services').remove(rec);
+				// Close tab
+				tab.close();
+				// Close waiting message
+				if ( total === actual ) {
+					Ext.Msg.hide();
+					if ( Ext.isFunction(callback) ) callback();
+				}
 			}).catch(err => { console.log(err) })
 		}
 	}

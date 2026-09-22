@@ -292,12 +292,6 @@ Ext.define('Redil.ux.WebView',{
 		// Notifications in Webview
 		me.setNotifications(localStorage.getItem('locked') || JSON.parse(localStorage.getItem('dontDisturb')) ? false : me.record.get('notifications'));
 
-		require('@electron/remote').session.fromPartition('persist:' + me.record.get('type') + '_' + me.id.replace('tab_', '')).webRequest.onBeforeSendHeaders((details, callback) => {
-			const change = details.url.match(/^https:\/\/accounts\.google\.com(\/|$)/);
-			if ( change ) details.requestHeaders['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0';
-			callback({ cancel: false, requestHeaders: details.requestHeaders });
-		});
-
 		// Show and hide spinner when is loading
 		webview.addEventListener("did-start-loading", function() {
 			console.info('Start loading...', me.src);
@@ -396,7 +390,7 @@ Ext.define('Redil.ux.WebView',{
 			e.preventDefault();
 		});
 
-		let eventsOnDom = false;
+		let firstDomReady = true;
 		webview.addEventListener("dom-ready", function(e) {
 			// Mute Webview
 			if ( me.record.get('muted') || localStorage.getItem('locked') || JSON.parse(localStorage.getItem('dontDisturb')) ) me.setAudioMuted(true, true);
@@ -426,62 +420,26 @@ Ext.define('Redil.ux.WebView',{
 			// Scroll always to top (bug)
 			js_inject += 'document.body.scrollTop=0;';
 
-			// Handles Certificate Errors
-			require('@electron/remote').webContents.fromId(webview.getWebContentsId()).on('certificate-error', function(event, url, error, certificate, callback) {
-				if (me.record.get('trust')) {
-					event.preventDefault();
-					callback(true);
-				} else {
-					callback(false);
-				}
+			// Handles Certificate Errors. Whether to accept one is decided in the
+			// main process, which owns this webContents but cannot reach the
+			// status bar, so it reports back here to have the warning drawn.
+			ipc.send('webview:setTrust', webview.getWebContentsId(), me.record.get('trust'));
+			if (!me.certificateWarning) {
+				me.certificateWarning = function(event, webContentsId) {
+					if (webContentsId !== webview.getWebContentsId()) return;
 
-				me.down('statusbar').keep = true;
-				me.down('statusbar').show();
-				me.down('statusbar').setStatus({
-					text: '<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Certification Warning',
-				});
-				me.down('statusbar').down('button').show();
-			});
-			if (!eventsOnDom) {
-				require('@electron/remote').webContents.fromId(webview.getWebContentsId()).on('before-input-event', (event, input) => {
-					if (input.type !== 'keyDown') return;
-
-					var modifiers = [];
-					if (input.shift) modifiers.push('shift');
-					if (input.control) modifiers.push('control');
-					if (input.alt) modifiers.push('alt');
-					if (input.meta) modifiers.push('meta');
-					if (input.isAutoRepeat) modifiers.push('isAutoRepeat');
-
-					if (input.key === 'Tab' && !(modifiers && modifiers.length)) return;
-
-					// Maps special keys to fire the correct event in Mac OS
-					if (require('@electron/remote').process.platform === 'darwin') {
-						var keys = [];
-						keys['ƒ'] = 'f'; // Search
-						keys[' '] = 'l'; // Lock
-						keys['∂'] = 'd'; // DND
-
-						input.key = keys[input.key] ? keys[input.key] : input.key;
-					}
-
-					if (
-						input.key === 'F11' ||
-						input.key === 'a' ||
-						input.key === 'A' ||
-						input.key === 'F12' ||
-						input.key === 'q' ||
-						(input.key === 'F1' && modifiers.includes('control'))
-					)
-						return;
-
-					require('@electron/remote').getCurrentWebContents().sendInputEvent({
-						type: input.type,
-						keyCode: input.key,
-						modifiers: modifiers,
+					me.down('statusbar').keep = true;
+					me.down('statusbar').show();
+					me.down('statusbar').setStatus({
+						text: '<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Certification Warning',
 					});
-				});
-				eventsOnDom = true;
+					me.down('statusbar').down('button').show();
+				};
+				ipc.on('webview:certificate-error', me.certificateWarning);
+				me.on('destroy', function() { ipc.removeListener('webview:certificate-error', me.certificateWarning); });
+			}
+			if (firstDomReady) {
+				firstDomReady = false;
 
 				Redil.app.config.googleURLs.forEach((loginURL) => {	if ( webview.getURL().indexOf(loginURL) > -1 ) webview.reload() })
 			}
@@ -528,7 +486,7 @@ Ext.define('Redil.ux.WebView',{
 			}
 
 			function showWindowAndActivateTab(event) {
-				require('@electron/remote').getCurrentWindow().show();
+				ipc.send('window:show');
 				var tabPanel = Ext.cq1('app-main');
 				// Temp fix missing cursor after upgrade to electron 3.x +
 				tabPanel.setActiveTab(me);
