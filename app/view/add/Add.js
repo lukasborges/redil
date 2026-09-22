@@ -32,6 +32,7 @@ Ext.define('Redil.view.add.Add',{
 		me.items = [
 			{
 				 xtype: 'form'
+				,cls: 'rx-plain'
 				,items: [
 					{
 						 xtype: 'textfield'

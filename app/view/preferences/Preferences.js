@@ -68,6 +68,9 @@ Ext.define('Redil.view.preferences.Preferences',{
 				 xtype: 'form'
 				,bodyPadding: 0
 				,layout: 'fit'
+				// a form inside a window is not a panel of its own, and crisp frames
+				// every panel body
+				,cls: 'rx-plain'
 				,items: [
 					/*
 					 * Five sections instead of one scroll of fourteen controls. The
@@ -82,6 +85,10 @@ Ext.define('Redil.view.preferences.Preferences',{
 						 xtype: 'tabpanel'
 						,tabPosition: 'left'
 						,tabRotation: 0
+						// the width belongs to the component, not to the stylesheet:
+						// Ext places the body from the width it laid the bar out with,
+						// so a CSS-only bar left a white gutter beside it
+						,tabBar: { width: 176 }
 						,deferredRender: false
 						,cls: 'rx-prefs-nav'
 						,items: [

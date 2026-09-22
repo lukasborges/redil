@@ -609,10 +609,11 @@ body {
  * because there are five words and no icons to stand in for them.
  */
 
+/* The width is a config on the tab bar, not a rule here, or Ext lays the body
+   out against the width it measured and leaves a gutter. The seam is the body's
+   own left border, so the bar draws none. */
 .rx-prefs-nav > .x-tab-bar-default-left {
-	width: 176px !important;
 	background-color: var(--rx-sunken);
-	border-right: 1px solid var(--rx-line);
 	padding: 10px 8px;
 }
 
@@ -1231,6 +1232,20 @@ body {
 .x-window-body-default {
 	background-color: var(--rx-raised);
 	border-color: var(--rx-line);
+}
+
+/*
+ * The window already draws its outline and its header the seam under it, so a
+ * second border around the body doubled both lines. And a form panel nested in
+ * a window is not a panel anyone can see: crisp framed its body as well, which
+ * put a stray rectangle around the fields.
+ */
+.x-window-body-default {
+	border-width: 0;
+}
+
+.rx-plain > .x-panel-body-default {
+	border-width: 0;
 }
 
 .x-window-header-default {
