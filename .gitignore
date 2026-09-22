@@ -36,3 +36,7 @@ npm-debug.log
 
 languages.js
 electron/dev-app-update.yml
+
+# Playwright output
+test-results/
+playwright-report/

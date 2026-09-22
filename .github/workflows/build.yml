@@ -1,8 +1,9 @@
 name: Build
 
-# Proves the app builds from the repository rather than from somebody's laptop.
-# Packaging is where this project is most likely to break silently, because the
-# renderer boots from a generated bootstrap.js that is not committed.
+# Runs the suite and proves the app builds from the repository rather than from
+# somebody's laptop. Packaging is where this project is most likely to break
+# silently, because the renderer boots from a generated bootstrap.js that is not
+# committed.
 
 on:
   push:
@@ -36,6 +37,11 @@ jobs:
 
       - name: Generate bootstrap.js
         run: npm run bootstrap
+
+      # The suite launches the real app, so it needs a display. The runner has
+      # none, and Electron will not start on Linux without one.
+      - name: Test
+        run: xvfb-run --auto-servernum npx playwright test
 
       - name: Package
         run: npx electron-builder --linux --publish never

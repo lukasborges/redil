@@ -50,11 +50,18 @@ There is no linter or formatter configured.
 ## Tests
 
 ```bash
-npm test                                            # mocha over test/tests/**/*.spec.js
-./node_modules/.bin/mocha test/tests/app/example.spec.js   # single spec
+npm test                                    # regenerates bootstrap.js, then runs Playwright
+npx playwright test test/contextmenu.spec.js   # one file
+npx playwright test -g "user agent"            # one test by name
 ```
 
-Tests are Mocha plus Chai driving the packaged app through Spectron. `test/helpers/RedilTestHelper.js` starts and stops Electron around each test. It requires `electron-prebuilt`, which is not in `package.json`, so the suite does not run as-is without adding that dependency or repointing the helper at the `electron` package.
+Playwright's Electron support drives the suite, in place of Spectron, which was abandoned in 2022 alongside upstream and had never been installable here anyway: the old helper required `electron-prebuilt`, which was not in `package.json`. Mocha and Chai went with it, so `@playwright/test` is the only test dependency and it downloads no browsers, because the suite launches this app and nothing else.
+
+`test/contextmenu.spec.js` needs no app: `template` in `electron/contextmenu.js` is a pure function, and those cases record the behaviour inherited from the package it replaced. `test/app.spec.js` launches the real thing through `test/helpers/launch.js`.
+
+Three things that helper has to get right. Each launch gets its own `--user-data-dir`, or the run reads the developer's own configuration, opens whatever services they have configured and talks to the network, which makes the assertions depend on the machine. Running unpacked makes `isDev` true, so `main.js` opens the DevTools and the app has **two** windows; `firstWindow()` returns whichever won the race, which made the suite fail two runs in three until the helper started finding the window by its URL. And the window exists well before Ext does, so it waits for the viewport rather than for load.
+
+Electron needs a display, so CI runs the suite under `xvfb-run`.
 
 ## Architecture
 
