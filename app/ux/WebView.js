@@ -450,7 +450,7 @@ Ext.define('Redil.ux.WebView',{
 			// Camera, microphone and screen sharing without a prompt, for the
 			// services that exist to make calls. Reported from here for the same
 			// reason as the trust flag: it lives in this side's localStorage.
-			me.setMediaAccess(me.record.get('media'));
+			me.setMediaAccess(me.mediaAccess());
 			if (!me.certificateWarning) {
 				me.certificateWarning = function(event, webContentsId) {
 					if (webContentsId !== webview.getWebContentsId()) return;
@@ -720,6 +720,20 @@ Ext.define('Redil.ux.WebView',{
 		if ( notification && !calledFromDisturb && JSON.parse(localStorage.getItem('dontDisturb')) ) return;
 
 		if ( me.record.get('enabled') ) ipc.send('setServiceNotifications', webview.partition, notification);
+	}
+
+	/**
+	 * Whether this service is allowed the camera and the microphone without being
+	 * asked. The record decides when it says anything; when it says null, which
+	 * is what a service configured before the setting existed says, the catalogue
+	 * entry it was created from answers for it.
+	 */
+	,mediaAccess: function() {
+		var decided = this.record.get('media');
+		if ( decided === true || decided === false ) return decided;
+
+		var entry = Ext.getStore('ServicesList').getById(this.record.get('type'));
+		return !!(entry && entry.get('media'));
 	}
 
 	/**

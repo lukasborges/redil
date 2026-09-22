@@ -46,8 +46,10 @@ Ext.define('Redil.view.add.AddController', {
 			var view = Ext.getCmp('tab_'+win.record.get('id'));
 
 			// The rail shows icons only, so the name is the tooltip rather than a
-			// title; the per-service tabname option went with the labels.
-			view.setTooltip( formValues.serviceName );
+			// title; the per-service tabname option went with the labels. The
+			// tooltip belongs to the tab, which is a button: a panel has no
+			// setTooltip, and calling it here threw before anything was saved.
+			view.tab.setTooltip( formValues.serviceName );
 			// Change sound of the Tab
 			view.setAudioMuted(formValues.muted);
 			// Change statusbar of the Tab

@@ -217,7 +217,11 @@ Ext.define('Redil.view.add.Add',{
 										 xtype: 'checkbox'
 										,boxLabel: 'Allow camera, microphone and screen sharing'
 										,name: 'media'
-										,checked: me.record.get('media')
+										// null on the record means nobody has decided, and the
+										// catalogue answers; saving writes an explicit answer
+										,checked: me.record.get('media') === null || me.record.get('media') === undefined
+											? !!(me.service || me.record).get('media')
+											: me.record.get('media')
 										,uncheckedValue: false
 										,inputValue: true
 									}
@@ -304,7 +308,9 @@ Ext.define('Redil.view.add.Add',{
 			}
 			,'->'
 			,{
-				 text: me.title
+				// The window is already titled "Edit Google Meet"; the button says
+				// what it does, not where it is.
+				 text: me.edit ? locale['button[4]'] : locale['app.window[10]']
 				,itemId: 'submit'
 				,handler: 'doSave'
 			}

@@ -60,12 +60,18 @@ Ext.define('Redil.model.Service', {
 		,type: 'boolean'
 		,defaultValue: false
 	},{
-		// Camera, microphone and screen sharing without a prompt. Seeded from the
-		// catalogue for the services whose whole job is calls; false for anything
-		// added before this field existed, which keeps the prompt.
+		/*
+		 * Camera, microphone and screen sharing without a prompt. Three states,
+		 * not two: null means nobody has decided, so the catalogue's own flag
+		 * answers, which is what makes a service added before this field existed
+		 * -- or before its catalogue entry was marked -- work without being
+		 * edited. Saving the Add window always writes true or false, so a person
+		 * who turns it off is not overruled by the catalogue later.
+		 */
 		 name: 'media'
 		,type: 'boolean'
-		,defaultValue: false
+		,allowNull: true
+		,defaultValue: null
 	},{
 		 name: 'enabled'
 		,type: 'boolean'
