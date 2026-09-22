@@ -67,6 +67,15 @@ if (config.get('enable_hidpi_support') && (process.platform === 'win32')) {
 	app.commandLine.appendSwitch('force-device-scale-factor', '1')
 }
 
+/*
+ * On a Wayland session the app ran through XWayland, which cannot see the
+ * compositor's output: screen sharing offered a list of X windows and no
+ * screens at all. Running natively hands capture to the desktop portal, which
+ * is the system's own picker and the only one that works there. The hint falls
+ * back to X11 on an X11 session, so it is safe to set unconditionally on Linux.
+ */
+if ( process.platform === 'linux' ) app.commandLine.appendSwitch('ozone-platform-hint', 'auto');
+
 app.commandLine.appendSwitch('lang', config.get('locale') === 'en' ? 'en-US' :  config.get('locale'));
 
 // Temporary fix to load Twitter and other websites inside webviews
@@ -235,7 +244,8 @@ function createWindow () {
 let mainMasterPasswordWindow;
 function createMasterPasswordWindow() {
 	mainMasterPasswordWindow = new BrowserWindow({
-		 backgroundColor: '#0675A0'
+		// the rail's navy, which is what the page paints over it
+		 backgroundColor: '#24506F'
 		,frame: false
 		,webPreferences: {
 			 preload: path.join(__dirname, 'preload.js')
@@ -579,12 +589,25 @@ app.on('web-contents-created', (webContentsCreatedEvent, contents) => {
 	// preload wrote over navigator.mediaDevices. An isolated preload cannot
 	// reach the page's navigator, and this is the API meant for the job: it
 	// needs no code in the page at all.
+	/*
+	 * Who picks the screen depends on whether the system has a picker of its own.
+	 * macOS 15 does, and useSystemPicker hands the whole request to it. Wayland
+	 * does too: asking desktopCapturer for sources opens the portal's chooser and
+	 * answers with the one stream the person selected there, so showing our own
+	 * picker after it would ask the same question twice. Everywhere else -- X11,
+	 * Windows -- nothing asks, and screenselector.html is the picker.
+	 */
 	contents.session.setDisplayMediaRequestHandler(async (request, callback) => {
 		const sources = await desktopCapturer.getSources({ types: ['screen', 'window'] });
+
+		// Answering with nothing is how a request is refused, and an empty list is
+		// what a cancelled portal dialog looks like.
+		if ( !sources.length ) return callback();
+		if ( systemPicksTheSource() ) return callback({ video: sources[0] });
+
 		const chosen = await pickScreenShareSource(sources);
-		// Answering with nothing is how a request is refused.
 		chosen ? callback({ video: chosen }) : callback();
-	}, { useSystemPicker: false });
+	}, { useSystemPicker: true });
 
 	// Held on its own, because reading it back off a destroyed webContents throws.
 	const contentsId = contents.id;
@@ -781,6 +804,16 @@ function toggleWindow(allwaysShow) {
 }
 
 ipcMain.on('toggleWin', (event, allwaysShow) => toggleWindow(allwaysShow));
+
+/**
+ * Whether the desktop has already asked which screen to share by the time the
+ * sources come back. That is what the Wayland portal does, and there is no way
+ * to ask it for a list without it showing its dialog.
+ */
+function systemPicksTheSource() {
+	return process.platform === 'linux'
+		&& (process.env.XDG_SESSION_TYPE === 'wayland' || !!process.env.WAYLAND_DISPLAY);
+}
 
 // ScreenShare
 // Enumerating screens belongs to the main process: desktopCapturer stopped being

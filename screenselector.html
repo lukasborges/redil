@@ -1,159 +1,183 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
+		<!--
+			For the colour tokens and the interface font. The picker is a window of
+			the app's own, so it follows the same theme as everything else, including
+			the dark one; nothing else in that file matches this page.
+		-->
+		<link rel="stylesheet" href="resources/css/redil-modern.css">
 		<style type="text/css">
+			/* The window is frameless and transparent: the card below is the window. */
 			html,
 			body {
 				width: 100%;
 				height: 100%;
 				margin: 0;
 				overflow: hidden;
+				background: transparent;
 			}
 
 			.screen-selector {
-				background-color: #fff;
+				display: flex;
+				flex-direction: column;
 				width: 100%;
 				height: 100%;
-				border-radius: 5px;
-				border: solid 1px #cdcdcd;
 				box-sizing: border-box;
+				background-color: var(--rx-raised);
+				border: 1px solid var(--rx-line);
+				border-radius: 12px;
+				box-shadow: 0 18px 48px var(--rx-shadow);
+				overflow: hidden;
+				color: var(--rx-ink);
 			}
 
+			/* the only place to grab a window with no frame */
 			.screen-selector ul.type {
-				display: inline-block;
-				padding: 0;
+				display: flex;
+				gap: 4px;
 				margin: 0;
-				border-bottom: solid 1px #cdcdcd;
-				width: 100%;
+				padding: 0 14px;
+				border-bottom: 1px solid var(--rx-line);
 				-webkit-app-region: drag;
 			}
 
 			.screen-selector ul.type li {
-				display: inline-block;
-				height: 40px;
-				line-height: 40px;
-				color: #65696c;
+				list-style: none;
+				height: 44px;
+				line-height: 44px;
+				padding: 0 10px;
+				font-size: 13px;
+				color: var(--rx-muted);
 				border-bottom: 2px solid transparent;
-				font-family: sans-serif;
-				font-weight: bold;
-				padding: 0 15px;
 				cursor: pointer;
 				-webkit-app-region: no-drag;
 			}
 
-			.screen-selector ul.type li.active,
 			.screen-selector ul.type li:hover {
-				color: #426ba3;
-				border-color: #426ba3;
+				color: var(--rx-ink);
+			}
+
+			.screen-selector ul.type li.active {
+				color: var(--rx-ink);
+				font-weight: 600;
+				border-bottom-color: var(--rx-brand);
 			}
 
 			.screen-selector > .content {
-				height: calc(100% - 92px);
+				flex-grow: 1;
+				min-height: 0;
 			}
 
 			.screen-selector ul.preview {
-				display: flex;
+				display: grid;
+				grid-template-columns: repeat(3, minmax(0, 1fr));
+				gap: 6px;
+				align-content: start;
 				margin: 0;
-				padding: 0;
-				width: 100%;
-				max-height: 100%;
+				padding: 12px;
+				height: 100%;
 				box-sizing: border-box;
-				padding: 10px;
 				overflow-y: auto;
-				flex-wrap: wrap;
 				list-style-type: none;
 			}
 
 			.screen-selector ul.preview li {
-				display: inline-block;
-				box-sizing: border-box;
-				width: calc(33% - 1px);
 				cursor: pointer;
-				padding: 5px;
 			}
 
 			.screen-selector ul.preview li .content {
 				display: flex;
-				box-sizing: border-box;
-				padding: 10px;
-				border: solid 2px transparent;
-				border-radius: 5px;
-				height: 100%;
 				flex-direction: column;
+				height: 100%;
+				box-sizing: border-box;
+				padding: 8px;
+				border: 1px solid transparent;
+				border-radius: var(--rx-radius-lg);
+				transition: background-color 0.12s ease, border-color 0.12s ease;
 			}
 
-			.screen-selector ul.preview li.active .content,
 			.screen-selector ul.preview li:hover .content {
-				border-color: #88abdb;
+				background-color: var(--rx-hover);
 			}
 
 			.screen-selector ul.preview li.active .content {
-				color: #000;
-				height: 100%;
+				border-color: var(--rx-brand);
+				background-color: var(--rx-focus);
 			}
 
 			.screen-selector ul.preview li .content .img-wrapper {
 				display: flex;
-				height: 100%;
 				align-items: center;
-				background: #f0f0f0;
+				justify-content: center;
+				height: 96px;
+				background-color: var(--rx-sunken);
+				border-radius: var(--rx-radius);
+				overflow: hidden;
 			}
 
 			.screen-selector ul.preview li .content img {
-				display: inline-block;
-				width: 100%;
+				max-width: 100%;
+				max-height: 100%;
 			}
 
 			.screen-selector ul.preview li .content span {
-				display: inline-block;
-				width: 100%;
-				height: 20px;
-				font-family: sans-serif;
+				display: block;
+				margin-top: 8px;
+				font-size: 12px;
+				color: var(--rx-muted);
 				text-align: center;
-				font-size: 14px;
-				margin-top: 10px;
-				color: #333;
-				box-sizing: border-box;
 				white-space: nowrap;
 				overflow: hidden;
 				text-overflow: ellipsis;
 			}
 
+			.screen-selector ul.preview li.active .content span {
+				color: var(--rx-ink);
+			}
+
 			.screen-selector .footer {
-				display: inline-block;
-				width: 100%;
-				border-top: solid 1px #cdcdcd;
+				display: flex;
+				justify-content: flex-end;
+				gap: 10px;
+				padding: 12px 14px;
+				border-top: 1px solid var(--rx-line);
 			}
 
 			.screen-selector .footer button {
-				float: right;
-				margin-top: 10px;
-				margin-right: 10px;
-				border: none;
-				border-radius: 5px;
-				padding: 5px 10px;
-				font-size: 14px;
+				font: inherit;
+				font-size: 13px;
+				padding: 8px 16px;
+				border-radius: var(--rx-radius);
 				cursor: pointer;
-				font-weight: bold;
+				transition: background-color 0.12s ease;
 			}
 
 			.screen-selector .footer button#cancel {
-				border: solid 1px #cdcdcd;
-				background: #fff;
-				color: #1c73e4;
+				color: var(--rx-ink);
+				background: none;
+				border: 1px solid var(--rx-line-strong);
+			}
+
+			.screen-selector .footer button#cancel:hover {
+				background-color: var(--rx-sunken);
 			}
 
 			.screen-selector .footer button#share {
-				border: solid 1px #186ddd;
-				background: #1c73e4;
-				color: #fff;
+				font-weight: 600;
+				color: var(--rx-on-brand);
+				background-color: var(--rx-brand);
+				border: 1px solid var(--rx-brand);
+			}
+
+			.screen-selector .footer button#share:hover {
+				background-color: var(--rx-brand-over);
+				border-color: var(--rx-brand-over);
 			}
 
 			.screen-selector .footer button#share[disabled] {
-				background: #666;
-				border: solid 1px #666;
+				opacity: 0.45;
 				cursor: not-allowed;
-				opacity: 0.4;
 			}
 		</style>
 	</head>
@@ -167,8 +191,8 @@
 				<ul class="preview"></ul>
 			</div>
 			<div class="footer">
-				<button id="share" disabled>Share</button>
 				<button id="cancel">Cancel</button>
+				<button id="share" disabled>Share</button>
 			</div>
 		</div>
 		<script>
