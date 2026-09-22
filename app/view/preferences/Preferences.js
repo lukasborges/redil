@@ -1,10 +1,10 @@
-Ext.define('Rambox.view.preferences.Preferences',{
+Ext.define('Redil.view.preferences.Preferences',{
 	 extend: 'Ext.window.Window'
 	,xtype: 'preferences'
 
 	,requires: [
-		 'Rambox.view.preferences.PreferencesController'
-		,'Rambox.view.preferences.PreferencesModel'
+		 'Redil.view.preferences.PreferencesController'
+		,'Redil.view.preferences.PreferencesModel'
 		,'Ext.form.field.ComboBox'
 		,'Ext.form.field.Checkbox'
 	]
@@ -42,7 +42,7 @@ Ext.define('Rambox.view.preferences.Preferences',{
 		var config = ipc.sendSync('getConfig');
 
 		var defaultServiceOptions = [];
-		defaultServiceOptions.push({ value: 'ramboxTab', label: 'Rambox Tab' });
+		defaultServiceOptions.push({ value: 'redilTab', label: 'Redil Tab' });
 		defaultServiceOptions.push({ value: 'last', label: 'Last Active Service' });
 		Ext.getStore('Services').each(function(rec) {
 			defaultServiceOptions.push({

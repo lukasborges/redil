@@ -1,139 +1,69 @@
-# EOL
-The Community Edition of Rambox is no longer maintained. We highly recommend that you update to the new version of Rambox, which has a FREE plan with all the features you already use and much more!
-
-Visit: https://rambox.app/download
-
-Thank you so much for all the users who contribute to this project all these years.
-
-[Read our blog post to know more about our new Rambox.](https://rambox.medium.com/hello-2022-hello-new-rambox-4bdef5d6c3b8)
-
----
-
 <div align="center">
-  <h1>
-    <br />
-    <a href="https://rambox.pro"><img src="./resources/Icon.png" width="256px" alt="Rambox" /></a><br />
-    Rambox CE
-    <br /><br/>
-  </h1>
-
-  <h4>Free, Open Source and Cross Platform messaging and emailing app that combines common web applications into one.</h4>
-
-  <p>
-    <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=WU75QWS7LH2CA" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-green.svg" alt="Donate with PayPal" /></a>
-    <a href="https://www.gnu.org/licenses/gpl-3.0.en.html" target="_blank"><img src="https://img.shields.io/github/license/saenzramiro/rambox.svg" alt="GNU GPL v3" /></a>
-    <a href="https://gitter.im/saenzramiro/rambox" target="_blank"><img src="https://badges.gitter.im/saenzramiro/rambox.svg" alt="Gitter" /></a>
-    <a href="https://github.com/saenzramiro/rambox/releases/latest" target="_blank">
-      <img src="https://img.shields.io/github/release/saenzramiro/rambox.svg" alt="Release" />
-    </a>
-    <a target="_blank" href="https://crowdin.com/project/rambox"><img src="https://d322cqt584bo4o.cloudfront.net/rambox/localized.svg" /></a>
-  </p>
-  <p>
-    <a href="https://travis-ci.org/saenzramiro/rambox" target="_blank"><img src="https://travis-ci.org/saenzramiro/rambox.svg?branch=master" alt="Travis CI" /></a>
-    <a href="https://ci.appveyor.com/project/saenzramiro/rambox" target="_blank"><img src="https://ci.appveyor.com/api/projects/status/3kk9ixjgxwrh7yfy?svg=true" alt="AppVeyor CI" /></a>
-    <a href="https://david-dm.org/saenzramiro/rambox" title="Dependency status"><img src="https://david-dm.org/saenzramiro/rambox.svg" /></a>
-    <a href="https://david-dm.org/saenzramiro/rambox#info=devDependencies" title="devDependency status"><img src="https://david-dm.org/saenzramiro/rambox/dev-status.svg" /></a>
-  </p>
-
-  <h5>Available for Windows, Mac and Linux.</h5>
-
-  <h5><a href="https://rambox.pro/#ce" target="_blank"><img src="https://cdn.rawgit.com/saenzramiro/rambox/gh-pages/images/img-download.svg" width="250" alt="DOWNLOAD HERE" /></a></h5>
-
-  <h6>Logo designed by <a href="https://www.linkedin.com/in/andriyyurchenko/" target="_blank">Andriy Yurchenko</a></h6>
+  <img src="./resources/Icon.png" width="160" alt="Redil" />
+  <h1>Redil</h1>
+  <p>One window for the messaging and email apps you already use in the browser.</p>
+  <p><a href="https://www.gnu.org/licenses/gpl-3.0.en.html">GNU GPL v3</a></p>
 </div>
 
----
-
-## Table of Contents
-
-- [Screenshot](#screenshot)
-- [Apps available](#apps-available)
-- [Features](#features)
-- [Privacy](#privacy)
-- [Donations](#donations)
-- [Translations](#translations)
-- [Install on Linux - Steps](#install-on-linux---steps)
-- [Contributing](#contributing)
-  - [Quickstart](#quickstart)
-- [Disclosure](#disclosure)
-- [Licence](#licence)
+![Redil running on Linux](./resources/screenshots/linux.png)
 
 ---
 
-## Screenshot
+This is a maintained fork of [Rambox Community Edition](https://github.com/ramboxapp/community-edition), which its authors archived in 2022 and pointed at their commercial product. The code was left unbuildable: the renderer was compiled by a version of Sencha Cmd that is no longer distributed, and the generated file it produced was never committed.
 
-![Rambox](./resources/screenshots/mac.png)
+That is fixed. The app builds and runs from this repository with nothing but npm.
 
-## Apps available
+## What changed since upstream
 
-Visit our website https://rambox.app/#apps and select the "Community-Edition" filter to see all the apps available.
+- **Electron 13 to 44.** The renderer was moved off three APIs Electron has since removed: the `remote` module, the `new-window` event, and `desktopCapturer` in the renderer.
+- **Builds without Sencha Cmd.** `scripts/gen-bootstrap.js` boots the app from the Ext JS build and theme CSS already vendored in the repository.
+- **Packaging rebuilt** on electron-builder, straight from the repository, with no dependency on the archived artifact repo that upstream's CI cloned.
+- **Service permissions are refused by default.** The old handler granted camera, microphone and location to every loaded service without asking. Sensitive permissions now prompt once per service.
+- **A third-party tracker and a hardcoded API key** were removed from the renderer, along with the dead Auth0 sign-in and profile sync, which pointed at infrastructure this fork cannot use.
+- **The catalogue is maintained here.** Thirteen entries pointed at services that no longer exist. `npm run check:services` reports what has rotted.
+- **The interface was refreshed**, lightly, without changing the layout.
 
-## Features
+## Install
 
-- [x] Multi-language.
-- [x] Sync your configuration between multiple computers.
-- [x] Master Password.
-- [x] Lock Rambox if you will be away for a period of time.
-- [x] Don't disturb mode.
-- [x] Reorder applications in the tab bar.
-- [x] Notification badge in the tab.
-- [x] Minimize to tray.
-- [x] Mute audio to specific service.
-- [x] Separate tabs floating to the right.
-- [x] Disable a service instead of remove it.
-- [x] Start automatically on system startup.
-- [x] Custom Code Injection.
-- [x] Keyboard Shortcuts.
-- [x] Proxy.
-- [x] Switch from horizontal to vertical tab bar.
+Builds are produced for Linux as an AppImage, a deb and a tarball. See [Releases](https://github.com/lukasborges/rambox-ce/releases).
 
-## Privacy
+The AppImage needs FUSE 2, which some distributions no longer install by default. On Fedora that is `fuse-libs`; on Debian and Ubuntu, `libfuse2`. Without it, run the AppImage with `--appimage-extract-and-run`.
 
-No personal information will be saved
+Windows and macOS are configured but have not been built or tested by this fork.
 
-Sessions will persist using the [partition:persist](https://electronjs.org/docs/api/webview-tag#partition) attribute for Webviews.
-So every time you open Rambox, your sessions will keep alive until you remove the service.
+## Run from source
 
-Sync feature use Auth0 for Single Sign On & Token Based Authentication and to store the services that user is using (and the configuration for each service).
-You are always welcome to check the code! ;)
-
-## Donations
-
-| Type             | URL/Wallet                                                                                 |
-| ---------------- | :----------------------------------------------------------------------------------------: |
-| Credit Cards     | [HERE](https://rambox.app/donate.html) |
-| Cryptocurrencies | [HERE](https://www.vaulty.io/v/b6480279-af28-4855-868c-17e5cb0ae7fa)                       |
-
-## Translations
-
-Help us translate Rambox on <https://crowdin.com/project/rambox/invite>.
-
-## [Install on Linux - Steps](https://github.com/ramboxapp/community-edition/wiki/Install-on-Linux)
-
-## [Contributing](./CONTRIBUTING.md)
-
-Want to report a bug, request a feature, contribute to or translate Rambox?
-We need all the help we can get!
-Fork and work!
-
-### Quickstart
-
-```shell
-git clone https://github.com/saenzramiro/rambox.git
-cd rambox
+```bash
 npm install
-sencha app watch
+npm run bootstrap     # writes bootstrap.js, which is not committed
 npm start
 ```
 
-See [Contributing.md](./CONTRIBUTING.md) for more detailed information about getting set up.
+On Linux, `npm start` may abort with a fatal GPU error, because the Electron installed by npm ships its sandbox helper without the setuid bit. Start it with `--no-sandbox`, which is what the packaged Linux builds already do.
 
----
+```bash
+npm run build:linux     # AppImage, deb and tar.gz into dist/
+npm run check:services  # report catalogue entries whose URLs have rotted
+```
+
+`CLAUDE.md` documents the architecture, the build, and the parts of this codebase that behave in ways you would not guess from reading them.
+
+## Privacy
+
+No account is needed and none is offered. The app stores nothing remotely: your list of services lives in the renderer's local storage, and each service keeps its own session in a persistent Electron partition, so you stay signed in between launches until you remove the service.
+
+Sessions belong to the services themselves. Redil is a frame around their web apps and does not see inside them.
+
+## Contributing
+
+Work on a branch, never on `master`, and see [CONTRIBUTING.md](./CONTRIBUTING.md). The prerequisites listed there are out of date: Sencha Cmd and Ruby are no longer needed.
+
+Translations come from Crowdin and are generated into `resources/languages`. The download path needs migrating to Crowdin's current API client; the version pinned here predates modern Node.
 
 ## Disclosure
 
-Rambox is not affiliated with any of the messaging apps offered.
+Redil is not affiliated with any of the messaging services it opens, nor with Rambox LLC or its product.
 
 ## Licence
 
-[GNU GPL v3](https://github.com/ramboxapp/community-edition/blob/master/LICENSE)
+[GNU GPL v3](./LICENSE). Ext JS 5.1.1 is vendored under the same licence.

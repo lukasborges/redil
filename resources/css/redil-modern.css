@@ -1,0 +1,395 @@
+/*
+ * A light modernisation layer, loaded after redil-theme.css.
+ *
+ * redil-theme.css restates the 2015 theme faithfully and stays traceable to the
+ * original Sass. This file is the opinionated part and is meant to be readable
+ * on its own: drop it from the STYLESHEETS list in scripts/gen-bootstrap.js and
+ * the app returns to the original look, unchanged.
+ *
+ * The idea behind the choices: Rambox is a frame around other people's apps.
+ * Gmail, Slack and Facebook each bring their own loud branding inside the
+ * window, so this chrome recedes and spends all of its contrast on the one
+ * thing only Rambox can tell you, which is where messages are waiting.
+ */
+
+:root {
+	--rx-ink: #12222E;        /* text, in place of a hard black */
+	--rx-brand: #2E658E;      /* unchanged Rambox blue */
+	--rx-chrome: #24506F;     /* command bar, a step behind the content */
+	--rx-surface: #FFFFFF;
+	--rx-sunken: #F3F6F8;     /* cool grey, in place of crisp's warm #f5f5f5 */
+
+	--rx-line: #E3E9EE;       /* hairline, in place of crisp's #cecece */
+	--rx-muted: #5B7183;
+	--rx-alert: #E03131;      /* the unread badge, the one loud colour */
+
+	--rx-radius: 6px;
+	--rx-radius-lg: 9px;
+}
+
+/* ---------------------------------------------------------------- type */
+
+/*
+ * The host system's own interface face. A shell that wraps other applications
+ * should speak in the voice of the desktop it runs on rather than ship a
+ * downloaded face of its own, and it keeps the app off the network at launch.
+ * Glyph classes are left alone; they are FontAwesome.
+ */
+body,
+.x-body,
+.x-panel-header-title-default,
+.x-title-text,
+.x-tab-inner,
+.x-btn-inner,
+.x-form-field,
+.x-form-cb-label,
+.x-grid-cell-inner,
+.x-grid-group-hd,
+.x-toolbar-text,
+.x-menu-item-text,
+.x-boundlist-item,
+.x-window-header-title,
+.service span {
+	font-family: system-ui, -apple-system, 'Segoe UI', Cantarell, Ubuntu, 'Noto Sans', 'Helvetica Neue', sans-serif;
+}
+
+body {
+	color: var(--rx-ink);
+}
+
+/* ------------------------------------------------------------- tab bar */
+
+.x-tab-bar-default-top {
+	background-color: var(--rx-sunken);
+	border-bottom: 1px solid var(--rx-line);
+}
+
+/*
+ * The 2015 theme pushed the bar body down 8px and pulled the strip up 10px to
+ * clear the strip it drew across the whole width. This layer draws no strip, and
+ * the leftover padding made the body taller than the bar it sits in, so the
+ * overflow showed as a white band under the tabs. The tabs carry their own
+ * padding now, so the body goes back to none, and it also paints the bar colour
+ * in case a future layout leaves it taller again.
+ */
+.x-tab-bar-top .x-tab-bar-body {
+	padding: 0 4px !important;
+	background-color: var(--rx-sunken);
+}
+
+.x-tab-bar-top .x-tab-bar-strip {
+	margin-top: 0;
+}
+
+/*
+ * The full width strip under the bar goes. A tab that is a lifted white surface
+ * sitting on the sunken bar already says which service you are in, and it reads
+ * as continuous with the content below it.
+ */
+.x-tab-bar-strip-default,
+.x-tab-bar-top > .x-tab-bar-strip {
+	background-color: transparent;
+	border-color: transparent;
+	height: 0;
+}
+
+.x-tab-default-top {
+	padding: 10px 14px;
+	border-radius: var(--rx-radius) var(--rx-radius) 0 0;
+	transition: background-color 0.12s ease;
+}
+
+.x-tab-default-top:not(.x-tab-active):hover {
+	background-color: rgba(46, 101, 142, 0.07);
+}
+
+.x-tab.x-tab-active.x-tab-default-top {
+	background-color: var(--rx-surface);
+	border-color: var(--rx-surface);
+	box-shadow: inset 0 -2px 0 0 var(--rx-brand);
+}
+
+/* 18px tab labels were the single most dated thing on screen */
+.x-tab-inner-default {
+	font-size: 14px;
+	line-height: 18px;
+	font-weight: 500;
+	color: var(--rx-muted);
+}
+
+.x-tab.x-tab-active.x-tab-default-top .x-tab-inner-default,
+.x-tab.x-tab-active.x-tab-default-top .x-tab-glyph {
+	color: var(--rx-ink);
+	font-weight: 600;
+}
+
+/* ------------------------------------------------- the one loud thing */
+
+.x-badge[data-badge-text]:after {
+	background-image: none;
+	background-color: var(--rx-alert);
+	border-radius: 999px;
+	padding: 1px 5px;
+	font-size: 10px;
+	font-weight: 700;
+	line-height: 14px;
+	text-shadow: none;
+	/* a ring in the bar colour lifts the count clear of the tab */
+	box-shadow: 0 0 0 2px var(--rx-sunken);
+}
+
+.x-tab.x-tab-active.x-badge[data-badge-text]:after {
+	box-shadow: 0 0 0 2px var(--rx-surface);
+}
+
+/* Badge.js leaves the attribute in place and empties it at zero unread */
+.x-badge[data-badge-text=""]:after {
+	display: none;
+}
+
+.x-badge.green-badge[data-badge-text]:after {
+	background-image: none;
+	background-color: #2F9E44;
+}
+
+.x-badge.blue-badge[data-badge-text]:after {
+	background-image: none;
+	background-color: #1971C2;
+}
+
+/* -------------------------------------------------------- command bar */
+
+.x-toolbar-main {
+	background-color: var(--rx-chrome);
+	border-color: var(--rx-chrome);
+	padding: 7px 10px;
+}
+
+/* Grey relief buttons on a navy bar were fighting it. These sit in it. */
+.x-toolbar-main .x-btn-default-toolbar-small {
+	background-color: rgba(255, 255, 255, 0.10);
+	border: 1px solid rgba(255, 255, 255, 0.16);
+	border-radius: var(--rx-radius);
+	box-shadow: none;
+	transition: background-color 0.12s ease;
+}
+
+.x-toolbar-main .x-btn-default-toolbar-small.x-btn-over {
+	background-color: rgba(255, 255, 255, 0.18);
+}
+
+.x-toolbar-main .x-btn-default-toolbar-small.x-btn-pressed {
+	background-color: rgba(255, 255, 255, 0.26);
+}
+
+.x-toolbar-main .x-btn-inner,
+.x-toolbar-main .x-btn-icon-el,
+.x-toolbar-main .x-btn-glyph {
+	color: #E8F1F8;
+	font-size: 12.5px;
+}
+
+/* ------------------------------------------------------- panels, grid */
+
+.x-panel-header-default {
+	background-color: var(--rx-surface);
+	background-image: none;
+	border-color: var(--rx-line);
+	padding: 12px 14px;
+}
+
+/* A heading is not a link, so it stops being brand blue */
+.x-panel-header-title-default .x-title-text {
+	color: var(--rx-ink);
+	font-size: 15px;
+	font-weight: 600;
+}
+
+.x-panel-body-default,
+.x-grid-body,
+.x-toolbar-default,
+.x-grid-item,
+.x-grid-cell {
+	border-color: var(--rx-line);
+}
+
+.x-grid-group-hd {
+	background-color: var(--rx-sunken);
+	border-color: var(--rx-line);
+	color: var(--rx-muted);
+	font-size: 12px;
+	font-weight: 600;
+}
+
+.x-grid-item-over .x-grid-cell,
+.x-grid-item-over {
+	background-color: rgba(46, 101, 142, 0.05);
+}
+
+/* --------------------------------------------------- service catalogue */
+
+.service {
+	border-radius: var(--rx-radius-lg);
+	transition: background-color 0.12s ease;
+}
+
+.service:hover {
+	background-color: rgba(46, 101, 142, 0.07);
+}
+
+.service span {
+	color: var(--rx-ink);
+	font-size: 13.5px;
+}
+
+/* ------------------------------------------------------------- inputs */
+
+/*
+ * Ext draws a text field as an input and any triggers side by side inside a
+ * wrapper, and crisp puts the border on the wrapper alone. So the border, the
+ * corner and the focus ring belong there too. Styling the input as well is what
+ * produced two concentric rounded boxes, the inner one cutting across the
+ * trigger.
+ */
+.x-form-trigger-wrap-default {
+	border: 1px solid var(--rx-line);
+	border-radius: var(--rx-radius-lg);
+	background-color: #FFF;
+	transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.x-form-trigger-wrap-default:hover {
+	border-color: #B9C6D0;
+}
+
+/* the focus ring reaches 3px past the border and was touching the label beside
+   it; only fields sitting in a toolbar need the gap */
+.x-toolbar .x-form-trigger-wrap-default {
+	margin-left: 8px;
+}
+
+.x-form-text-default,
+.x-form-trigger-default {
+	border: 0;
+	border-radius: 0;
+	box-shadow: none;
+	background-color: transparent;
+}
+
+.x-form-text-default {
+	padding-left: 10px;
+}
+
+/*
+ * Ext draws its checkboxes as a sprite on an <input type="button">. Dropping the
+ * sprite and building the box in CSS gives a rounded control that matches the
+ * rest of this layer and scales without a new image. The checked class sits on
+ * the field wrapper, three levels above the input.
+ */
+.x-form-checkbox-default {
+	-webkit-appearance: none;
+	appearance: none;
+	width: 16px;
+	height: 16px;
+	border: 1.5px solid #B9C6D0;
+	border-radius: 5px;
+	background-color: #FFF;
+	background-image: none;
+	transition: background-color 0.12s ease, border-color 0.12s ease;
+}
+
+.x-form-checkbox-default:hover {
+	border-color: var(--rx-brand);
+}
+
+.x-form-cb-checked .x-form-checkbox-default {
+	background-color: var(--rx-brand);
+	border-color: var(--rx-brand);
+	background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%23fff' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round' d='M3.5 8.4l3 3 6-6'/%3E%3C/svg%3E");
+	background-size: 11px 11px;
+	background-position: center;
+	background-repeat: no-repeat;
+}
+
+.x-form-checkbox-default:focus-visible {
+	outline: none;
+	box-shadow: 0 0 0 3px rgba(46, 101, 142, 0.25);
+}
+
+/* crisp clears the absolutely positioned input with 19px, which left the label
+   almost touching the box; two classes to outrank it */
+.x-form-cb-label-default.x-form-cb-label-after {
+	padding-left: 24px;
+	color: var(--rx-ink);
+}
+
+.x-form-trigger-wrap-default.x-form-trigger-wrap-focus {
+	border-color: var(--rx-brand);
+	box-shadow: 0 0 0 3px rgba(46, 101, 142, 0.15);
+}
+
+/* the ring is the wrapper's job; the input must not draw a second one */
+.x-form-text-default:focus,
+.x-form-text-default.x-form-focus {
+	box-shadow: none;
+	outline: none;
+}
+
+/* --------------------------------------------------------- status bar */
+
+.x-statusbar {
+	background-color: var(--rx-chrome) !important;
+}
+
+/* --------------------------------------------------------- scrollbars */
+
+::-webkit-scrollbar {
+	width: 11px;
+	height: 11px;
+}
+
+::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+	background-color: #C4CFD8;
+	border-radius: 999px;
+	border: 3px solid transparent;
+	background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background-color: #9FB1BF;
+}
+
+::-webkit-scrollbar-corner {
+	background: transparent;
+}
+
+/* ------------------------------------------------------------- a11y */
+
+.x-btn:focus-visible,
+.service:focus-visible {
+	outline: 2px solid var(--rx-brand);
+	outline-offset: 2px;
+}
+
+.x-tab-default-focus {
+	outline: none;
+	box-shadow: inset 0 0 0 2px rgba(46, 101, 142, 0.35);
+}
+
+.x-tab.x-tab-active.x-tab-default-top.x-tab-default-focus {
+	box-shadow: inset 0 -2px 0 0 var(--rx-brand);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		transition-duration: 0.01ms !important;
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+	}
+}

@@ -1,19 +1,19 @@
 {
-	"name": "Rambox",
-	"productName": "Rambox",
-	"version": "0.8.0",
+	"name": "Redil",
+	"productName": "Redil",
+	"version": "0.9.0",
 	"description": "Free and Open Source messaging and emailing app that combines common web applications into one.",
 	"main": "electron/main.js",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/ramboxapp/community-edition.git"
+		"url": "https://github.com/lukasborges/redil.git"
 	},
 	"bugs": {
-		"url": "https://github.com/ramboxapp/community-edition/issues"
+		"url": "https://github.com/lukasborges/redil/issues"
 	},
-	"homepage": "https://rambox.app",
+	"homepage": "https://github.com/lukasborges/redil",
 	"keywords": [
-		"Rambox",
+		"Redil",
 		"messaging",
 		"app",
 		"slack",
@@ -25,58 +25,35 @@
 		"hangouts",
 		"skype"
 	],
-	"author": "Rambox LLC <support@rambox.app>",
+	"author": "Lucas Borges <lukasborges@users.noreply.github.com>",
 	"license": "GPL-3.0",
 	"scripts": {
 		"start": "electron electron/main.js",
 		"start:debug": "electron electron/main.js --enable-logging",
 		"dev": "electron electron/main.js",
 		"test": "./node_modules/.bin/mocha test/tests/**/*.spec.js",
-		"sencha:clean": "rm -rf ./build/production",
-		"sencha:compile": "sencha app build && npm --prefix ./build/production/Rambox/ install ./build/production/Rambox/",
-		"sencha:compile:build": "sencha app build",
+		"bootstrap": "node scripts/gen-bootstrap.js",
+		"check:services": "node scripts/check-services.js",
 		"clean": "rm -rf ./dist",
-		"clean:osx": "rm -rf ./dist/Rambox-darwin-*",
-		"clean:win": "rm -rf ./dist/Rambox-win32-*",
-		"pack": "npm run pack:osx && npm run pack:win",
-		"pack:osx": "npm run pack:osx64 && npm run pack:osxarm64",
-		"pack:osx64": "electron-packager \"./build/production/Rambox/\" \"Rambox\" --out=dist --platform=darwin --arch=x64 --icon=resources/installer/Icon.icns --app-version=0.2.0 --build-version=64-bit --version-string.CompanyName=\"Rambox\" --version-string.ProductName=\"Rambox\" --asar --prune --overwrite",
-		"pack:osxarm64": "electron-packager \"./build/production/Rambox/\" \"Rambox\" --out=dist --platform=darwin --arch=arm64 --icon=resources/installer/Icon.icns --app-version=0.2.0 --build-version=64-bit --version-string.CompanyName=\"Rambox\" --version-string.ProductName=\"Rambox\" --asar --prune --overwrite",
-		"pack:win": "npm run pack:win32 && npm run pack:win64",
-		"pack:win32": "electron-packager \"./build/production/Rambox/\" \"Rambox\" --out=dist --platform=win32 --arch=ia32 --icon=resources/installer/Icon.ico --app-version=0.2.0 --build-version=32-bit --version-string.CompanyName=\"Rambox\" --version-string.ProductName=\"Rambox\" --asar --prune --overwrite",
-		"pack:win64": "electron-packager \"./build/production/Rambox/\" \"Rambox\" --out=dist --platform=win32 --arch=x64 --icon=resources/installer/Icon.ico --app-version=0.2.0 --build-version=64-bit --version-string.CompanyName=\"Rambox\" --version-string.ProductName=\"Rambox\" --asar --prune --overwrite",
-		"pack:linux": "npm run pack:linux32 && npm run pack:linux64",
-		"pack:linux32": "electron-packager \"./build/production/Rambox/\" \"Rambox\" --out=dist --platform=linux --arch=ia32 --icon=resources/installer/Icon.ico --app-version=0.2.0 --build-version=64-bit --version-string.CompanyName=\"Rambox\" --version-string.ProductName=\"Rambox\" --asar --prune --overwrite",
-		"pack:linux64": "electron-packager \"./build/production/Rambox/\" \"Rambox\" --out=dist --platform=linux --arch=x64 --icon=resources/installer/Icon.ico --app-version=0.2.0 --build-version=64-bit --version-string.CompanyName=\"Rambox\" --version-string.ProductName=\"Rambox\" --asar --prune --overwrite",
-		"build": "npm run build:linux && npm run build:osx && npm run build:win",
-		"build:osx": "electron-builder --macos --universal",
-		"build:osx64": "electron-builder --macos --x64",
-		"build:osxarm64": "electron-builder --macos --arm64",
-		"build:linux": "electron-builder --linux --publish=onTagOrDraft",
-		"build:linux32": "electron-builder --linux --ia32 --publish=onTagOrDraft",
-		"build:linux64": "electron-builder --linux --x64 --publish=onTagOrDraft",
-		"build:win": "electron-builder --win --ia32 --x64",
-		"build:win32": "electron-builder --win --ia32",
-		"build:win64": "electron-builder --win --x64",
-		"setup:osx": "npm run sencha:clean && npm run sencha:compile && npm run clean:osx && npm run pack:osx && npm run build:osx && npm run build:osx64 && npm run build:osxarm64",
-		"setup:win": "npm run sencha:clean && npm run sencha:compile && npm run clean:win && npm run pack:win && npm run build:win",
-		"all:win": "npm run sencha:clean && npm run sencha:compile && npm run clean:win && npm run pack:win && npm run zip:win32 && npm run zip:win64 && npm run build:win",
-		"all:linux": "npm run sencha:clean && npm run sencha:compile && npm run build:linux",
+		"build": "npm run bootstrap && electron-builder",
+		"build:linux": "npm run bootstrap && electron-builder --linux",
+		"build:win": "npm run bootstrap && electron-builder --win",
+		"build:mac": "npm run bootstrap && electron-builder --mac",
 		"translations:download": "node languages.js download",
 		"translations:generate": "node languages.js generate"
 	},
 	"build": {
-		"productName": "Rambox",
-		"appId": "com.grupovrs.ramboxce",
+		"productName": "Redil",
+		"appId": "io.github.lukasborges.redil",
 		"afterSign": "resources/installer/notarize.js",
 		"asar": true,
-		"electronVersion": "13.6.3",
+		"electronVersion": "44.4.3",
 		"electronDownload": {
-			"version": "13.6.3"
+			"version": "44.4.3"
 		},
 		"mac": {
 			"category": "public.app-category.productivity",
-			"artifactName": "Rambox-${version}-mac-${arch}.${ext}",
+			"artifactName": "Redil-${version}-mac-${arch}.${ext}",
 			"target": [
 				{
 					"target": "default",
@@ -90,12 +67,12 @@
 			"entitlements": "resources/installer/entitlements.mac.plist",
 			"entitlementsInherit": "resources/installer/entitlements.mac.plist",
 			"extendInfo": {
-				"NSMicrophoneUsageDescription": "Apps inside Rambox CE may need access to your microphone. Please, grant access to have a better experience.",
-				"NSCameraUsageDescription": "Apps inside Rambox CE may need access to your camera. Please, grant access to have a better experience."
+				"NSMicrophoneUsageDescription": "Apps inside Redil may need access to your microphone. Please, grant access to have a better experience.",
+				"NSCameraUsageDescription": "Apps inside Redil may need access to your camera. Please, grant access to have a better experience."
 			}
 		},
 		"dmg": {
-			"title": "Rambox",
+			"title": "Redil",
 			"iconSize": 128,
 			"sign": false,
 			"contents": [
@@ -113,12 +90,14 @@
 			]
 		},
 		"win": {
-			"publisherName": "Rambox LLC",
-			"artifactName": "Rambox-${version}-win-${arch}.${ext}",
+			"artifactName": "Redil-${version}-win-${arch}.${ext}",
 			"target": [
 				"nsis",
 				"zip"
-			]
+			],
+			"signtoolOptions": {
+				"publisherName": "Lucas Borges"
+			}
 		},
 		"nsis": {
 			"deleteAppDataOnUninstall": true,
@@ -126,75 +105,37 @@
 			"perMachine": false,
 			"runAfterFinish": true
 		},
-		"snap": {
-			"publish": [
-				{
-					"provider": "github"
-				}
-			],
-			"plugs": [
-				"default",
-				"camera",
-				"audio-record",
-				"audio-playback",
-				"removable-media",
-				"raw-usb",
-				"u2f-devices",
-				"cups-control"
-			]
-		},
 		"linux": {
 			"icon": "resources/installer/icons",
 			"category": "Network",
 			"desktop": {
-				"Terminal": "false",
-				"Type": "Application",
-				"Categories": "GTK;GNOME;Network;Email;Chat;InstantMessaging;"
+				"entry": {
+					"Terminal": "false",
+					"Type": "Application",
+					"Categories": "GTK;GNOME;Network;Email;Chat;InstantMessaging;"
+				}
 			},
-			"artifactName": "Rambox-${version}-linux-${arch}.${ext}",
+			"artifactName": "Redil-${version}-linux-${arch}.${ext}",
 			"executableArgs": [
 				"--no-sandbox"
 			],
 			"target": [
 				{
-					"target": "snap",
+					"target": "AppImage",
 					"arch": [
 						"x64"
 					]
 				},
 				{
-					"target": "AppImage",
-					"arch": [
-						"x64",
-						"ia32"
-					]
-				},
-				{
 					"target": "deb",
 					"arch": [
-						"x64",
-						"ia32"
-					]
-				},
-				{
-					"target": "rpm",
-					"arch": [
-						"x64",
-						"ia32"
-					]
-				},
-				{
-					"target": "zip",
-					"arch": [
-						"x64",
-						"ia32"
+						"x64"
 					]
 				},
 				{
 					"target": "tar.gz",
 					"arch": [
-						"x64",
-						"ia32"
+						"x64"
 					]
 				}
 			]
@@ -206,10 +147,28 @@
 		"publish": [
 			{
 				"provider": "github",
-				"owner": "ramboxapp",
-				"repo": "community-edition",
-				"vPrefixedTagName": false
+				"owner": "lukasborges",
+				"repo": "redil",
+				"vPrefixedTagName": false,
+				"releaseType": "draft"
 			}
+		],
+		"files": [
+			"electron/**/*",
+			"app/**/*",
+			"overrides/**/*",
+			"packages/local/**/*",
+			"resources/**/*",
+			"vendor/**/*",
+			"index.html",
+			"app.js",
+			"bootstrap.js",
+			"masterpassword.html",
+			"screenselector.html",
+			"ext/build/ext-all-rtl-debug.js",
+			"ext/src/**/*",
+			"ext/packages/ext-theme-crisp/build/**/*",
+			"ext/packages/ext-locale/build/**/*"
 		]
 	},
 	"devDependencies": {
@@ -217,18 +176,16 @@
 		"chai": "3.5.0",
 		"crowdin": "1.0.0",
 		"csvjson": "4.3.3",
-		"electron": "13.6.3",
-		"electron-builder": "22.14.13",
+		"electron": "44.4.3",
+		"electron-builder": "26.0.12",
 		"electron-notarize": "1.0.0",
-		"electron-packager": "15.1.0",
 		"mocha": "5.2.0",
 		"spectron": "^15.0.0"
 	},
 	"dependencies": {
-		"@exponent/electron-cookies": "2.0.0",
+		"@electron/remote": "2.1.3",
 		"auto-launch-patched": "5.0.2",
-		"crypto": "1.0.1",
-		"electron-contextmenu-wrapper": "git+https://github.com/ramboxapp/electron-contextmenu-wrapper.git",
+		"electron-contextmenu-wrapper": "file:vendor/electron-contextmenu-wrapper",
 		"electron-is-dev": "1.2.0",
 		"electron-log": "4.3.0",
 		"electron-store": "6.0.1",
@@ -236,12 +193,13 @@
 		"is-online": "8.2.0",
 		"mime": "2.3.1",
 		"mousetrap": "1.6.3",
-		"request": "2.88.0",
-		"request-promise": "4.2.2",
 		"rimraf": "2.6.1",
 		"tmp": "0.0.28"
 	},
 	"volta": {
 		"node": "14.16.1"
+	},
+	"allowScripts": {
+		"electron@44.4.3": true
 	}
 }

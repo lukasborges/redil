@@ -1,8 +1,11 @@
 'use strict';
 
-const {app, BrowserWindow, shell, Menu, ipcMain, nativeImage, session} = require('electron');
+const {app, BrowserWindow, shell, Menu, ipcMain, nativeImage, session, desktopCapturer, dialog} = require('electron');
 // Tray
 const tray = require('./tray');
+// Remote module (replacement for the built-in one removed in Electron 14)
+const remoteMain = require('@electron/remote/main');
+remoteMain.initialize();
 // AutoLaunch
 var AutoLaunch = require('auto-launch-patched');
 // Configuration
@@ -44,7 +47,7 @@ const config = new Config({
 		,locale: 'en'
 		,enable_hidpi_support: false
 		,user_agent: ''
-		,default_service: 'ramboxTab'
+		,default_service: 'redilTab'
 		,sendStatistics: false
 
 		,x: undefined
@@ -69,7 +72,7 @@ app.commandLine.appendSwitch('disable-features', 'CrossOriginOpenerPolicy');
 
 // Because we build it using Squirrel, it will assign UserModelId automatically, so we match it here to display notifications correctly.
 // https://github.com/electron-userland/electron-builder/issues/362
-app.setAppUserModelId('com.grupovrs.ramboxce');
+app.setAppUserModelId('io.github.lukasborges.redil');
 
 // Menu
 const appMenu = require('./menu')(config);
@@ -78,7 +81,7 @@ const appMenu = require('./menu')(config);
 let appLauncher;
 if ( !isDev ) {
 	appLauncher = new AutoLaunch({
-		 name: 'Rambox'
+		 name: 'Redil'
 		,isHidden: config.get('start_minimized')
 	});
 	config.get('auto_launch') ? appLauncher.enable() : appLauncher.disable();
@@ -92,7 +95,7 @@ let isQuitting = false;
 function createWindow () {
 	// Create the browser window using the state information
 	mainWindow = new BrowserWindow({
-		 title: 'Rambox'
+		 title: 'Redil'
 		,icon: __dirname + '/../resources/Icon.' + (process.platform === 'linux' ? 'png' : 'ico')
 		,backgroundColor: '#FFF'
 		,x: config.get('x')
@@ -105,15 +108,17 @@ function createWindow () {
 		,show: !config.get('start_minimized')
 		,acceptFirstMouse: true
 		,webPreferences: {
-			 enableRemoteModule: true
-			,plugins: true
-			,partition: 'persist:rambox'
+			 plugins: true
+			,partition: 'persist:rambox' // storage key, not a name: renaming it empties
+			// the local storage that holds everyone's configured services
 			,nodeIntegration: true
 			,webviewTag: true
 			,contextIsolation: false
 			,spellcheck: false
 		}
 	});
+
+	remoteMain.enable(mainWindow.webContents);
 
 	// Check if user has defined a custom User-Agent
 	if ( config.get('user_agent').length > 0 ) mainWindow.webContents.setUserAgent( config.get('user_agent') );
@@ -146,26 +151,19 @@ function createWindow () {
 	updater.initialize(mainWindow);
 
 	// Open links in default browser
-	mainWindow.webContents.on('new-window', function(e, url, frameName, disposition, options) {
-		const protocol = require('url').parse(url).protocol;
-		switch ( disposition ) {
-			case 'new-window':
-				e.preventDefault();
-				const win = new BrowserWindow(options);
-				if ( config.get('user_agent').length > 0 ) win.webContents.setUserAgent( config.get('user_agent') );
-				win.once('ready-to-show', () => win.show());
-				win.loadURL(url);
-				e.newGuest = win;
-				break;
-			case 'foreground-tab':
-				if (protocol === 'http:' || protocol === 'https:' || protocol === 'mailto:') {
-					e.preventDefault();
-					shell.openExternal(url);
-				}
-				break;
-			default:
-				break;
+	mainWindow.webContents.setWindowOpenHandler(({ url, disposition }) => {
+		if ( disposition === 'foreground-tab' ) {
+			const protocol = require('url').parse(url).protocol;
+			if ( protocol === 'http:' || protocol === 'https:' || protocol === 'mailto:' ) {
+				shell.openExternal(url);
+				return { action: 'deny' };
+			}
 		}
+		return { action: 'allow' };
+	});
+
+	mainWindow.webContents.on('did-create-window', (win) => {
+		if ( config.get('user_agent').length > 0 ) win.webContents.setUserAgent( config.get('user_agent') );
 	});
 
 	mainWindow.webContents.on('will-navigate', function(event, url) {
@@ -234,9 +232,12 @@ function createMasterPasswordWindow() {
 		,frame: false
 		,webPreferences: {
 			 nodeIntegration: true
-			,enableRemoteModule: true
+			,contextIsolation: false
 		}
 	});
+
+	remoteMain.enable(mainMasterPasswordWindow.webContents);
+
 	// Open the DevTools.
 	if ( isDev ) mainMasterPasswordWindow.webContents.openDevTools();
 
@@ -274,7 +275,7 @@ function formatBytes(bytes, decimals = 2) {
 }
 
 /* async function availableSpaceWatchDog() {
-	// optionally render this information also in rambox window
+	// optionally render this information also in Redil window
 	try {
 		const { available } = await disk.check(appPath);
 		if (available < 1073741824) { // 1 GB
@@ -282,9 +283,9 @@ function formatBytes(bytes, decimals = 2) {
 				type: 'warning',
 				buttons: ['OK, quit'],
 				defaultId: 0,
-				title: `Running out of disk space! - Rambox shutting down`,
-				detail: `You've got just ${formatBytes(available)} space left.\n\nRambox has been frozen to prevent settings corruption.\n\nOnce you quit this dialog, Rambox will shutdown.\n\n1 GB of avalable disk space is required.\nFree up space on partition where Rambox is installed then start the app again.\n\nRambox path: \n${appPath}`,
-				message: `Running out of disk space! - Rambox shutting down`,
+				title: `Running out of disk space! - Redil shutting down`,
+				detail: `You've got just ${formatBytes(available)} space left.\n\nRedil has been frozen to prevent settings corruption.\n\nOnce you quit this dialog, Redil will shutdown.\n\n1 GB of avalable disk space is required.\nFree up space on partition where Redil is installed then start the app again.\n\nRedil path: \n${appPath}`,
+				message: `Running out of disk space! - Redil shutting down`,
 			};
 		
 			dialog.showMessageBoxSync(null, options);
@@ -352,13 +353,90 @@ ipcMain.on('validateMasterPassword', function(event, pass) {
 	event.returnValue = false;
 });
 
+// Service permissions
+//
+// A webview runs somebody else's web app, so a permission it asks for is that
+// site's request and not Redil's. This used to answer callback(true) to
+// everything that was not a notification, which silently handed every service
+// the camera, the microphone and the user's location. Anything not named below
+// is now refused.
+
+// Needed to use a messaging app normally, and not sensitive on their own.
+const SILENT_PERMISSIONS = [
+	 'fullscreen'
+	,'pointerLock'
+	,'clipboard-sanitized-write'
+	,'background-sync'
+];
+
+// Sensitive, but calls and screen sharing genuinely need them, so the person is
+// asked once per service and the answer is kept.
+const PROMPTED_PERMISSIONS = {
+	 'media': 'use your camera and microphone'
+	,'display-capture': 'capture your screen'
+};
+
+function permissionKey(partition, permission) {
+	return partition + '|' + permission;
+}
+
+function rememberedPermission(partition, permission) {
+	return (config.get('permissions') || {})[permissionKey(partition, permission)];
+}
+
+function serviceNameFor(partition) {
+	return String(partition).replace('persist:', '').split('_')[0] || 'This service';
+}
+
+function askAboutPermission(partition, permission, callback) {
+	const remembered = rememberedPermission(partition, permission);
+	if ( typeof remembered === 'boolean' ) return callback(remembered);
+
+	dialog.showMessageBox(mainWindow, {
+		 type: 'question'
+		,buttons: ['Allow', 'Block']
+		,defaultId: 1
+		,cancelId: 1
+		,title: 'Permission request'
+		,message: serviceNameFor(partition) + ' wants to ' + PROMPTED_PERMISSIONS[permission] + '.'
+		,detail: 'Redil remembers this answer for this service. Remove and add the service again to be asked once more.'
+	}).then(function(result) {
+		const allowed = result.response === 0;
+		const decisions = config.get('permissions') || {};
+		decisions[permissionKey(partition, permission)] = allowed;
+		config.set('permissions', decisions);
+		callback(allowed);
+	}).catch(function() { callback(false); });
+}
+
+/**
+ * A null partition means the renderer has not reported this service's settings
+ * yet. There is no key to remember an answer against in that state, so the
+ * sensitive permissions are refused instead of prompted; the real policy
+ * replaces this one as soon as the service reaches dom-ready.
+ */
+function applyPermissionPolicy(serviceSession, partition, notificationsAllowed) {
+	serviceSession.setPermissionRequestHandler(function(webContents, permission, callback) {
+		if ( permission === 'notifications' ) return callback(notificationsAllowed);
+		if ( SILENT_PERMISSIONS.indexOf(permission) !== -1 ) return callback(true);
+		if ( PROMPTED_PERMISSIONS[permission] && partition ) return askAboutPermission(partition, permission, callback);
+		console.info('Refused permission "' + permission + '" for ' + (partition || 'an unconfigured service'));
+		callback(false);
+	});
+
+	// navigator.permissions.query never reaches the request handler
+	serviceSession.setPermissionCheckHandler(function(webContents, permission) {
+		if ( permission === 'notifications' ) return notificationsAllowed;
+		if ( SILENT_PERMISSIONS.indexOf(permission) !== -1 ) return true;
+		if ( PROMPTED_PERMISSIONS[permission] && partition ) return rememberedPermission(partition, permission) === true;
+		return false;
+	});
+}
+
 // Handle Service Notifications
 ipcMain.on('setServiceNotifications', function(event, partition, op) {
 	if ( partition === null ) return;
-	session.fromPartition(partition).setPermissionRequestHandler(function(webContents, permission, callback) {
-		if (permission === 'notifications') return callback(op);
-		callback(true)
-	});
+	applyPermissionPolicy(session.fromPartition(partition), partition, op);
 });
 
 ipcMain.on('setDontDisturb', function(event, arg) {
@@ -419,38 +497,41 @@ let allowPopUp = [
 
 app.on('web-contents-created', (webContentsCreatedEvent, contents) => {
 	if (contents.getType() !== 'webview') return;
+	// The service preload builds its context menu through @electron/remote.
+	remoteMain.enable(contents);
+	// Without this the session carries no handler until the renderer reports the
+	// service's settings, and Electron's own default is to grant.
+	applyPermissionPolicy(contents.session, null, false);
 	// Block some Deep links to prevent that open its app (Ex: Slack)
 	contents.on('will-navigate', (event, url) => url.substring(0, 8) === 'slack://' && event.preventDefault());
-	// New Window handler
-	contents.on('new-window', (event, url, frameName, disposition, options, additionalFeatures, referrer, postBody) => {
-		// If the url is about:blank we allow the window and handle it in 'did-create-window'
+	// New Window handler. The about:blank case is finished in 'did-create-window'.
+	contents.setWindowOpenHandler(({ url }) => {
 		if (['about:blank', 'about:blank#blocked'].includes(url)) {
-			event.preventDefault();
-			Object.assign(options, { show: false });
-			const win = new BrowserWindow(options);
-			win.center();
-			let once = false;
-			win.webContents.on('will-navigate', (e, nextURL) => {
-				if (once) return;
-				if (['about:blank', 'about:blank#blocked'].includes(nextURL)) return;
-				once = true;
-				let allow = false;
-				allowPopUp.forEach(url => nextURL.indexOf(url) > -1 && (allow = true));
-				// If the url is in aboutBlankOnlyWindow we handle this as a popup window
-				if (allow) return win.show();
-				shell.openExternal(nextURL);
-				win.close()
-			})
-			event.newGuest = win;
-			return;
+			return { action: 'allow', overrideBrowserWindowOptions: { show: false } };
 		}
-		// We check if url is in the allowPopUpLoginURLs or allowForegroundTabURLs in Firebase to open a as a popup,
-		// if it is not we send this to the app
+
+		// Protocol rules used to live on the webview's own 'new-window' DOM event,
+		// which was removed alongside this one.
+		let protocol;
+		try {
+			protocol = new URL(url).protocol;
+		} catch (e) {
+			return { action: 'deny' };
+		}
+		// Block deep links that would hand the session to a native app (Ex: Slack)
+		if (protocol === 'slack:') return { action: 'deny' };
+		if (!['http:', 'https:'].includes(protocol)) {
+			shell.openExternal(url);
+			return { action: 'deny' };
+		}
+
+		// Allow the login and foreground-tab URLs that need a real popup,
+		// send everything else to the default browser.
 		let allow = false;
 		allowPopUp.forEach(allowed => url.indexOf(allowed) > -1 && (allow = true));
-		if (allow) return;
+		if (allow) return { action: 'allow' };
 		shell.openExternal(url);
-		event.preventDefault();
+		return { action: 'deny' };
 	});
 	contents.on('did-create-window', (win, details) => {
 		// Here we center the new window.
@@ -481,7 +562,7 @@ ipcMain.on('image:download', function(event, url, partition) {
 	let file = imageCache[url];
 	if (file) {
 		if (file.complete) {
-			shell.openItem(file.path);
+			shell.openPath(file.path);
 		}
 
 		// Pending downloads intentionally do not proceed
@@ -507,7 +588,7 @@ ipcMain.on('image:download', function(event, url, partition) {
 		downloadItem.once('done', () => {
 			tmpWindow.destroy();
 			tmpWindow = null;
-			shell.openItem(file.path);
+			shell.openPath(file.path);
 			file.complete = true;
 		});
 	});
@@ -577,9 +658,21 @@ ipcMain.on('toggleWin', function(event, allwaysShow) {
 });
 
 // ScreenShare
+// Enumerating screens belongs to the main process: desktopCapturer stopped being
+// reachable from renderers, so the service preload asks for the list over IPC.
+// Thumbnails are serialised here because a NativeImage cannot cross the boundary.
+ipcMain.handle('screenShare:listSources', async () => {
+	const sources = await desktopCapturer.getSources({ types: ['screen', 'window'] });
+	return sources.map(source => ({
+		 id: source.id
+		,name: source.name
+		,thumbnail: source.thumbnail.toDataURL()
+	}));
+});
+
 ipcMain.on('screenShare:show', (event, screenList) => {
 	let tmpWindow = new BrowserWindow({
-		title: 'Rambox - Select screen',
+		title: 'Redil - Select screen',
 		width: 600,
 		height: 500,
 		icon: __dirname + '/../resources/Icon.ico',

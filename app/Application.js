@@ -1,22 +1,16 @@
-Ext.define('Rambox.Application', {
+Ext.define('Redil.Application', {
 	 extend: 'Ext.app.Application'
 
-	,name: 'Rambox'
+	,name: 'Redil'
 
 	,requires: [
-		'Rambox.util.MD5'
+		'Redil.util.MD5'
 		,'Ext.window.Toast'
-		,'Ext.util.Cookies'
 	]
 
 	,stores: [
 		 'ServicesList'
 		,'Services'
-	]
-
-	,profiles: [
-		 'Offline'
-		,'Online'
 	]
 
 	,config: {
@@ -37,7 +31,7 @@ Ext.define('Rambox.Application', {
 					Ext.get('background') ? Ext.get('background').destroy() : null;
 					Ext.Msg.show({
 						title: 'No Internet Connection'
-						,msg: 'Please, check your internet connection. If you use a Proxy, please go to Preferences to configure it. Rambox will try to re-connect in 10 seconds'
+						,msg: 'Please, check your internet connection. If you use a Proxy, please go to Preferences to configure it. Redil will try to re-connect in 10 seconds'
 						,width: 300
 						,closable: false
 						,buttons: Ext.Msg.YESNO
@@ -61,7 +55,7 @@ Ext.define('Rambox.Application', {
 			})
 		})();
 
-		if ( !localStorage.getItem('hideMacPermissions') && process.platform === 'darwin' && (require('electron').remote.systemPreferences.getMediaAccessStatus('microphone') !== 'granted' || require('electron').remote.systemPreferences.getMediaAccessStatus('camera') !== 'granted') ) {
+		if ( !localStorage.getItem('hideMacPermissions') && process.platform === 'darwin' && (require('@electron/remote').systemPreferences.getMediaAccessStatus('microphone') !== 'granted' || require('@electron/remote').systemPreferences.getMediaAccessStatus('camera') !== 'granted') ) {
 			console.info('Checking mac permissions...');
 			Ext.cq1('app-main').addDocked({
 				xtype: 'toolbar'
@@ -71,15 +65,15 @@ Ext.define('Rambox.Application', {
 					'->'
 					,{
 						xtype: 'label'
-						,html: '<b>Rambox CE needs permissions to use Microphone and Camera for the apps.</b>'
+						,html: '<b>Redil CE needs permissions to use Microphone and Camera for the apps.</b>'
 					}
 					,{
 						xtype: 'button'
 						,text: 'Grant permissions'
 						,ui: 'decline'
 						,handler: async function(btn) {
-							await require('electron').remote.systemPreferences.askForMediaAccess('microphone');
-							await require('electron').remote.systemPreferences.askForMediaAccess('camera');
+							await require('@electron/remote').systemPreferences.askForMediaAccess('microphone');
+							await require('@electron/remote').systemPreferences.askForMediaAccess('camera');
 							Ext.cq1('app-main').removeDocked(btn.up('toolbar'), true);
 						}
 					}
@@ -116,7 +110,7 @@ Ext.define('Rambox.Application', {
 						'->'
 						,{
 							 xtype: 'label'
-							,html: '<b>Services couldn\'t be loaded, some Rambox features will not be available.</b>'
+							,html: '<b>Services couldn\'t be loaded, some Redil features will not be available.</b>'
 						}
 						,{
 							 xtype: 'button'
@@ -138,7 +132,7 @@ Ext.define('Rambox.Application', {
 			Ext.Loader.loadScript({url: Ext.util.Format.format("ext/packages/ext-locale/build/ext-locale-{0}.js", localStorage.getItem('locale-extjs') || 'en')});
 
 			// Set Google URLs
-			Rambox.app.config.googleURLs = [
+			Redil.app.config.googleURLs = [
 				"accounts.google.com/ServiceLogin",
 				"accounts.google.com/signin",
 				"accounts.google.com/_/lookup/accountlookup",
@@ -149,7 +143,7 @@ Ext.define('Rambox.Application', {
 			];
 
 			// Shortcuts
-			const platform = require('electron').remote.process.platform;
+			const platform = require('@electron/remote').process.platform;
 			// Prevents default behaviour of Mousetrap, that prevents shortcuts in textareas
 			Mousetrap.prototype.stopCallback = function(e, element, combo) {
 				return false;
@@ -195,10 +189,10 @@ Ext.define('Rambox.Application', {
 				btn.toggle();
 				Ext.cq1('app-main').getController().dontDisturb(btn, true);
 			});
-			// Add shortcut to Lock Rambox
+			// Add shortcut to Lock Redil
 			Mousetrap.bind(platform === 'darwin' ? ['command+alt+l'] : ['shift+alt+l'], (e, combo) => {
-				var btn = Ext.getCmp('lockRamboxBtn');
-				Ext.cq1('app-main').getController().lockRambox(btn);
+				var btn = Ext.getCmp('lockRedilBtn');
+				Ext.cq1('app-main').getController().lockRedil(btn);
 			});
 
 			// Mouse Wheel zooming
@@ -222,7 +216,7 @@ Ext.define('Rambox.Application', {
 			ipc.send('setDontDisturb', localStorage.getItem('dontDisturb')); // We store it in config
 
 			if ( localStorage.getItem('locked') ) {
-				console.info('Lock Rambox:', 'Enabled');
+				console.info('Lock Redil:', 'Enabled');
 				Ext.cq1('app-main').getController().showLockWindow();
 			}
 			Ext.getStore('Services').load();
@@ -233,15 +227,15 @@ Ext.define('Rambox.Application', {
 		newValue = parseInt(newValue);
 		if ( newValue > 0 )	{
 			if ( Ext.cq1('app-main').getActiveTab().record ) {
-				document.title = 'Rambox (' + Rambox.util.Format.formatNumber(newValue) + ') - '+Ext.cq1('app-main').getActiveTab().record.get('name');
+				document.title = 'Redil (' + Redil.util.Format.formatNumber(newValue) + ') - '+Ext.cq1('app-main').getActiveTab().record.get('name');
 			} else {
-				document.title = 'Rambox (' + Rambox.util.Format.formatNumber(newValue) + ')';
+				document.title = 'Redil (' + Redil.util.Format.formatNumber(newValue) + ')';
 			}
 		} else {
 			if ( Ext.cq1('app-main') && Ext.cq1('app-main').getActiveTab().record ) {
-				document.title = 'Rambox - '+Ext.cq1('app-main').getActiveTab().record.get('name');
+				document.title = 'Redil - '+Ext.cq1('app-main').getActiveTab().record.get('name');
 			} else {
-				document.title = 'Rambox';
+				document.title = 'Redil';
 			}
 		}
 	}

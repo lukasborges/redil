@@ -1,4 +1,4 @@
-Ext.define('Rambox.model.ServiceList', {
+Ext.define('Redil.model.ServiceList', {
 	 extend: 'Ext.data.Model'
 
 	,fields: [{

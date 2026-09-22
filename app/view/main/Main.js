@@ -1,11 +1,11 @@
-Ext.define('Rambox.view.main.Main', {
+Ext.define('Redil.view.main.Main', {
 	 extend: 'Ext.tab.Panel'
 	,requires: [
-		 'Rambox.view.main.MainController'
-		,'Rambox.view.main.MainModel'
-		,'Rambox.ux.WebView'
-		,'Rambox.ux.mixin.Badge'
-		,'Rambox.view.add.Add'
+		 'Redil.view.main.MainController'
+		,'Redil.view.main.MainModel'
+		,'Redil.ux.WebView'
+		,'Redil.ux.mixin.Badge'
+		,'Redil.view.add.Add'
 		,'Ext.ux.TabReorderer'
 	]
 
@@ -32,7 +32,7 @@ Ext.define('Rambox.view.main.Main', {
 	,items: [
 		{
 			 icon: 'resources/IconTray@2x.png'
-			,id: 'ramboxTab'
+			,id: 'redilTab'
 			,closable: false
 			,reorderable: false
 			,autoScroll: true
@@ -236,7 +236,7 @@ Ext.define('Rambox.view.main.Main', {
 					{
 						 glyph: JSON.parse(localStorage.getItem('dontDisturb')) ? 'xf1f7@FontAwesome' : 'xf0f3@FontAwesome'
 						,text: locale['app.main[16]']+': '+(JSON.parse(localStorage.getItem('dontDisturb')) ? locale['app.window[20]'] : locale['app.window[21]'])
-						,tooltip: locale['app.main[17]']+'<br/><b>'+locale['app.main[18]']+(require('electron').remote.process.platform === 'darwin' ? ': Cmd + Alt + D</b>' : ': Alt + Shift + D</b>')
+						,tooltip: locale['app.main[17]']+'<br/><b>'+locale['app.main[18]']+(require('@electron/remote').process.platform === 'darwin' ? ': Cmd + Alt + D</b>' : ': Alt + Shift + D</b>')
 						,enableToggle: true
 						,handler: 'dontDisturb'
 						,reference: 'disturbBtn'
@@ -246,32 +246,15 @@ Ext.define('Rambox.view.main.Main', {
 					,{
 						 glyph: 'xf023@FontAwesome'
 						,text: locale['app.main[19]']
-						,tooltip: locale['app.main[20]']+'<br/><b>'+locale['app.main[18]']+(require('electron').remote.process.platform === 'darwin' ? ': Cmd + Alt + L</b>' : ': Alt + Shift + L</b>')
-						,handler: 'lockRambox'
-						,id: 'lockRamboxBtn'
+						,tooltip: locale['app.main[20]']+'<br/><b>'+locale['app.main[18]']+(require('@electron/remote').process.platform === 'darwin' ? ': Cmd + Alt + L</b>' : ': Alt + Shift + L</b>')
+						,handler: 'lockRedil'
+						,id: 'lockRedilBtn'
 					}
 					,'->'
 					,{
 						 tooltip: locale['preferences[0]']
 						,glyph: 'xf013@FontAwesome'
 						,handler: 'openPreferences'
-					}
-				]
-			}
-			,bbar: {
-				xtype: 'toolbar'
-				,cls: 'deprecation'
-				,items: [
-					'<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> <b>This version of Rambox is no longer supported.</b> We highly recommend that you update to the new version of Rambox which has a free plan with all the features you already use and much more!'
-					,'->'
-					,{
-						 xtype: 'button'
-						,text: 'Migrate now'
-						,handler: function(btn) {
-							btn.setText('Downloading...');
-							btn.setDisabled(true);
-							Rambox.app.checkUpdate();
-						}
 					}
 				]
 			}

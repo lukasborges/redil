@@ -2,15 +2,15 @@
  * Default config for all webviews created
  */
 
-Ext.define('Rambox.ux.WebView',{
+Ext.define('Redil.ux.WebView',{
 	 extend: 'Ext.panel.Panel'
 	,xtype: 'webview'
 
 	,requires: [
-		 'Rambox.util.Format'
-		,'Rambox.util.Notifier'
-		,'Rambox.util.UnreadCounter'
-		,'Rambox.util.IconLoader'
+		 'Redil.util.Format'
+		,'Redil.util.Notifier'
+		,'Redil.util.UnreadCounter'
+		,'Redil.util.IconLoader'
 	]
 
 	// private
@@ -209,15 +209,15 @@ Ext.define('Rambox.ux.WebView',{
 					 tag: 'webview'
 					,src: me.record.get('url')
 					,style: 'width:100%;height:100%;visibility:visible;'
-					,partition: 'persist:' + me.record.get('type') + '_' + me.id.replace('tab_', '') + (localStorage.getItem('id_token') ? '_' + Ext.decode(localStorage.getItem('profile')).sub : '')
+					,partition: 'persist:' + me.record.get('type') + '_' + me.id.replace('tab_', '')
 					,plugins: 'true'
 					,allowtransparency: 'on'
 					,autosize: 'on'
-					,webpreferences: 'nativeWindowOpen=yes, spellcheck=no, contextIsolation=no'
+					,webpreferences: 'spellcheck=no, contextIsolation=no, sandbox=no'
 					,allowpopups: 'on'
 					// ,disablewebsecurity: 'on' // Disabled because some services (Like Google Drive) dont work with this enabled
 					,useragent: me.getUserAgent()
-					,preload: './resources/js/rambox-service-api.js'
+					,preload: new URL('resources/js/rambox-service-api.js', window.location.href).href
 				}
 			}];
 		}
@@ -225,8 +225,23 @@ Ext.define('Rambox.ux.WebView',{
 		return cfg;
 	}
 	,getUserAgent: function() {
-		var ua = ipc.sendSync('getConfig').user_agent ? ipc.sendSync('getConfig').user_agent : Ext.getStore('ServicesList').getById(this.record.get('type')) ? Ext.getStore('ServicesList').getById(this.record.get('type')).get('userAgent') : ''
-		return ua.length === 0 ? window.clientInformation.userAgent.replace(/Rambox\/([0-9]\.?)+\s/ig,'').replace(/Electron\/([0-9]\.?)+\s/ig,'') : ua;
+		// A user agent typed into Preferences is used exactly as written.
+		var configured = ipc.sendSync('getConfig').user_agent;
+		if ( configured ) return configured;
+
+		var catalogEntry = Ext.getStore('ServicesList').getById(this.record.get('type'));
+		var pinned = catalogEntry ? catalogEntry.get('userAgent') : '';
+
+		if ( !pinned ) {
+			return window.clientInformation.userAgent.replace(/Redil\/([0-9]\.?)+\s/ig,'').replace(/Electron\/([0-9]\.?)+\s/ig,'');
+		}
+
+		// The agents pinned in resources/services.json name whatever Chrome was
+		// current when the entry was written. WhatsApp's still says 70, from 2018,
+		// and the site now turns away anything below 100. The platform half of each
+		// string is still doing a job, so only the version is moved up to the
+		// Chromium this build actually runs on.
+		return pinned.replace(/Chrome\/[0-9.]+/i, 'Chrome/' + process.versions.chrome);
 	}
 
 	,statusBarConstructor: function(floating) {
@@ -277,7 +292,7 @@ Ext.define('Rambox.ux.WebView',{
 		// Notifications in Webview
 		me.setNotifications(localStorage.getItem('locked') || JSON.parse(localStorage.getItem('dontDisturb')) ? false : me.record.get('notifications'));
 
-		require('electron').remote.session.fromPartition('persist:' + me.record.get('type') + '_' + me.id.replace('tab_', '') + (localStorage.getItem('id_token') ? '_' + Ext.decode(localStorage.getItem('profile')).sub : '')).webRequest.onBeforeSendHeaders((details, callback) => {
+		require('@electron/remote').session.fromPartition('persist:' + me.record.get('type') + '_' + me.id.replace('tab_', '')).webRequest.onBeforeSendHeaders((details, callback) => {
 			const change = details.url.match(/^https:\/\/accounts\.google\.com(\/|$)/);
 			if ( change ) details.requestHeaders['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0';
 			callback({ cancel: false, requestHeaders: details.requestHeaders });
@@ -297,7 +312,7 @@ Ext.define('Rambox.ux.WebView',{
 		});
 
 		webview.addEventListener("did-finish-load", function(e) {
-			Rambox.app.setTotalServicesLoaded( Rambox.app.getTotalServicesLoaded() + 1 );
+			Redil.app.setTotalServicesLoaded( Redil.app.getTotalServicesLoaded() + 1 );
 
 			// Apply saved zoom level
 			webview.setZoomLevel(me.record.get('zoomLevel'));
@@ -309,7 +324,7 @@ Ext.define('Rambox.ux.WebView',{
 				webview.focus();
 			}
 			// Set special icon for some service (like Slack)
-			Rambox.util.IconLoader.loadServiceIconUrl(me, webview);
+			Redil.util.IconLoader.loadServiceIconUrl(me, webview);
 		});
 
 		// On search text
@@ -373,17 +388,9 @@ Ext.define('Rambox.ux.WebView',{
 			}
 		});
 
-		// Open links in default browser
-		webview.addEventListener('new-window', function(e) {
-			e.preventDefault();
-			const { URL } = require('url');
-			const url = new URL(e.url);
-			const protocol = url.protocol;
-			// Block some Deep links to prevent that open its app (Ex: Slack) 
-			if ( ['slack:'].includes(protocol) ) return;
-			// Allow Deep links
-			if ( !['http:', 'https:', 'about:'].includes(protocol) ) return require('electron').shell.openExternal(url.href);
-		});
+		// Links that open a window are decided in the main process, by the
+		// setWindowOpenHandler installed on this webview's webContents.
+		// The 'new-window' DOM event this used to listen to no longer exists.
 
 		webview.addEventListener('will-navigate', function(e, url) {
 			e.preventDefault();
@@ -420,7 +427,7 @@ Ext.define('Rambox.ux.WebView',{
 			js_inject += 'document.body.scrollTop=0;';
 
 			// Handles Certificate Errors
-			require('electron').remote.webContents.fromId(webview.getWebContentsId()).on('certificate-error', function(event, url, error, certificate, callback) {
+			require('@electron/remote').webContents.fromId(webview.getWebContentsId()).on('certificate-error', function(event, url, error, certificate, callback) {
 				if (me.record.get('trust')) {
 					event.preventDefault();
 					callback(true);
@@ -436,7 +443,7 @@ Ext.define('Rambox.ux.WebView',{
 				me.down('statusbar').down('button').show();
 			});
 			if (!eventsOnDom) {
-				require('electron').remote.webContents.fromId(webview.getWebContentsId()).on('before-input-event', (event, input) => {
+				require('@electron/remote').webContents.fromId(webview.getWebContentsId()).on('before-input-event', (event, input) => {
 					if (input.type !== 'keyDown') return;
 
 					var modifiers = [];
@@ -449,7 +456,7 @@ Ext.define('Rambox.ux.WebView',{
 					if (input.key === 'Tab' && !(modifiers && modifiers.length)) return;
 
 					// Maps special keys to fire the correct event in Mac OS
-					if (require('electron').remote.process.platform === 'darwin') {
+					if (require('@electron/remote').process.platform === 'darwin') {
 						var keys = [];
 						keys['ƒ'] = 'f'; // Search
 						keys[' '] = 'l'; // Lock
@@ -468,7 +475,7 @@ Ext.define('Rambox.ux.WebView',{
 					)
 						return;
 
-					require('electron').remote.getCurrentWebContents().sendInputEvent({
+					require('@electron/remote').getCurrentWebContents().sendInputEvent({
 						type: input.type,
 						keyCode: input.key,
 						modifiers: modifiers,
@@ -476,7 +483,7 @@ Ext.define('Rambox.ux.WebView',{
 				});
 				eventsOnDom = true;
 
-				Rambox.app.config.googleURLs.forEach((loginURL) => {	if ( webview.getURL().indexOf(loginURL) > -1 ) webview.reload() })
+				Redil.app.config.googleURLs.forEach((loginURL) => {	if ( webview.getURL().indexOf(loginURL) > -1 ) webview.reload() })
 			}
 			webview.executeJavaScript(js_inject).then(result => {} ).catch(err => { console.log(err) })
 		});
@@ -521,7 +528,7 @@ Ext.define('Rambox.ux.WebView',{
 			}
 
 			function showWindowAndActivateTab(event) {
-				require('electron').remote.getCurrentWindow().show();
+				require('@electron/remote').getCurrentWindow().show();
 				var tabPanel = Ext.cq1('app-main');
 				// Temp fix missing cursor after upgrade to electron 3.x +
 				tabPanel.setActiveTab(me);
@@ -557,12 +564,12 @@ Ext.define('Rambox.ux.WebView',{
 		var me = this;
 
 		if ( !isNaN(newUnreadCount) && (function(x) { return (x | 0) === x; })(parseFloat(newUnreadCount)) && me.record.get('includeInGlobalUnreadCounter') === true) {
-			Rambox.util.UnreadCounter.setUnreadCountForService(me.record.get('id'), newUnreadCount);
+			Redil.util.UnreadCounter.setUnreadCountForService(me.record.get('id'), newUnreadCount);
 		} else {
-			Rambox.util.UnreadCounter.clearUnreadCountForService(me.record.get('id'));
+			Redil.util.UnreadCounter.clearUnreadCountForService(me.record.get('id'));
 		}
 
-		me.setTabBadgeText(Rambox.util.Format.formatNumber(newUnreadCount));
+		me.setTabBadgeText(Redil.util.Format.formatNumber(newUnreadCount));
 
 		me.doManualNotification(parseInt(newUnreadCount));
 	}
@@ -573,7 +580,7 @@ Ext.define('Rambox.ux.WebView',{
 
 	/**
 	 * Dispatch manual notification if
-	 * • service doesn't have notifications, so Rambox does them
+	 * • service doesn't have notifications, so Redil does them
 	 * • count increased
 	 * • not in dnd mode
 	 * • notifications enabled
@@ -584,7 +591,7 @@ Ext.define('Rambox.ux.WebView',{
 		var me = this;
 		var manualNotifications = Ext.getStore('ServicesList').getById(me.type) ? Ext.getStore('ServicesList').getById(me.type).get('manual_notifications') : false;
 		if ( manualNotifications && me.currentUnreadCount < count && me.record.get('notifications') && !JSON.parse(localStorage.getItem('dontDisturb'))) {
-			Rambox.util.Notifier.dispatchNotification(me, count);
+			Redil.util.Notifier.dispatchNotification(me, count);
 		}
 
 		me.currentUnreadCount = count;
@@ -612,7 +619,7 @@ Ext.define('Rambox.ux.WebView',{
 	,clearUnreadCounter: function() {
 		var me = this;
 		me.tab.setBadgeText('');
-		Rambox.util.UnreadCounter.clearUnreadCountForService(me.record.get('id'));
+		Redil.util.UnreadCounter.clearUnreadCountForService(me.record.get('id'));
 	}
 
 	,reloadService: function(btn) {

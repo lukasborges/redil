@@ -2,7 +2,7 @@
 /**
  * Singleton class for notification dispatching.
  */
-Ext.define('Rambox.util.Notifier', {
+Ext.define('Redil.util.Notifier', {
 
 	singleton: true,
 
@@ -19,7 +19,10 @@ Ext.define('Rambox.util.Notifier', {
 		 */
 		function getNotificationText(view, count) {
 			var text;
-			switch (Ext.getStore('ServicesList').getById(view.type).get('type')) {
+			// The service may have been dropped from the catalogue since the
+			// person added it, so fall back to the generic wording.
+			var catalogEntry = Ext.getStore('ServicesList').getById(view.type);
+			switch (catalogEntry ? catalogEntry.get('type') : '') {
 				case 'messaging':
 					text = 'You have ' + Ext.util.Format.plural(count, 'new message', 'new messages') + '.';
 					break;

@@ -1,9 +1,9 @@
-Ext.define('Rambox.view.add.Add',{
+Ext.define('Redil.view.add.Add',{
 	 extend: 'Ext.window.Window'
 
 	,requires: [
-		 'Rambox.view.add.AddController'
-		,'Rambox.view.add.AddModel'
+		 'Redil.view.add.AddController'
+		,'Redil.view.add.AddModel'
 	]
 
 	,controller: 'add-add'
@@ -263,8 +263,8 @@ Ext.define('Rambox.view.add.Add',{
 					}
 					,{
 						 xtype: 'container'
-						,hidden: (me.edit ? Ext.getStore('ServicesList').getById(me.record.get('type')).get('note') === '' : me.record.get('note') === '')
-						,data: { note: (me.edit ? Ext.getStore('ServicesList').getById(me.record.get('type')).get('note') : me.record.get('note')) }
+						,hidden: me.serviceNote() === ''
+						,data: { note: me.serviceNote() }
 						,margin: '10 0 0 0'
 						,style: 'background-color:#93CFE0;color:#053767;border-radius:6px;'
 						,tpl: [
@@ -291,6 +291,17 @@ Ext.define('Rambox.view.add.Add',{
 		];
 
 		this.callParent(this);
+	}
+
+	/**
+	 * The note shown above the form. When editing, it comes from the catalogue
+	 * entry for the service, which may no longer exist if the entry was dropped
+	 * after the person added it.
+	 */
+	,serviceNote: function() {
+		if ( !this.edit ) return this.record.get('note');
+		var catalogEntry = Ext.getStore('ServicesList').getById(this.record.get('type'));
+		return catalogEntry ? catalogEntry.get('note') : '';
 	}
 
 	,listeners: {
