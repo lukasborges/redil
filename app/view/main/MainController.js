@@ -41,10 +41,13 @@ Ext.define('Redil.view.main.MainController', {
 		var webview = newTab.down('component').el.dom;
 
 		setTimeout(function () {
-			if ( webview ) {
-				tabPanel.getActiveTab().getWebView().blur();
-				tabPanel.getActiveTab().getWebView().focus();
-			}
+			// Whoever is active in 300ms may not be this tab any more, and the
+			// home tab has no webview to focus: opening the catalogue from a
+			// service switches twice inside that window.
+			if ( !webview || tabPanel.getActiveTab() !== newTab ) return;
+
+			newTab.getWebView().blur();
+			newTab.getWebView().focus();
 		}, 300);
 
 		// Update the main window so it includes the active tab title.
@@ -160,8 +163,22 @@ Ext.define('Redil.view.main.MainController', {
 	 * in a window of its own, so that its filters, its search and its item click
 	 * keep resolving to the methods below without a second controller.
 	 */
+	/*
+	 * The catalogue's element lives inside the home tab's card, and the card
+	 * layout hides the card by hiding its element, so from a service the + did
+	 * nothing at all: the panel was shown inside something display:none. Opening
+	 * it brings the home tab forward, and closing it puts the service back,
+	 * unless one was picked, in which case the add window decides where you end.
+	 */
 	,openCatalogue: function() {
+		var painel = Ext.cq1('app-main');
 		var catalogo = Ext.getCmp('redilTab').down('#catalogue');
+
+		if ( painel.getActiveTab().id !== 'redilTab' ) {
+			catalogo.previousTab = painel.getActiveTab().id;
+			painel.setActiveTab('redilTab');
+		}
+
 		catalogo.show();
 		catalogo.center();
 		// Nothing has filtered the store the first time the overlay opens, and
@@ -170,7 +187,19 @@ Ext.define('Redil.view.main.MainController', {
 		catalogo.down('#catalogueSearch').focus(false, 100);
 	}
 
+	,onCatalogueHide: function( catalogo ) {
+		var anterior = catalogo.previousTab;
+		delete catalogo.previousTab;
+
+		if ( anterior && Ext.getCmp(anterior) ) Ext.cq1('app-main').setActiveTab(anterior);
+	}
+
 	,onNewServiceSelect: function( view, record, item, index, e ) {
+		// Picking a service ends the trip: the add window, and then the new
+		// service's own tab, decide where you are, not the tab you came from.
+		var catalogo = Ext.getCmp('redilTab').down('#catalogue');
+		if ( catalogo ) delete catalogo.previousTab;
+
 		Ext.create('Redil.view.add.Add', {
 			record: record
 		});

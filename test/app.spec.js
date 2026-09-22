@@ -382,3 +382,38 @@ test('exposes the online check the renderer runs at boot', async () => {
 
 	expect(exposto).toBe(true);
 });
+
+test('opens the catalogue from a service and goes back to it', async () => {
+	// The catalogue is a floating child of the home tab, so the card layout hid
+	// it with the card: from a service the + did nothing. Reordering made this
+	// easy to hit, because the reorderer activates the tab it just moved.
+	const fixture = 'file://' + path.join(repoRoot, 'test', 'fixtures', 'service.html');
+	const passo = await redil.window.evaluate(url => {
+		const painel = Ext.cq1('app-main');
+		const store = Ext.getStore('Services');
+		const rec = store.add({ id: 7101, type: 'custom', name: 'From service', url: url,
+			align: 'left', position: 0, enabled: true, notifications: false, muted: false })[0];
+
+		painel.suspendEvent('add');
+		painel.insert(1, { xtype: 'webview', id: 'tab_7101', title: '', tooltip: rec.get('name'),
+			src: url, type: 'custom', enabled: true, record: rec, tabConfig: { service: rec } });
+		painel.resumeEvent('add');
+		painel.setActiveTab('tab_7101');
+
+		const controlador = painel.getController();
+		const catalogo = Ext.getCmp('redilTab').down('#catalogue');
+
+		controlador.openCatalogue();
+		const aberto = { visivel: catalogo.isVisible(), ativo: painel.getActiveTab().id };
+
+		catalogo.hide();
+		const fechado = { visivel: catalogo.isVisible(), ativo: painel.getActiveTab().id };
+
+		Ext.getCmp('tab_7101').destroy();
+		store.remove(store.getById(7101));
+		return { aberto: aberto, fechado: fechado };
+	}, fixture);
+
+	expect(passo.aberto).toEqual({ visivel: true, ativo: 'redilTab' });
+	expect(passo.fechado).toEqual({ visivel: false, ativo: 'tab_7101' });
+});

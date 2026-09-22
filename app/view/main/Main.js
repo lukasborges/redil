@@ -112,6 +112,9 @@ Ext.define('Redil.view.main.Main', {
 					,title: locale['app.main[0]']
 					,itemId: 'catalogue'
 					,cls: 'rx-catalogue'
+					,listeners: {
+						hide: 'onCatalogueHide'
+					}
 					,floating: true
 					,hidden: true
 					,modal: true
