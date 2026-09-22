@@ -1267,8 +1267,12 @@ body {
 	font-size: 13px;
 }
 
-.x-menu-item-icon-default,
-.x-menu-item-glyph-default {
+/*
+ * crisp colours a glyph through .x-menu-item-icon-default.x-menu-item-glyph,
+ * two classes on one element, which a single class never beat: the icons stayed
+ * crisp's grey in both themes.
+ */
+.x-menu-item-icon-default.x-menu-item-glyph {
 	color: var(--rx-muted);
 }
 
@@ -1278,7 +1282,19 @@ body {
 	border-color: transparent;
 }
 
-.x-menu-item-active .x-menu-item-glyph-default {
+/*
+ * The item under the pointer is painted twice by crisp: the link, which the rule
+ * above repaints, and the item around it, from .x-menu-item-default.x-menu-item-active.
+ * That outer one stayed crisp's pale blue, and in the dark theme the white text
+ * on it was unreadable.
+ */
+.x-menu-item-default.x-menu-item-active {
+	background-color: transparent;
+	background-image: none;
+	border-color: transparent;
+}
+
+.x-menu-item-active .x-menu-item-icon-default.x-menu-item-glyph {
 	color: var(--rx-brand);
 }
 
@@ -1297,11 +1313,25 @@ body {
 	padding: 2px 2px 6px;
 }
 
-.x-menu-default .x-segmented-button .x-btn-default-small {
+/*
+ * Inside a toolbar the pair takes crisp's toolbar button, not the default one,
+ * which paints it light grey with grey text whatever the theme.
+ */
+.x-menu-default .x-segmented-button .x-btn-default-toolbar-small {
+	background-color: transparent;
+	background-image: none;
 	border-color: var(--rx-line);
 }
 
-.x-menu-default .x-segmented-button .x-btn-default-small .x-btn-glyph {
+.x-menu-default .x-segmented-button .x-btn-default-toolbar-small.x-btn-over {
+	background-color: var(--rx-hover);
+}
+
+.x-menu-default .x-segmented-button .x-btn-default-toolbar-small .x-btn-inner {
+	color: var(--rx-ink);
+}
+
+.x-menu-default .x-segmented-button .x-btn-default-toolbar-small .x-btn-glyph {
 	color: var(--rx-muted);
 	font-size: 11px;
 }
@@ -1439,6 +1469,16 @@ body {
  */
 .x-window-body-default {
 	border-width: 0;
+}
+
+/*
+ * A message box paints its body white from .x-message-box .x-window-body, which
+ * outranks the rule above, and its text inherits black from nothing at all. The
+ * prompt behind the lock button was a white slab in the dark theme.
+ */
+.x-message-box .x-window-body {
+	background-color: var(--rx-raised);
+	color: var(--rx-ink);
 }
 
 .rx-plain > .x-panel-body-default {
