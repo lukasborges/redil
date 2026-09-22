@@ -146,3 +146,35 @@ test('puts the service bar on the left, as a rail of icons', async () => {
 	expect(rail.rotulos).toBeGreaterThan(0);
 	expect(rail.rotulosVisiveis).toBe(0);
 });
+
+test('splits the preferences into sections without unbinding a field', async () => {
+	const prefs = await redil.window.evaluate(() => {
+		const win = Ext.create('Redil.view.preferences.Preferences');
+		win.show();
+		const nomes = win.down('form').getForm().getFields().items.map(f => f.getName());
+		const resultado = {
+			 secoes: win.down('tabpanel').items.items.map(t => t.title)
+			// proxyHost lives on Advanced, which is not the open section: it is
+			// bound only because the tab panel renders every section up front.
+			,temProxyHost: nomes.includes('proxyHost')
+			,temMasterPassword: nomes.includes('master_password1')
+			,temTheme: nomes.includes('theme')
+			// The ui: 'decline' buttons had no styling at all, so Cancel was
+			// rendered, coloured and 42px wide inside a line box 0px tall.
+			,alturaDoCancelar: (() => {
+				const botao = win.dockedItems.items
+					.flatMap(d => (d.items && d.items.items) || [])
+					.find(b => b.isXType && b.isXType('button') && b.ui === 'decline-small');
+				return Math.round(botao.el.dom.querySelector('.x-btn-inner').getBoundingClientRect().height);
+			})()
+		};
+		win.destroy();
+		return resultado;
+	});
+
+	expect(prefs.secoes).toEqual(['Appearance', 'Window', 'Services', 'Security', 'Advanced']);
+	expect(prefs.temProxyHost).toBe(true);
+	expect(prefs.temMasterPassword).toBe(true);
+	expect(prefs.temTheme).toBe(true);
+	expect(prefs.alturaDoCancelar).toBeGreaterThan(0);
+});

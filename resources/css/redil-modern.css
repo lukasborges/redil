@@ -87,33 +87,37 @@ body {
  * shape Franz and Station settled on. Ext gives us a left tab bar for free --
  * setTabPosition('left') in MainController -- so all of this is appearance.
  *
+ * Scoped to #mainTabBar throughout: the Preferences window uses a left tab bar
+ * of its own for its sections, and without the id these rules would turn its
+ * navigation into a second navy rail of icons.
+ *
  * It carries the window's whole chrome now. The three buttons at its foot used
  * to be the home tab's toolbar, a navy strip across the top that disappeared
  * the moment a service was open; folding them in here removed that strip and
  * gave the content back its full height.
  */
 
-.x-tab-bar-default-left {
+#mainTabBar.x-tab-bar-default-left {
 	width: 68px !important;
 	background-color: var(--rx-chrome);
 	border: 0;
 	padding: 6px 0 8px;
 }
 
-.x-tab-bar-left .x-tab-bar-body {
+#mainTabBar .x-tab-bar-body {
 	padding: 0 !important;
 	background-color: var(--rx-chrome);
 }
 
 /* The strip Ext draws along the active edge; the rail marks the tab instead. */
-.x-tab-bar-strip-default-left,
-.x-tab-bar-left > .x-tab-bar-strip {
+#mainTabBar .x-tab-bar-strip-default-left,
+#mainTabBar > .x-tab-bar-strip {
 	background-color: transparent;
 	border-color: transparent;
 	width: 0;
 }
 
-.x-tab-default-left {
+#mainTabBar .x-tab-default-left {
 	width: 68px !important;
 	height: 52px !important;
 	padding: 0;
@@ -123,12 +127,12 @@ body {
 	transition: background-color 0.12s ease;
 }
 
-.x-tab-default-left:not(.x-tab-active):hover {
+#mainTabBar .x-tab-default-left:not(.x-tab-active):hover {
 	background-color: rgba(255, 255, 255, 0.08);
 }
 
 /* Two classes to outrank crisp, which paints the active tab from its own pair. */
-.x-tab.x-tab-active.x-tab-default-left {
+#mainTabBar .x-tab.x-tab-active.x-tab-default-left {
 	background-color: rgba(255, 255, 255, 0.14);
 	border-color: transparent;
 	/* the marker is a bar down the inner edge, not a strip across the bar */
@@ -136,11 +140,11 @@ body {
 }
 
 /* Icons only: the title is empty, and the element would still take up room. */
-.x-tab-default-left .x-tab-inner-default {
+#mainTabBar .x-tab-default-left .x-tab-inner-default {
 	display: none;
 }
 
-.x-tab-default-left .x-tab-icon-el {
+#mainTabBar .x-tab-default-left .x-tab-icon-el {
 	width: 30px;
 	height: 30px;
 	background-size: 30px 30px;
@@ -150,13 +154,13 @@ body {
 	transition: opacity 0.12s ease;
 }
 
-.x-tab-default-left:hover .x-tab-icon-el,
-.x-tab.x-tab-active.x-tab-default-left .x-tab-icon-el {
+#mainTabBar .x-tab-default-left:hover .x-tab-icon-el,
+#mainTabBar .x-tab.x-tab-active.x-tab-default-left .x-tab-icon-el {
 	opacity: 1;
 }
 
 /* The three at the foot, pinned there by the fill ahead of them. */
-.x-tab-bar-default-left .x-btn-default-small {
+#mainTabBar .x-btn-default-small {
 	background: none;
 	background-image: none;
 	border: 0;
@@ -167,24 +171,134 @@ body {
 	transition: background-color 0.12s ease;
 }
 
-.x-tab-bar-default-left .x-btn-default-small.x-btn-over {
+#mainTabBar .x-btn-default-small.x-btn-over {
 	background-color: rgba(255, 255, 255, 0.08);
 }
 
-.x-tab-bar-default-left .x-btn-default-small.x-btn-pressed {
+#mainTabBar .x-btn-default-small.x-btn-pressed {
 	background-color: rgba(255, 255, 255, 0.18);
 }
 
-.x-tab-bar-default-left .x-btn-glyph,
-.x-tab-bar-default-left .x-btn-icon-el {
+#mainTabBar .x-btn-glyph,
+#mainTabBar .x-btn-icon-el {
 	color: rgba(255, 255, 255, 0.72);
 	font-size: 17px;
 	opacity: 1;
 }
 
-.x-tab-bar-default-left .x-btn-default-small.x-btn-over .x-btn-glyph,
-.x-tab-bar-default-left .x-btn-default-small.x-btn-pressed .x-btn-glyph {
+#mainTabBar .x-btn-default-small.x-btn-over .x-btn-glyph,
+#mainTabBar .x-btn-default-small.x-btn-pressed .x-btn-glyph {
 	color: #FFFFFF;
+}
+
+/* ----------------------------------------------------- the decline ui */
+
+/*
+ * Six buttons in this app carry ui: 'decline', and two toolbars carry uis of
+ * their own. Those were Sass mixins in the 2015 theme, which no longer compiles,
+ * so crisp defines nothing for them and the buttons rendered with no styling at
+ * all -- the Cancel in Preferences was there the whole time, invisible. This is
+ * a quiet secondary button: an outline, not a fill, because it sits beside the
+ * one that commits.
+ */
+
+.x-btn-decline-small,
+.x-btn-decline-toolbar-small,
+.x-btn-decline-medium {
+	background: none;
+	background-image: none;
+	background-color: var(--rx-surface);
+	border: 1px solid var(--rx-line-strong);
+	border-radius: var(--rx-radius);
+	box-shadow: none;
+	padding: 5px 14px;
+	transition: background-color 0.12s ease, border-color 0.12s ease;
+}
+
+.x-btn-decline-small .x-btn-inner,
+.x-btn-decline-toolbar-small .x-btn-inner,
+.x-btn-decline-medium .x-btn-inner {
+	color: var(--rx-ink);
+	font-size: 13px;
+	/* Ext leaves the line box to the ui, and an undefined ui leaves it at zero:
+	   the label was rendered, coloured and 42px wide, in a box 0px tall. */
+	line-height: 18px;
+}
+
+.x-btn-decline-small.x-btn-over,
+.x-btn-decline-toolbar-small.x-btn-over,
+.x-btn-decline-medium.x-btn-over {
+	background-color: var(--rx-sunken);
+	border-color: var(--rx-muted);
+}
+
+/* The two banner toolbars: no version update or catalogue failure should look
+   like an error, so they read as notices in the app's own colours. */
+.x-toolbar-newversion,
+.x-toolbar-servicesnotloaded {
+	background-color: var(--rx-sunken);
+	background-image: none;
+	border-bottom: 1px solid var(--rx-line);
+	padding: 8px 12px;
+}
+
+/* -------------------------------------------- preferences navigation */
+
+/*
+ * The Preferences window puts its five sections in a left tab bar of its own.
+ * This is the opposite of the rail: a quiet list on a sunken panel, with labels,
+ * because there are five words and no icons to stand in for them.
+ */
+
+.rx-prefs-nav > .x-tab-bar-default-left {
+	width: 176px !important;
+	background-color: var(--rx-sunken);
+	border-right: 1px solid var(--rx-line);
+	padding: 10px 8px;
+}
+
+.rx-prefs-nav .x-tab-bar-body {
+	background-color: transparent;
+}
+
+.rx-prefs-nav .x-tab-bar-strip {
+	width: 0;
+	border: 0;
+	background: transparent;
+}
+
+.rx-prefs-nav .x-tab-default-left {
+	width: 160px !important;
+	height: 34px !important;
+	padding: 0 10px;
+	margin-bottom: 2px;
+	background: none;
+	border: 0;
+	border-radius: var(--rx-radius);
+	text-align: left;
+	transition: background-color 0.12s ease;
+}
+
+.rx-prefs-nav .x-tab-default-left:not(.x-tab-active):hover {
+	background-color: var(--rx-hover);
+}
+
+.rx-prefs-nav .x-tab.x-tab-active.x-tab-default-left {
+	background-color: var(--rx-surface);
+	box-shadow: none;
+}
+
+.rx-prefs-nav .x-tab-inner-default {
+	display: block;
+	font-size: 13px;
+	font-weight: 500;
+	color: var(--rx-muted);
+	text-align: left;
+}
+
+.rx-prefs-nav .x-tab.x-tab-active.x-tab-default-left .x-tab-inner-default {
+	color: var(--rx-ink);
+	font-weight: 600;
 }
 
 /* ------------------------------------------------- the one loud thing */

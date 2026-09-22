@@ -79,6 +79,10 @@ Three preferences went with that decision, and they are gone from the defaults, 
 
 **Renderer** is the ExtJS app: `index.html` loads the generated `bootstrap.js`, `app.js` bootstraps `Redil.Application` (`app/Application.js`) with `Redil.view.main.Main` as the viewport. `app/` follows Sencha MVVM conventions, with view, controller and model files side by side under `app/view/<feature>/`. The bulk of the behavior is in `app/view/main/MainController.js`, `app/view/preferences/`, `app/view/add/`, and `app/ux/WebView.js`.
 
+**Preferences** are five sections -- Appearance, Window, Services, Security, Advanced -- in a left tab panel, not the single scroll of fourteen controls they used to be. Every field still lives inside one form, so Save reads them all in a single `getFieldValues`; `deferredRender: false` is what makes that true, by rendering every section whether or not it is on screen. Take it off and the proxy and master password fields silently stop saving.
+
+Six buttons carry `ui: 'decline'`, and two toolbars carry `newversion` and `servicesnotloaded`. Those were Sass mixins in the 2015 theme, so nothing defines them now and Ext leaves such a button entirely unstyled -- the Cancel in Preferences was rendered, coloured and 42px wide inside a line box 0px tall, which is why it looked absent for as long as this fork has existed. `redil-modern.css` defines them.
+
 **Configuration flow.** The renderer never reads config directly. It calls `ipc.sendSync('getConfig')` and pushes changes back with `ipc.send('setConfig', ...)` or `sConfig` (partial merge). Adding a preference means touching the `defaults` in `electron/main.js`, the form in `app/view/preferences/Preferences.js`, and whichever consumer reads it.
 
 **Services.** Two distinct stores, easy to confuse:
