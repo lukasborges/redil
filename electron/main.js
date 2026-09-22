@@ -475,6 +475,10 @@ const PROMPTED_PERMISSIONS = {
  */
 const mediaGranted = {};
 
+// What a call needs besides the camera and the screen, granted silently to the
+// same services: without the wake lock the display sleeps in the middle of one.
+const CALL_PERMISSIONS = ['screen-wake-lock'];
+
 ipcMain.on('service:setMediaAccess', function(event, partition, allowed) {
 	if ( !partition ) return;
 
@@ -525,6 +529,7 @@ function applyPermissionPolicy(serviceSession, partition, notificationsAllowed) 
 	serviceSession.setPermissionRequestHandler(function(webContents, permission, callback) {
 		if ( permission === 'notifications' ) return callback(notificationsAllowed);
 		if ( SILENT_PERMISSIONS.indexOf(permission) !== -1 ) return callback(true);
+		if ( CALL_PERMISSIONS.indexOf(permission) !== -1 && mediaGranted[partition] ) return callback(true);
 		if ( PROMPTED_PERMISSIONS[permission] && partition ) {
 			if ( mediaGranted[partition] ) return callback(true);
 			return askAboutPermission(partition, permission, callback);
@@ -537,9 +542,21 @@ function applyPermissionPolicy(serviceSession, partition, notificationsAllowed) 
 	serviceSession.setPermissionCheckHandler(function(webContents, permission) {
 		if ( permission === 'notifications' ) return notificationsAllowed;
 		if ( SILENT_PERMISSIONS.indexOf(permission) !== -1 ) return true;
+		if ( CALL_PERMISSIONS.indexOf(permission) !== -1 && mediaGranted[partition] ) return true;
 		if ( PROMPTED_PERMISSIONS[permission] && partition ) return mediaGranted[partition] === true || rememberedPermission(partition, permission) === true;
+		reportRefusedCheck(partition, permission);
 		return false;
 	});
+}
+
+// A page may query the same permission many times a second, so each refusal is
+// reported once per service rather than on every check.
+const reportedChecks = new Set();
+function reportRefusedCheck(partition, permission) {
+	const key = permissionKey(partition, permission);
+	if ( reportedChecks.has(key) ) return;
+	reportedChecks.add(key);
+	console.info('Refused permission check "' + permission + '" for ' + (partition || 'an unconfigured service'));
 }
 
 // Handle Service Notifications
