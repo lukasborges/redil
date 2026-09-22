@@ -250,6 +250,10 @@ Ext.define('Redil.Application', {
 	 */
 	,updateUnreadSummary: function( total ) {
 		var aba = Ext.getCmp('redilTab');
+		// The list is a dataview now; its rows carry the per-service count.
+		var lista = aba && aba.down('#serviceList');
+		if ( lista && lista.rendered ) lista.refresh();
+
 		var resumo = aba && aba.down('#unreadSummary');
 		if ( !resumo ) return;
 

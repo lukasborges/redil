@@ -217,3 +217,39 @@ test('opens on the unread summary, with the catalogue behind a button', async ()
 	});
 	expect(aberto).toBe(true);
 });
+
+test('draws the service list from a template, one node per service', async () => {
+	const lista = await redil.window.evaluate(() => {
+		const view = Ext.getCmp('redilTab').down('#serviceList');
+		const store = view.getStore();
+
+		store.add({ id: 4141, type: 'custom', name: 'Probe', url: 'file:///probe.html',
+			align: 'left', enabled: true, notifications: true, muted: false });
+		Redil.util.UnreadCounter.setUnreadCountForService(4141, 3);
+		view.refresh();
+
+		const linha = view.el.dom.querySelector('.rx-service');
+		const resultado = {
+			 nos: view.getNodes().length
+			,registros: store.getCount()
+			,nome: linha.querySelector('.rx-service-name').textContent
+			,naoLidas: linha.querySelector('.rx-unread').textContent
+			,estado: linha.querySelector('.rx-state').textContent
+			,ponto: linha.querySelector('.rx-dot').className
+			// Edit, remove and the enable toggle: what the grid spent three
+			// columns on, dispatched from one click handler by data-act.
+			,acoes: [...linha.querySelectorAll('.rx-act')].map(a => a.getAttribute('data-act'))
+		};
+
+		Redil.util.UnreadCounter.clearUnreadCountForService(4141);
+		store.remove(store.getById(4141));
+		return resultado;
+	});
+
+	expect(lista.nos).toBe(lista.registros);
+	expect(lista.nome).toBe('Probe');
+	expect(lista.naoLidas).toBe('3 unread');
+	expect(lista.estado).toBe('Active');
+	expect(lista.ponto).toContain('rx-dot-active');
+	expect(lista.acoes).toEqual(['edit', 'remove', 'toggle']);
+});

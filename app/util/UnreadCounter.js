@@ -41,6 +41,16 @@ Ext.define('Redil.util.UnreadCounter', {
 		};
 
 		/**
+		 * What a single service is holding. The home tab's list says it per row.
+		 *
+		 * @param {*} id	Id of the service.
+		 * @return {number}
+		 */
+		this.getUnreadCountForService = function(id) {
+			return unreadCountByService.get(id) || 0;
+		};
+
+		/**
 		 * How many services are holding something unread. The home tab says this
 		 * beside the total, and only the map knows it.
 		 *

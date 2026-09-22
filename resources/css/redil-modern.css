@@ -267,6 +267,161 @@ body {
 	color: var(--rx-muted);
 }
 
+/* -------------------------------------------------- the service list */
+
+/*
+ * The home tab's services, drawn by the dataview's own template rather than by
+ * a grid. Everything here is ours, which is why it can be the shape the design
+ * asks for: a card per service, its state said in words, and the actions kept
+ * quiet until the pointer is on the row.
+ */
+
+.rx-services.x-panel,
+.rx-services .x-panel-body {
+	border: 0;
+	background-color: var(--rx-surface);
+}
+
+.rx-services > .x-panel-header-default {
+	background-color: transparent;
+	border: 0;
+	padding: 4px 36px 2px;
+}
+
+.rx-services .x-panel-header-title-default .x-title-text {
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.07em;
+	text-transform: uppercase;
+	color: var(--rx-muted);
+}
+
+/* The remove-all tool, which crisp draws as a filled button. */
+.rx-services .x-tool,
+.rx-services .x-tool .x-btn-default-toolbar-small {
+	background: none;
+	background-color: transparent;
+	border: 0;
+	box-shadow: none;
+}
+
+.rx-services .x-tool .x-btn-glyph {
+	color: var(--rx-muted);
+	font-size: 14px;
+}
+
+.rx-services .x-tool .x-btn-default-toolbar-small.x-btn-over .x-btn-glyph {
+	color: var(--rx-alert);
+}
+
+.rx-service {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	padding: 14px 18px;
+	margin-bottom: 8px;
+	background-color: var(--rx-surface);
+	border: 1px solid var(--rx-line);
+	border-radius: var(--rx-radius-lg);
+	cursor: default;
+	transition: border-color 0.12s ease;
+}
+
+.rx-service:hover {
+	border-color: var(--rx-line-strong);
+}
+
+.rx-service-off {
+	opacity: 0.6;
+}
+
+.rx-service-icon {
+	width: 30px;
+	height: 30px;
+	border-radius: 7px;
+	flex-shrink: 0;
+}
+
+.rx-service-off .rx-service-icon {
+	filter: grayscale(1);
+}
+
+.rx-service-name {
+	flex-grow: 1;
+	min-width: 0;
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--rx-ink);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.rx-unread {
+	font-style: normal;
+	font-size: 12px;
+	font-weight: 700;
+	color: var(--rx-ink);
+}
+
+.rx-dot {
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+
+.rx-dot-active { background-color: var(--rx-ok); }
+.rx-dot-muted,
+.rx-dot-disabled { background-color: var(--rx-muted); }
+
+.rx-state {
+	font-size: 13px;
+	color: var(--rx-muted);
+	width: 72px;
+}
+
+/* Quiet until the row is under the pointer, as the action columns were. */
+.rx-service-actions {
+	display: flex;
+	gap: 4px;
+	opacity: 0;
+	transition: opacity 0.12s ease;
+}
+
+.rx-service:hover .rx-service-actions,
+.rx-service:focus-within .rx-service-actions {
+	opacity: 1;
+}
+
+.rx-act {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 30px;
+	height: 30px;
+	border-radius: var(--rx-radius);
+	color: var(--rx-muted);
+	font-size: 14px;
+	text-decoration: none;
+	transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+.rx-act:hover {
+	background-color: var(--rx-hover);
+	color: var(--rx-ink);
+}
+
+.rx-act-toggle {
+	font-size: 17px;
+}
+
+.rx-empty {
+	margin: 10px 0;
+	font-size: 13px;
+	color: var(--rx-muted);
+}
+
 /* -------------------------------------------- preferences navigation */
 
 /*

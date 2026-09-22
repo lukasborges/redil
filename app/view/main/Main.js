@@ -182,115 +182,82 @@ Ext.define('Redil.view.main.Main', {
 					]
 				}
 				,{
-					 xtype: 'grid'
+					/*
+					 * A dataview, not a grid. The grid drew each row as a <table>,
+					 * which fought every attempt to give the rows the shape the
+					 * design asks for -- margins and corners do not apply to a
+					 * layout Ext sizes in pixels. Here the row's markup is ours and
+					 * Ext still binds the store and dispatches the clicks.
+					 *
+					 * Two things the grid did are gone with it. Rows no longer group
+					 * by align: the rail already shows that split, above and below
+					 * its fill. And a name is renamed in the Edit window rather than
+					 * in place, which is where every other field of a service lives.
+					 */
+					 xtype: 'panel'
 					,title: locale['app.main[4]']
-					// The catalogue floats now, so this is the whole of the tab.
-					,store: 'Services'
-					,hideHeaders: true
-					,margin: '0 0 0 5'
+					,cls: 'rx-services'
 					,flex: 1
-					,header: { height: 50 }
-					,features: [
-						{
-							 ftype:'grouping'
-							,collapsible: false
-							,groupHeaderTpl: '{columnName:uppercase}: {name:capitalize} ({rows.length} {[values.rows.length > 1 ? "'+locale['app.main[9]']+'" : "'+locale['app.main[8]']+'"]})'
-						}
-					]
-					,plugins: {
-						 ptype: 'cellediting'
-						,clicksToEdit: 2
-					}
+					,scrollable: 'vertical'
+					,bodyPadding: '0 34 14 34'
 					,tools: [
 						{
 							 xtype: 'button'
 							,glyph: 'xf1f8@FontAwesome'
-							,baseCls: ''
-							,tooltip: locale['app.main[10]']
+							,tooltip: locale['app.main[6]']
 							,handler: 'removeAllServices'
-							,bind: {
-								disabled: '{emptyServices}'
-							}
 						}
 					]
-					,columns: [
+					,items: [
 						{
-							 xtype: 'templatecolumn'
-							,width: 52
-							,variableRowHeight: true
-							,tpl: '<img src="{[ values.type !== \"custom\" ? \"resources/icons/\"+values.logo : (values.logo == \"\" ? \"resources/icons/custom.png\" : values.logo) ]}" data-qtip="{type:capitalize}" width="32" style="{[ values.enabled ? \"-webkit-filter: grayscale(0)\" : \"-webkit-filter: grayscale(1)\" ]}" />'
-						}
-						,{
-							 dataIndex: 'name'
-							,variableRowHeight: true
-							,flex: 1
-							,editor: {
-								 xtype: 'textfield'
-								,allowBlank: true
-							}
-						}
-						,{
-							 xtype: 'actioncolumn'
-							,width: 60
-							,align: 'right'
-							,items: [
-								{
-									 glyph: 0xf1f7
-									,tooltip: locale['app.main[11]']
-									,getClass: function( value, metaData, record, rowIndex, colIndex, store, view ){
-										if ( record.get('notifications') ) return 'x-hidden';
+							 xtype: 'dataview'
+							,itemId: 'serviceList'
+							,store: 'Services'
+							,itemSelector: '.rx-service'
+							,tpl: new Ext.XTemplate(
+								'<tpl for=".">'
+									, '<div class="rx-service<tpl if="!enabled"> rx-service-off</tpl>">'
+										, '<img class="rx-service-icon" src="{[ this.icone(values) ]}" alt="">'
+										, '<span class="rx-service-name">{name:htmlEncode}</span>'
+										, '<tpl if="this.naoLidas(values.id) &gt; 0">'
+											, '<em class="rx-unread">{[ this.naoLidas(values.id) ]} unread</em>'
+										, '</tpl>'
+										, '<i class="rx-dot rx-dot-{[ this.estado(values) ]}"></i>'
+										, '<span class="rx-state">{[ this.rotulo(values) ]}</span>'
+										, '<span class="rx-service-actions">'
+											, '<a href="#" class="rx-act" data-act="edit" title="' + locale['app.main[13]'] + '"><i class="fa fa-cog"></i></a>'
+											, '<a href="#" class="rx-act" data-act="remove" title="' + locale['app.main[14]'] + '"><i class="fa fa-trash"></i></a>'
+											, '<a href="#" class="rx-act rx-act-toggle" data-act="toggle" title="{[ values.enabled ? \'Disable\' : \'Enable\' ]}">'
+												, '<i class="fa fa-{[ values.enabled ? \'toggle-on\' : \'toggle-off\' ]}"></i>'
+											, '</a>'
+										, '</span>'
+									, '</div>'
+								, '</tpl>'
+								, {
+									 icone: function(v) {
+										if ( v.type !== 'custom' ) return 'resources/icons/' + v.logo;
+										return v.logo === '' ? 'resources/icons/custom.png' : v.logo;
+									}
+									,naoLidas: function(id) {
+										return Redil.util.UnreadCounter.getUnreadCountForService(id);
+									}
+									,estado: function(v) {
+										if ( !v.enabled ) return 'disabled';
+										return v.muted || !v.notifications ? 'muted' : 'active';
+									}
+									,rotulo: function(v) {
+										if ( !v.enabled ) return 'Disabled';
+										if ( v.muted ) return 'Muted';
+										return v.notifications ? 'Active' : 'Silent';
 									}
 								}
-								,{
-									 glyph: 0xf026
-									,tooltip: locale['app.main[12]']
-									,getClass: function( value, metaData, record, rowIndex, colIndex, store, view ){
-										if ( !record.get('muted') ) return 'x-hidden';
-									}
-								}
-							]
-						}
-						,{
-							 xtype: 'actioncolumn'
-							,width: 60
-							,align: 'center'
-							,items: [
-								{
-									 glyph: 0xf013
-									,tooltip: locale['app.main[13]']
-									,handler: 'configureService'
-									,getClass: function(){ return 'x-hidden-display'; }
-								}
-								,{
-									 glyph: 0xf1f8
-									,tooltip: locale['app.main[14]']
-									,handler: 'removeService'
-									,getClass: function(){ return 'x-hidden-display'; }
-								}
-							]
-						}
-						,{
-							 xtype: 'checkcolumn'
-							,width: 40
-							,dataIndex: 'enabled'
-							,renderer: function(value, metaData) {
-								metaData.tdAttr = 'data-qtip="Service '+(value ? 'Enabled' : 'Disabled')+'"';
-								return this.defaultRenderer(value, metaData);
-							}
+							)
 							,listeners: {
-								checkchange: 'onEnableDisableService'
+								 itemclick: 'onServiceListClick'
+								,itemdblclick: 'showServiceTab'
 							}
 						}
 					]
-					,viewConfig: {
-						 emptyText: locale['app.main[15]']
-						,forceFit: true
-						,stripeRows: true
-					}
-					,listeners: {
-						 edit: 'onRenameService'
-						,rowdblclick: 'showServiceTab'
-					}
 				}
 			]
 		}

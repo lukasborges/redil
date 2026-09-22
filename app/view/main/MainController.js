@@ -81,20 +81,42 @@ Ext.define('Redil.view.main.MainController', {
 		store.resumeEvent('remove');
 	}
 
-	,showServiceTab: function( grid, record, tr, rowIndex, e ) {
-		if ( e.position.colIdx === 0 ) { // Service Logo
-			Ext.getCmp('tab_'+record.get('id')).show();
+	,showServiceTab: function( view, record ) {
+		// The grid only obeyed a double click on the logo cell, because it tested
+		// e.position.colIdx. A row has no columns now, so the whole row opens it.
+		var aba = Ext.getCmp('tab_' + record.get('id'));
+		if ( aba ) aba.show();
+	}
+
+	/*
+	 * One click handler for the row, dispatched by the data-act of whatever was
+	 * hit. The grid spent three columns on this: two action columns and a check
+	 * column, each with its own signature.
+	 */
+	,onServiceListClick: function( view, record, item, index, e ) {
+		var alvo = e.getTarget('.rx-act', 3);
+		if ( !alvo ) return;
+
+		e.stopEvent();
+
+		switch ( alvo.getAttribute('data-act') ) {
+			case 'edit':
+				this.configureService(null, index, null, null, e, record, item);
+				break;
+			case 'remove':
+				this.removeService(null, index, null, null, e, record, item);
+				break;
+			case 'toggle':
+				// The check column wrote the field before firing; nothing does now.
+				var ligado = !record.get('enabled');
+				record.set('enabled', ligado);
+				this.onEnableDisableService(null, index, ligado);
+				view.refreshNode(index);
+				break;
 		}
 	}
 
-	,onRenameService: function(editor, e) {
-		var me = this;
 
-		e.record.commit();
-
-		// Change the title of the Tab
-		Ext.getCmp('tab_'+e.record.get('id')).setTitle(e.record.get('name'));
-	}
 
 	,onEnableDisableService: function(cc, rowIndex, checked, obj, hideTab) {
 		var rec = Ext.getStore('Services').getAt(rowIndex);
