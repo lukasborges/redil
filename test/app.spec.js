@@ -299,3 +299,18 @@ test('filters the catalogue by type and by name at the same time', async () => {
 	expect(filtro.emailEGm).toEqual(['Gmail']);
 	expect(filtro.rotulo).toBe('1 service');
 });
+
+test('keeps the custom entry last under a name the add window can print', async () => {
+	const custom = await redil.window.evaluate(() => {
+		const store = Ext.getStore('ServicesList');
+		return {
+			 nome: store.getById('custom').get('name')
+			,ultimo: store.getAt(store.getCount() - 1).getId()
+		};
+	});
+
+	// It used to be called '_Custom Service' to sort itself to the end, and the
+	// Add window titles itself from the record, so it read "Add _Custom Service".
+	expect(custom.nome).toBe('Custom Service');
+	expect(custom.ultimo).toBe('custom');
+});

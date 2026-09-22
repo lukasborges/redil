@@ -1041,6 +1041,52 @@ body {
 	flex-shrink: 0;
 }
 
+/* ------------------------------------------------------- the url row */
+
+/*
+ * A service with a domain of its own asks for the middle of a url: a fixed
+ * prefix, what you type, and a picker for the server. They are three Ext
+ * components, and they read as one control only if the corners of whichever
+ * ones are showing are the only round ones -- which is what the two :has rules
+ * work out, since the prefix and the picker come and go as the picker changes.
+ */
+.rx-url .x-btn-default-small {
+	background-color: var(--rx-sunken);
+	border: 1px solid var(--rx-line);
+	border-radius: 0;
+	padding: 0 12px;
+}
+
+.rx-url .x-btn-default-small .x-btn-inner {
+	color: var(--rx-muted);
+}
+
+.rx-url .rx-url-prefix {
+	border-top-left-radius: var(--rx-radius-lg);
+	border-bottom-left-radius: var(--rx-radius-lg);
+	border-right-width: 0;
+}
+
+.rx-url .rx-url-suffix {
+	border-top-right-radius: var(--rx-radius-lg);
+	border-bottom-right-radius: var(--rx-radius-lg);
+	border-left-width: 0;
+}
+
+.rx-url .x-form-trigger-wrap-default {
+	border-radius: var(--rx-radius-lg);
+}
+
+.rx-url:has(.rx-url-prefix:not([class*="x-hidden"])) .x-form-trigger-wrap-default {
+	border-top-left-radius: 0;
+	border-bottom-left-radius: 0;
+}
+
+.rx-url:has(.rx-url-suffix:not([class*="x-hidden"])) .x-form-trigger-wrap-default {
+	border-top-right-radius: 0;
+	border-bottom-right-radius: 0;
+}
+
 /* -------------------------------------------------------------- menus */
 
 /*

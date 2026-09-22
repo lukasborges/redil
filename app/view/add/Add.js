@@ -47,19 +47,26 @@ Ext.define('Redil.view.add.Add',{
 						,listeners: { specialkey: 'onEnter' }
 					}
 					,{
-						 xtype: 'container'
-						,layout: 'hbox'
+						/*
+						 * The prefix, the field and the server picker are one control,
+						 * so they sit in a field container under a single label rather
+						 * than beside a label of their own. The corners are joined in
+						 * CSS, which also knows which of the three are showing.
+						 */
+						 xtype: 'fieldcontainer'
+						,fieldLabel: locale['app.window[17]']
+						,labelAlign: 'top'
+						,labelSeparator: ''
+						,anchor: '100%'
+						,cls: 'rx-url'
+						,margin: '10 0 0 0'
+						,layout: { type: 'hbox', align: 'stretch' }
 						,hidden: me.edit ? me.service.get('url').indexOf('___') === -1 && !me.service.get('custom_domain') : me.record.get('url').indexOf('___') === -1 && !me.record.get('custom_domain')
 						,items: [
 							{
-								 xtype: 'label'
-								,text: locale['app.window[17]']+':'
-								,width: 45
-							}
-							,{
 								 xtype: 'button'
+								,cls: 'rx-url-prefix'
 								,text: me.edit ? me.service.get('url').split('___')[0] : me.record.get('url').split('___')[0]
-								,style: 'border-top-right-radius:0;border-bottom-right-radius:0;'
 								,hidden: me.edit ? me.service.get('url').indexOf('___') === -1 ? true : me.service.get('type') === 'custom' || me.service.get('url') === '___' : me.record.get('url').indexOf('___') === -1 ? true : me.record.get('type') === 'custom' || me.record.get('url') === '___'
 							}
 							,{
@@ -82,8 +89,8 @@ Ext.define('Redil.view.add.Add',{
 							}
 							,{
 								 xtype: 'cycle'
+								,cls: 'rx-url-suffix'
 								,showText: true
-								,style: 'border-top-left-radius:0;border-bottom-left-radius:0;'
 								,hidden: me.edit ? me.service.get('type') === 'custom' || me.service.get('url') === '___' : me.record.get('type') === 'custom' || me.record.get('url') === '___'
 								,arrowVisible: me.edit ? (me.service.get('url').indexOf('___') >= 0 && !me.service.get('custom_domain') ? false : me.service.get('custom_domain')) : (me.record.get('url').indexOf('___') >= 0 && !me.record.get('custom_domain') ? false : me.record.get('custom_domain'))
 								,menu: {
