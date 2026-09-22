@@ -123,3 +123,14 @@ test('grants the camera and the microphone only to a service marked for calls', 
 
 	expect(await inGuest(consulta)).toBe('camera=denied microphone=denied');
 });
+
+test('counts unread from the page title when the service brings no snippet', async () => {
+	// What WhatsApp needs: its catalogue snippet was written against class names
+	// the site stopped generating years ago, so it carries none and the title,
+	// which every messenger writes as "(3) Name", is what answers.
+	await inGuest('document.title = "(3) Fixture service"');
+	await redil.window.waitForFunction(() => Redil.util.UnreadCounter.getTotalUnreadCount() === 3, null, { timeout: 10000 });
+
+	await inGuest('document.title = "Fixture service"');
+	await redil.window.waitForFunction(() => Redil.util.UnreadCounter.getTotalUnreadCount() === 0, null, { timeout: 10000 });
+});

@@ -525,10 +525,19 @@ Ext.define('Redil.ux.WebView',{
 			}
 		});
 
-		/**
-		 * Register page title update event listener only for services that don't specify a js_unread
+		/*
+		 * Watching the title is what counts unread messages for a service with no
+		 * snippet of its own. The test used to read `entry ? A : false && B`,
+		 * which is `entry ? A : false`: a service whose catalogue entry had been
+		 * dropped got no counting at all, and a snippet written by hand in the
+		 * service's own settings was counted on top of the title rather than
+		 * instead of it.
 		 */
-		if ( Ext.getStore('ServicesList').getById(me.record.get('type')) ? Ext.getStore('ServicesList').getById(me.record.get('type')).get('js_unread') === '' : false && me.record.get('js_unread') === '' ) {
+		var catalogueEntry = Ext.getStore('ServicesList').getById(me.record.get('type'));
+		var hasNoSnippet = (!catalogueEntry || catalogueEntry.get('js_unread') === '')
+			&& Ext.isEmpty(me.record.get('js_unread'));
+
+		if ( hasNoSnippet ) {
 			webview.addEventListener("page-title-updated", function(e) {
 				var count = e.title.match(/\(([^)]+)\)/); // Get text between (...)
 				count = count ? count[1] : '0';
