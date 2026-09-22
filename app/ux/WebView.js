@@ -255,8 +255,9 @@ Ext.define('Redil.ux.WebView',{
 			,id: me.id+'statusbar'
 			,hidden: !me.record.get('statusbar')
 			,keep: me.record.get('statusbar')
-			,y: floating ? '-18px' : 'auto'
-			,height: 19
+			// the floating one hangs over the bottom of the page by its own height
+			,y: floating ? '-22px' : 'auto'
+			,height: 22
 			,dock: 'bottom'
 			,defaultText: '<i class="fa fa-check fa-fw" aria-hidden="true"></i> Ready'
 			,busyIconCls : ''

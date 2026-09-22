@@ -219,11 +219,16 @@ body {
 
 .x-btn-decline-small .x-btn-inner,
 .x-btn-decline-toolbar-small .x-btn-inner,
-.x-btn-decline-medium .x-btn-inner {
+.x-btn-decline-medium .x-btn-inner,
+.x-btn-decline-small .x-btn-glyph,
+.x-btn-decline-toolbar-small .x-btn-glyph,
+.x-btn-decline-medium .x-btn-glyph {
 	color: var(--rx-ink);
 	font-size: 13px;
 	/* Ext leaves the line box to the ui, and an undefined ui leaves it at zero:
-	   the label was rendered, coloured and 42px wide, in a box 0px tall. */
+	   the label was rendered, coloured and 42px wide, in a box 0px tall. The
+	   glyph of an icon-only decline button, in the status bar, was clipped to a
+	   sliver by the same zero. */
 	line-height: 18px;
 }
 
@@ -1204,8 +1209,49 @@ body {
 
 /* --------------------------------------------------------- status bar */
 
+/*
+ * The strip under a service, which says what is loading and where a link goes.
+ * It was a second navy bar, the same colour as the rail, running the full width
+ * of somebody else's page: the loudest thing on screen for the least important
+ * thing the app has to say. It is a hairline and grey text now. The !important
+ * answers redil-theme.css, which states the original in the same terms.
+ */
 .x-statusbar {
-	background-color: var(--rx-chrome) !important;
+	background-color: var(--rx-surface) !important;
+	border-top: 1px solid var(--rx-line) !important;
+	padding: 0 10px !important;
+}
+
+.x-statusbar .x-toolbar-text-default,
+.x-statusbar .x-status-text {
+	color: var(--rx-muted) !important;
+	font-size: 11.5px;
+	line-height: 16px;
+}
+
+/* the url of whatever the pointer is over: long, and nobody reads the end */
+.x-statusbar .x-toolbar-text-default {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* the button that dismisses the bar until next time, which is not a form
+   button however much the decline ui it carries says so */
+.x-statusbar .x-btn-decline-small {
+	background: none;
+	background-color: transparent;
+	border-color: transparent;
+	padding: 0 4px;
+}
+
+.x-statusbar .x-btn-decline-small.x-btn-over {
+	background-color: var(--rx-hover);
+}
+
+.x-statusbar .x-btn-decline-small .x-btn-glyph {
+	color: var(--rx-muted);
+	font-size: 12px;
 }
 
 /* --------------------------------------------------------- scrollbars */
