@@ -473,7 +473,12 @@ Ext.define('Redil.ux.WebView',{
 
 				Redil.app.config.googleURLs.forEach((loginURL) => {	if ( webview.getURL().indexOf(loginURL) > -1 ) webview.reload() })
 			}
-			webview.executeJavaScript(js_inject).then(result => {} ).catch(err => { console.log(err) })
+			// The error is kept, not only logged: a snippet that throws is the first
+			// thing the unread report has to be able to say.
+			me.injectionError = null;
+			webview.executeJavaScript(js_inject)
+				.then(() => {})
+				.catch(err => { me.injectionError = String(err && err.message ? err.message : err); console.log(err); })
 		});
 
 		webview.addEventListener('ipc-message', function(event) {
@@ -496,7 +501,7 @@ Ext.define('Redil.ux.WebView',{
 			function handleClearUnreadCount() {
 				me.tab.setBadgeText('');
 				me.currentUnreadCount = 0;
-				me.setUnreadCount(0);
+				me.reportSnippetUnread(0);
 			}
 
 			/**
@@ -510,7 +515,7 @@ Ext.define('Redil.ux.WebView',{
 					var count = event.args[0];
 					if (count === parseInt(count, 10) || "•" === count) {
 						if ( count === 999999 ) count = "•";
-						me.setUnreadCount(count);
+						me.reportSnippetUnread(count);
 					}
 				}
 			}
@@ -526,27 +531,20 @@ Ext.define('Redil.ux.WebView',{
 		});
 
 		/*
-		 * Watching the title is what counts unread messages for a service with no
-		 * snippet of its own. The test used to read `entry ? A : false && B`,
-		 * which is `entry ? A : false`: a service whose catalogue entry had been
-		 * dropped got no counting at all, and a snippet written by hand in the
-		 * service's own settings was counted on top of the title rather than
-		 * instead of it.
+		 * The title is read for every service, not only for the ones without a
+		 * snippet. A snippet is written against a site that keeps changing, and
+		 * when it stops matching it reports zero for ever -- the service goes
+		 * quiet and nothing says why. reportTitleUnread decides which of the two
+		 * answers to believe; see effectiveUnreadCount.
 		 */
-		var catalogueEntry = Ext.getStore('ServicesList').getById(me.record.get('type'));
-		var hasNoSnippet = (!catalogueEntry || catalogueEntry.get('js_unread') === '')
-			&& Ext.isEmpty(me.record.get('js_unread'));
+		webview.addEventListener("page-title-updated", function(e) {
+			var count = e.title.match(/\(([^)]+)\)/); // Get text between (...)
+			count = count ? count[1] : '0';
+			count = count === '•' ? count : Ext.isArray(count.match(/\d+/g)) ? count.match(/\d+/g).join("") : count.match(/\d+/g); // Some services have special characters. Example: (•)
+			count = count === null ? '0' : count;
 
-		if ( hasNoSnippet ) {
-			webview.addEventListener("page-title-updated", function(e) {
-				var count = e.title.match(/\(([^)]+)\)/); // Get text between (...)
-				count = count ? count[1] : '0';
-				count = count === '•' ? count : Ext.isArray(count.match(/\d+/g)) ? count.match(/\d+/g).join("") : count.match(/\d+/g); // Some services have special characters. Example: (•)
-				count = count === null ? '0' : count;
-
-				me.setUnreadCount(count);
-			});
-		}
+			me.reportTitleUnread(count);
+		});
 
 		webview.addEventListener('did-navigate', function( e ) {
 			if ( e.isMainFrame && me.record.get('type') === 'tweetdeck' ) Ext.defer(function() { webview.loadURL(e.newURL); }, 1000); // Applied a defer because sometimes is not redirecting. TweetDeck 2FA is an example.
@@ -555,6 +553,75 @@ Ext.define('Redil.ux.WebView',{
 		webview.addEventListener('update-target-url', function( url ) {
 			me.down('statusbar #url').setText(url.url);
 		});
+	}
+
+	/**
+	 * Everything the app knows about how this service is being counted, for the
+	 * report under View. Testing unread detection means logging into the service,
+	 * so the least this can do is say what it sees rather than leave the person
+	 * guessing why a tab is quiet.
+	 */
+	,unreadDiagnosis: function() {
+		var me = this;
+		var entry = Ext.getStore('ServicesList').getById(me.record.get('type'));
+		var fromCatalogue = entry ? entry.get('js_unread') !== '' : false;
+		var fromService = !Ext.isEmpty(me.record.get('js_unread'));
+
+		return {
+			 name: me.record.get('name')
+			,snippet: fromCatalogue || fromService ? (fromService ? 'own code' : 'catalogue') : 'none'
+			,snippetUnread: me.snippetUnread === undefined || me.snippetUnread === null ? '—' : String(me.snippetUnread)
+			,snippetWorks: !!me.snippetWorks
+			,titleUnread: me.titleUnread === undefined || me.titleUnread === null ? '—' : String(me.titleUnread)
+			,counting: me.snippetWorks ? 'snippet' : (me.countOf(me.titleUnread) > me.countOf(me.snippetUnread) ? 'title' : 'neither yet')
+			,countingCls: me.snippetWorks ? 'snippet' : (me.countOf(me.titleUnread) > me.countOf(me.snippetUnread) ? 'title' : 'quiet')
+			,total: String(me.countOf(me.effectiveUnreadCount()))
+			,error: me.injectionError || ''
+		};
+	}
+
+	/**
+	 * How many a count stands for, with '•' meaning "some, and the service is not
+	 * saying how many".
+	 */
+	,countOf: function(value) {
+		if ( value === '•' ) return 1;
+		var number = parseInt(value, 10);
+		return isNaN(number) ? 0 : number;
+	}
+
+	/**
+	 * What the service's own snippet says. Once it has ever reported more than
+	 * none, it is the only answer used: it is the one that knows which chats are
+	 * muted or archived, and the title does not.
+	 */
+	,reportSnippetUnread: function(count) {
+		var me = this;
+
+		me.snippetUnread = count;
+		if ( me.countOf(count) > 0 ) me.snippetWorks = true;
+		me.setUnreadCount(me.effectiveUnreadCount());
+	}
+
+	/**
+	 * What the page title says, which is the safety net. A snippet that has
+	 * stopped matching the site reports zero rather than failing, so a service
+	 * whose title says "(3)" while its snippet says nothing is counted from the
+	 * title -- possibly counting muted chats too, which beats counting nothing.
+	 */
+	,reportTitleUnread: function(count) {
+		var me = this;
+
+		me.titleUnread = count;
+		me.setUnreadCount(me.effectiveUnreadCount());
+	}
+
+	,effectiveUnreadCount: function() {
+		var me = this;
+
+		if ( me.snippetWorks ) return me.snippetUnread;
+		var chosen = me.countOf(me.titleUnread) > me.countOf(me.snippetUnread) ? me.titleUnread : me.snippetUnread;
+		return chosen === undefined || chosen === null ? 0 : chosen;
 	}
 
 	,setUnreadCount: function(newUnreadCount) {

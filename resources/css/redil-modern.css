@@ -1145,6 +1145,61 @@ body {
 	border-bottom-right-radius: 0;
 }
 
+/* ------------------------------------------------------ unread report */
+
+/*
+ * What each service's unread count is coming from. A table, because that is
+ * what it is, drawn from a template for the same reason the service list is.
+ */
+.rx-report .rx-report-head,
+.rx-report .rx-report-row {
+	display: grid;
+	grid-template-columns: 1.6fr 1fr 0.6fr 0.6fr 1fr 0.5fr;
+	gap: 10px;
+	align-items: center;
+	padding: 9px 20px;
+	font-size: 13px;
+}
+
+.rx-report .rx-report-head {
+	position: sticky;
+	top: 0;
+	background-color: var(--rx-surface);
+	border-bottom: 1px solid var(--rx-line);
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.07em;
+	text-transform: uppercase;
+	color: var(--rx-muted);
+}
+
+.rx-report .rx-report-row + .rx-report-row {
+	border-top: 1px solid var(--rx-line);
+}
+
+.rx-report .rx-report-name {
+	font-weight: 600;
+}
+
+/* the one column worth reading twice: where the number came from */
+.rx-report .rx-report-snippet {
+	color: var(--rx-ok);
+}
+
+.rx-report .rx-report-title {
+	color: var(--rx-info);
+}
+
+.rx-report .rx-report-quiet {
+	color: var(--rx-muted);
+}
+
+.rx-report .rx-report-error {
+	grid-column: 1 / -1;
+	font-size: 12px;
+	color: var(--rx-alert);
+}
+
 /* -------------------------------------------------------------- menus */
 
 /*

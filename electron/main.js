@@ -1,6 +1,6 @@
 'use strict';
 
-const {app, BrowserWindow, shell, Menu, ipcMain, nativeImage, session, desktopCapturer, dialog, systemPreferences, webContents, nativeTheme} = require('electron');
+const {app, BrowserWindow, shell, Menu, ipcMain, nativeImage, session, desktopCapturer, dialog, systemPreferences, webContents, nativeTheme, clipboard} = require('electron');
 // Tray
 const tray = require('./tray');
 // Context menus, built in this process for every webContents that gets one
@@ -405,6 +405,12 @@ function applySpellChecking(target) {
 	const languages = preferredSpellLanguages(target.availableSpellCheckerLanguages);
 	if ( languages.length ) target.setSpellCheckerLanguages(languages);
 }
+
+// The unread report's Copy button. The renderer has no clipboard of its own now
+// that it is isolated, and this is the only thing that needs one.
+ipcMain.on('clipboard:writeText', function(event, text) {
+	clipboard.writeText(String(text));
+});
 
 ipcMain.on('spellcheck:getLanguages', function(event) {
 	event.returnValue = {

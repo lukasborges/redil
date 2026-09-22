@@ -187,6 +187,80 @@ Ext.define('Redil.view.main.MainController', {
 		catalogo.down('#catalogueSearch').focus(false, 100);
 	}
 
+	/**
+	 * The unread report. Every service counts differently and none of it can be
+	 * tested without logging in, so this says, for each service open right now,
+	 * what its snippet answered, what its title said and which of the two the
+	 * count came from. A service reading "neither yet" with a snippet is the
+	 * shape of a snippet that has stopped matching its site.
+	 */
+	,showUnreadReport: function() {
+		var linhas = [];
+		Ext.cq1('app-main').items.each(function(aba) {
+			if ( !aba.unreadDiagnosis || !aba.record || !aba.record.get('enabled') ) return;
+			linhas.push(aba.unreadDiagnosis());
+		});
+
+		var existente = Ext.getCmp('unreadReport');
+		if ( existente ) existente.destroy();
+
+		Ext.create('Ext.window.Window', {
+			 id: 'unreadReport'
+			,title: 'Unread detection'
+			,cls: 'rx-prefs'
+			,width: 760
+			,height: 420
+			,modal: true
+			,closeAction: 'destroy'
+			,layout: 'fit'
+			,bodyPadding: 0
+			,items: [
+				{
+					 xtype: 'dataview'
+					,cls: 'rx-report'
+					,scrollable: 'vertical'
+					,store: Ext.create('Ext.data.Store', {
+						 fields: ['name', 'snippet', 'snippetUnread', 'snippetWorks', 'titleUnread', 'counting', 'countingCls', 'total', 'error']
+						,data: linhas
+					})
+					,itemSelector: 'div.rx-report-row'
+					,tpl: [
+						 '<div class="rx-report-head">'
+							,'<span class="rx-report-name">Service</span>'
+							,'<span>Snippet</span><span>Says</span><span>Title</span><span>Counting</span><span>Total</span>'
+						,'</div>'
+						,'<tpl for=".">'
+							,'<div class="rx-report-row">'
+								,'<span class="rx-report-name">{name}</span>'
+								,'<span>{snippet}</span>'
+								,'<span>{snippetUnread}</span>'
+								,'<span>{titleUnread}</span>'
+								,'<span class="rx-report-{countingCls}">{counting}</span>'
+								,'<span>{total}</span>'
+								,'<tpl if="error"><span class="rx-report-error">{error}</span></tpl>'
+							,'</div>'
+						,'</tpl>'
+					]
+					,emptyText: '<p class="rx-empty">No service is open, so there is nothing to report.</p>'
+				}
+			]
+			,buttons: [
+				{
+					 text: 'Copy'
+					,ui: 'decline'
+					,handler: function() {
+						var texto = linhas.map(function(l) {
+							return [l.name, l.snippet, l.snippetUnread, l.titleUnread, l.counting, l.total, l.error].join('\t');
+						}).join('\n');
+						ipc.send('clipboard:writeText', texto);
+					}
+				}
+				,{ xtype: 'tbfill' }
+				,{ text: locale['button[0]'], handler: function(b) { b.up('window').close(); } }
+			]
+		}).show();
+	}
+
 	,onCatalogueHide: function( catalogo ) {
 		var anterior = catalogo.previousTab;
 		delete catalogo.previousTab;

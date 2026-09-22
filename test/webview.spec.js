@@ -124,13 +124,61 @@ test('grants the camera and the microphone only to a service marked for calls', 
 	expect(await inGuest(consulta)).toBe('camera=denied microphone=denied');
 });
 
-test('counts unread from the page title when the service brings no snippet', async () => {
-	// What WhatsApp needs: its catalogue snippet was written against class names
-	// the site stopped generating years ago, so it carries none and the title,
-	// which every messenger writes as "(3) Name", is what answers.
+test('counts unread from the title until the snippet proves it can count', async () => {
+	// What WhatsApp needed: its catalogue snippet was written against class names
+	// the site stopped generating years ago, so it reported zero for ever and the
+	// service went quiet. The title, which every messenger writes as "(3) Name",
+	// answers for a snippet that has never said anything -- and an earlier test
+	// in this file made this one say 7, so the reset is what "never" means here.
+	await redil.window.evaluate(() => {
+		const tab = Ext.cq1('app-main').items.items.find(item => item.id === 'tab_4242');
+		tab.snippetWorks = false;
+		tab.snippetUnread = 0;
+	});
+
 	await inGuest('document.title = "(3) Fixture service"');
 	await redil.window.waitForFunction(() => Redil.util.UnreadCounter.getTotalUnreadCount() === 3, null, { timeout: 10000 });
 
-	await inGuest('document.title = "Fixture service"');
+	// A snippet that answers takes the service over: it is the one that knows
+	// which chats are muted, and the title does not.
+	await inGuest('window.rambox.setUnreadCount(1)');
+	await redil.window.waitForFunction(() => Redil.util.UnreadCounter.getTotalUnreadCount() === 1, null, { timeout: 10000 });
+
+	await inGuest('document.title = "(9) Fixture service"');
+	await new Promise(resolve => setTimeout(resolve, 500));
+	expect(await redil.window.evaluate(() => Redil.util.UnreadCounter.getTotalUnreadCount())).toBe(1);
+
+	await inGuest('window.rambox.clearUnreadCount(); document.title = "Fixture service"');
 	await redil.window.waitForFunction(() => Redil.util.UnreadCounter.getTotalUnreadCount() === 0, null, { timeout: 10000 });
+});
+
+test('says where each service is getting its count from', async () => {
+	// The report under View is this, once per open service. Testing unread
+	// detection means logging into the service, so what the app can do instead
+	// is say what it sees: a snippet that never answers reads "neither yet".
+	const quiet = await redil.window.evaluate(() => {
+		const tab = Ext.cq1('app-main').items.items.find(item => item.id === 'tab_4242');
+		tab.snippetWorks = false;
+		tab.snippetUnread = 0;
+		tab.titleUnread = '0';
+		return tab.unreadDiagnosis();
+	});
+
+	expect(quiet).toMatchObject({ name: 'Fixture', snippet: 'none', counting: 'neither yet', total: '0' });
+
+	const counted = await redil.window.evaluate(() => {
+		const tab = Ext.cq1('app-main').items.items.find(item => item.id === 'tab_4242');
+		tab.reportTitleUnread('2');
+		const fromTitle = tab.unreadDiagnosis();
+		tab.reportSnippetUnread(5);
+		return { fromTitle: fromTitle, fromSnippet: tab.unreadDiagnosis() };
+	});
+
+	expect(counted.fromTitle).toMatchObject({ counting: 'title', total: '2' });
+	expect(counted.fromSnippet).toMatchObject({ counting: 'snippet', total: '5' });
+
+	await redil.window.evaluate(() => {
+		const tab = Ext.cq1('app-main').items.items.find(item => item.id === 'tab_4242');
+		tab.reportSnippetUnread(0);
+	});
 });

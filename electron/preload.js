@@ -14,6 +14,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 const TO_MAIN = [
 	 'app:getVersion'
 	,'app:quit'
+	,'clipboard:writeText'
 	,'autoUpdater:check-for-updates'
 	,'autoUpdater:quit-and-install'
 	,'getConfig'
@@ -51,6 +52,7 @@ const FROM_MAIN = [
 	,'setBadge'
 	,'showAbout'
 	,'showPreferences'
+	,'showUnreadReport'
 	,'toggleStatusBar'
 	,'webview:certificate-error'
 	,'zoomin-webview'

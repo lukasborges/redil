@@ -133,6 +133,14 @@ module.exports = function(config) {
 					}
 				},
 				{
+					// Unread detection cannot be tested without logging into each
+					// service, so the app says what it sees instead.
+					label: '&Unread detection...',
+					click() {
+						sendAction('showUnreadReport');
+					}
+				},
+				{
 					type: 'separator'
 				},
 				{
