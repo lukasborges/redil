@@ -97,3 +97,29 @@ test('wraps Notification so a click can reach the tab', async () => {
 	const wrapped = await inGuest('({ marked: !!window.__ramboxNotification, isWrapper: Notification.toString().indexOf("__native") > -1 })');
 	expect(wrapped).toEqual({ marked: true, isWrapper: true });
 });
+
+test('grants the camera and the microphone only to a service marked for calls', async () => {
+	// navigator.permissions.query answers from main's permission check handler,
+	// which is the same policy the real request goes through -- and unlike a
+	// request it never opens the dialog, so the assertion cannot hang.
+	const consulta = "Promise.all(['camera', 'microphone'].map(name =>"
+		+ " navigator.permissions.query({ name: name }).then(status => name + '=' + status.state)"
+		+ ")).then(states => states.join(' '))";
+
+	// The fixture is not marked, so it is asked about rather than granted.
+	expect(await inGuest(consulta)).toBe('camera=denied microphone=denied');
+
+	await redil.window.evaluate(() => {
+		const tab = Ext.cq1('app-main').items.items.find(item => item.id === 'tab_4242');
+		tab.setMediaAccess(true);
+	});
+
+	expect(await inGuest(consulta)).toBe('camera=granted microphone=granted');
+
+	await redil.window.evaluate(() => {
+		const tab = Ext.cq1('app-main').items.items.find(item => item.id === 'tab_4242');
+		tab.setMediaAccess(false);
+	});
+
+	expect(await inGuest(consulta)).toBe('camera=denied microphone=denied');
+});

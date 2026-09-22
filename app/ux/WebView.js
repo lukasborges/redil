@@ -445,6 +445,11 @@ Ext.define('Redil.ux.WebView',{
 			// main process, which owns this webContents but cannot reach the
 			// status bar, so it reports back here to have the warning drawn.
 			ipc.send('webview:setTrust', webview.getWebContentsId(), me.record.get('trust'));
+
+			// Camera, microphone and screen sharing without a prompt, for the
+			// services that exist to make calls. Reported from here for the same
+			// reason as the trust flag: it lives in this side's localStorage.
+			me.setMediaAccess(me.record.get('media'));
 			if (!me.certificateWarning) {
 				me.certificateWarning = function(event, webContentsId) {
 					if (webContentsId !== webview.getWebContentsId()) return;
@@ -714,6 +719,19 @@ Ext.define('Redil.ux.WebView',{
 		if ( notification && !calledFromDisturb && JSON.parse(localStorage.getItem('dontDisturb')) ) return;
 
 		if ( me.record.get('enabled') ) ipc.send('setServiceNotifications', webview.partition, notification);
+	}
+
+	/**
+	 * Whether this service gets the camera, the microphone and screen sharing
+	 * without being asked. Main keeps the answer per session partition and its
+	 * permission handler reads it; nothing is remembered for a service that is
+	 * turned off, which has no session of its own running.
+	 */
+	,setMediaAccess: function(allowed) {
+		var me = this;
+		var webview = me.getWebView();
+
+		if ( me.record.get('enabled') && webview ) ipc.send('service:setMediaAccess', webview.partition, allowed);
 	}
 
 	,setEnabled: function(enabled) {

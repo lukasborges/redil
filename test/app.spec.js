@@ -424,3 +424,32 @@ test('opens the catalogue from a service and goes back to it', async () => {
 	expect(passo.fechado).toEqual({ visivel: false, ativo: 'tab_7101' });
 	expect(passo.reaberto).toEqual({ visivel: true, ativo: 'redilTab' });
 });
+
+test('seeds the media permission from the catalogue and exposes the channel', async () => {
+	// A person who adds Google Meet is asking for a camera and a microphone, so
+	// the checkbox arrives ticked and main grants the permission without a
+	// dialog. Anything the catalogue does not mark still has to be answered.
+	const caixas = await redil.window.evaluate(() => {
+		const ler = id => {
+			const janela = Ext.create('Redil.view.add.Add', { record: Ext.getStore('ServicesList').getById(id) });
+			const valor = janela.down('checkbox[name=media]').getValue();
+			janela.destroy();
+			return valor;
+		};
+
+		return { chamada: ler('googlemeet'), correio: ler('gmail') };
+	});
+
+	expect(caixas).toEqual({ chamada: true, correio: false });
+
+	const exposto = await redil.window.evaluate(() => {
+		try {
+			redil.ipc.send('service:setMediaAccess', 'persist:probe', true);
+			return true;
+		} catch (e) {
+			return e.message;
+		}
+	});
+
+	expect(exposto).toBe(true);
+});

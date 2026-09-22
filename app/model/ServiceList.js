@@ -48,5 +48,15 @@ Ext.define('Redil.model.ServiceList', {
 		 name: 'custom_domain'
 		,type: 'boolean'
 		,defaultValue: false
+	},{
+		/*
+		 * The service's own purpose includes calls, so a person who adds it is
+		 * asking for a camera and a microphone. It seeds the per-service setting
+		 * in the Add window and nothing else; the answer that counts lives on
+		 * the configured service, where it can be changed.
+		 */
+		 name: 'media'
+		,type: 'boolean'
+		,defaultValue: false
 	}]
 });

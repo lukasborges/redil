@@ -208,6 +208,20 @@ Ext.define('Redil.view.add.Add',{
 										,inputValue: true
 									}
 									,{
+										/*
+										 * Without this the site asks, Electron asks on its
+										 * behalf, and the person answers the same question for
+										 * every call app they add. The catalogue seeds it for
+										 * the services that exist to make calls.
+										 */
+										 xtype: 'checkbox'
+										,boxLabel: 'Allow camera, microphone and screen sharing'
+										,name: 'media'
+										,checked: me.record.get('media')
+										,uncheckedValue: false
+										,inputValue: true
+									}
+									,{
 										 xtype: 'checkbox'
 										,boxLabel: locale['app.window[19]']
 										,name: 'trust'

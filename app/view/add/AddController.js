@@ -38,6 +38,7 @@ Ext.define('Redil.view.add.AddController', {
 				,displayTabUnreadCounter: formValues.displayTabUnreadCounter
 				,includeInGlobalUnreadCounter: formValues.includeInGlobalUnreadCounter
 				,trust: formValues.trust
+				,media: formValues.media
 				,js_unread: formValues.js_unread
 				,disableAutoReloadOnFail: formValues.disableAutoReloadOnFail
 			});
@@ -53,6 +54,8 @@ Ext.define('Redil.view.add.AddController', {
 			view.setStatusBar(formValues.statusbar);
 			// Change notifications of the Tab
 			view.setNotifications(formValues.notifications);
+			// Change whether the service is asked about camera and microphone
+			view.setMediaAccess(formValues.media);
 			// Change the icon of the Tab
 			if ( win.record.get('type') === 'custom' && oldData.logo !== formValues.logo ) Ext.getCmp('tab_'+win.record.get('id')).setConfig('icon', formValues.logo === '' ? 'resources/icons/custom.png' : formValues.logo);
 			// Change the URL of the Tab
@@ -94,7 +97,11 @@ Ext.define('Redil.view.add.AddController', {
 				,displayTabUnreadCounter: formValues.displayTabUnreadCounter
 				,includeInGlobalUnreadCounter: formValues.includeInGlobalUnreadCounter
 				,trust: formValues.trust
+				,media: formValues.media
 				,js_unread: formValues.js_unread
+				// The edit branch has always written this one and the add branch
+				// never did, so a service added with it ticked came back unticked.
+				,disableAutoReloadOnFail: formValues.disableAutoReloadOnFail
 			});
 			service.save();
 			Ext.getStore('Services').add(service);

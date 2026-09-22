@@ -26,6 +26,7 @@ const TO_MAIN = [
 	,'setBadge'
 	,'setConfig'
 	,'setDontDisturb'
+	,'service:setMediaAccess'
 	,'setServiceNotifications'
 	,'toggleWin'
 	,'validateMasterPassword'

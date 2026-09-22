@@ -60,6 +60,13 @@ Ext.define('Redil.model.Service', {
 		,type: 'boolean'
 		,defaultValue: false
 	},{
+		// Camera, microphone and screen sharing without a prompt. Seeded from the
+		// catalogue for the services whose whole job is calls; false for anything
+		// added before this field existed, which keeps the prompt.
+		 name: 'media'
+		,type: 'boolean'
+		,defaultValue: false
+	},{
 		 name: 'enabled'
 		,type: 'boolean'
 		,defaultValue: true

@@ -369,6 +369,25 @@ const PROMPTED_PERMISSIONS = {
 	,'display-capture': 'capture your screen'
 };
 
+/*
+ * Services the person has allowed the camera, the microphone and screen sharing
+ * for without being asked. The catalogue marks the apps whose purpose is calls,
+ * the Add window turns that into a per-service setting, and the renderer reports
+ * it here as each service loads -- the same route the trust flag takes, because
+ * the setting lives in the renderer's localStorage.
+ *
+ * It grants the permission, not the picker: screen sharing still opens the
+ * source chooser, because choosing what to share is the point of it.
+ */
+const mediaGranted = {};
+
+ipcMain.on('service:setMediaAccess', function(event, partition, allowed) {
+	if ( !partition ) return;
+
+	if ( allowed ) mediaGranted[partition] = true;
+	else delete mediaGranted[partition];
+});
+
 function permissionKey(partition, permission) {
 	return partition + '|' + permission;
 }
@@ -412,7 +431,10 @@ function applyPermissionPolicy(serviceSession, partition, notificationsAllowed) 
 	serviceSession.setPermissionRequestHandler(function(webContents, permission, callback) {
 		if ( permission === 'notifications' ) return callback(notificationsAllowed);
 		if ( SILENT_PERMISSIONS.indexOf(permission) !== -1 ) return callback(true);
-		if ( PROMPTED_PERMISSIONS[permission] && partition ) return askAboutPermission(partition, permission, callback);
+		if ( PROMPTED_PERMISSIONS[permission] && partition ) {
+			if ( mediaGranted[partition] ) return callback(true);
+			return askAboutPermission(partition, permission, callback);
+		}
 		console.info('Refused permission "' + permission + '" for ' + (partition || 'an unconfigured service'));
 		callback(false);
 	});
@@ -421,7 +443,7 @@ function applyPermissionPolicy(serviceSession, partition, notificationsAllowed) 
 	serviceSession.setPermissionCheckHandler(function(webContents, permission) {
 		if ( permission === 'notifications' ) return notificationsAllowed;
 		if ( SILENT_PERMISSIONS.indexOf(permission) !== -1 ) return true;
-		if ( PROMPTED_PERMISSIONS[permission] && partition ) return rememberedPermission(partition, permission) === true;
+		if ( PROMPTED_PERMISSIONS[permission] && partition ) return mediaGranted[partition] === true || rememberedPermission(partition, permission) === true;
 		return false;
 	});
 }

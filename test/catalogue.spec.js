@@ -12,7 +12,7 @@ const FIELDS = {
 	 id: 'string', logo: 'string', name: 'string', description: 'string', url: 'string'
 	,type: 'string', allow_popups: 'boolean', manual_notifications: 'boolean'
 	,js_unread: 'string', userAgent: 'string', note: 'string'
-	,titleBlink: 'boolean', custom_domain: 'boolean'
+	,titleBlink: 'boolean', custom_domain: 'boolean', media: 'boolean'
 };
 
 test('gives every entry the same fields with the same types', () => {
@@ -47,4 +47,15 @@ test('gives every entry an https url or a custom domain template', () => {
 		.filter(entry => !entry.url.startsWith('https://') && !entry.url.includes('___'))
 		.map(entry => `${entry.id} -> ${entry.url}`);
 	expect(bad).toEqual([]);
+});
+
+test('marks the services whose purpose is calls', () => {
+	// The flag seeds a per-service permission in the Add window, so a mistake
+	// here is a camera and a microphone handed out, or withheld, by accident.
+	// Its type is covered by the shape test above, which every entry shares.
+	const comMedia = catalogue.filter(entry => entry.media).map(entry => entry.id);
+	expect(comMedia).toEqual(expect.arrayContaining(['googlemeet', 'zoom', 'teams', 'discord', 'slack', 'whatsapp']));
+	// and nothing that has no call of its own
+	expect(comMedia).not.toContain('gmail');
+	expect(comMedia).not.toContain('chatgpt');
 });
