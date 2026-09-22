@@ -35,17 +35,22 @@ Ext.define('Redil.view.main.Main', {
 		 */
 		,items: [
 			// A tab bar is a Header, not a Toolbar: the '->' shorthand resolves to
-			// null there, and each item needs its xtype spelled out.
+			// null there, and each item needs its xtype spelled out. None of them
+			// is reorderable: they share the bar with the tabs, and the reorderer
+			// counts every item in it, so without this a service dropped at the
+			// foot of the rail swaps places with a button.
 			{
 				 xtype: 'button'
+				,reorderable: false
 				,glyph: 'xf067@FontAwesome'
 				,tooltip: locale['app.main[0]']
 				,handler: 'openCatalogue'
 				,itemId: 'addService'
 			}
-			,{ xtype: 'tbfill' }
+			,{ xtype: 'tbfill', reorderable: false }
 			,{
 				 xtype: 'button'
+				,reorderable: false
 				,glyph: JSON.parse(localStorage.getItem('dontDisturb')) ? 'xf1f7@FontAwesome' : 'xf0f3@FontAwesome'
 				,tooltip: locale['app.main[17]']+'<br/><b>'+locale['app.main[18]']+(redil.platform === 'darwin' ? ': Cmd + Alt + D</b>' : ': Alt + Shift + D</b>')
 				,enableToggle: true
@@ -56,6 +61,7 @@ Ext.define('Redil.view.main.Main', {
 			}
 			,{
 				 xtype: 'button'
+				,reorderable: false
 				,glyph: 'xf023@FontAwesome'
 				,tooltip: locale['app.main[20]']+'<br/><b>'+locale['app.main[18]']+(redil.platform === 'darwin' ? ': Cmd + Alt + L</b>' : ': Alt + Shift + L</b>')
 				,handler: 'lockRedil'
@@ -63,6 +69,7 @@ Ext.define('Redil.view.main.Main', {
 			}
 			,{
 				 xtype: 'button'
+				,reorderable: false
 				,tooltip: locale['preferences[0]']
 				,glyph: 'xf013@FontAwesome'
 				,handler: 'openPreferences'

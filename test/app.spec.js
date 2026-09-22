@@ -314,3 +314,71 @@ test('keeps the custom entry last under a name the add window can print', async 
 	expect(custom.nome).toBe('Custom Service');
 	expect(custom.ultimo).toBe('custom');
 });
+
+test('reorders the rail and writes the order back to the store', async () => {
+	// The reorderer moves the card and the panel fires childmove; updatePositions
+	// walks the rail from there. It used to finish with store.load(), which threw
+	// inside the home tab's list, so any page error here is the regression.
+	const erros = [];
+	const anotar = e => erros.push(String(e));
+	redil.window.on('pageerror', anotar);
+
+	const fixture = 'file://' + path.join(repoRoot, 'test', 'fixtures', 'service.html');
+	const ordem = await redil.window.evaluate(url => {
+		const painel = Ext.cq1('app-main');
+		const store = Ext.getStore('Services');
+
+		const registros = [7001, 7002, 7003].map((id, i) => store.add({
+			 id: id, type: 'custom', name: 'Reorder ' + (i + 1), url: url
+			,align: 'left', position: i, enabled: true, notifications: false, muted: false
+		})[0]);
+
+		painel.suspendEvent('add');
+		registros.forEach((rec, i) => painel.insert(1 + i, {
+			 xtype: 'webview', id: 'tab_' + rec.get('id'), title: '', tooltip: rec.get('name')
+			,src: url, type: 'custom', enabled: true, record: rec, tabConfig: { service: rec }
+		}));
+		painel.resumeEvent('add');
+
+		// what the reorderer does once the drag has settled
+		painel.move(Ext.getCmp('tab_7001'), 3);
+
+		const resultado = {
+			 abas: painel.items.items.map(t => t.id)
+			,loja: store.getRange().map(r => r.get('name') + ':' + r.get('align'))
+			,nos: Ext.getCmp('redilTab').down('#serviceList').getNodes().length
+			,itens: Ext.getStore('Services').getCount()
+		};
+
+		[7001, 7002, 7003].forEach(id => {
+			Ext.getCmp('tab_' + id).destroy();
+			store.remove(store.getById(id));
+		});
+		return resultado;
+	}, fixture);
+
+	redil.window.off('pageerror', anotar);
+
+	expect(erros).toEqual([]);
+	expect(ordem.abas.slice(0, 4)).toEqual(['redilTab', 'tab_7002', 'tab_7003', 'tab_7001']);
+	// the store follows the rail, and nothing crossed into the right group
+	expect(ordem.loja).toEqual(['Reorder 2:left', 'Reorder 3:left', 'Reorder 1:left']);
+	expect(ordem.nos).toBe(ordem.itens);
+});
+
+test('exposes the online check the renderer runs at boot', async () => {
+	// Application.js invokes this before it loads the services; it was left out
+	// of the preload's allowlist when is-online moved to the main process, so the
+	// call threw on every launch. The promise is not awaited: what is under test
+	// is the allowlist, not the network.
+	const exposto = await redil.window.evaluate(() => {
+		try {
+			redil.ipc.invoke('net:isOnline');
+			return true;
+		} catch (e) {
+			return e.message;
+		}
+	});
+
+	expect(exposto).toBe(true);
+});

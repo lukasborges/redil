@@ -55,30 +55,40 @@ Ext.define('Redil.view.main.MainController', {
 		}
 	}
 
+	/*
+	 * The rail is the source of truth for the order, and this is the one place
+	 * that walks from it back into the store. It used to finish with
+	 * store.load(), which re-read localStorage: the records were removed and
+	 * added again while 'remove' was suspended, so the home tab's list kept
+	 * nodes for records the store no longer held and threw on the next add.
+	 * Setting the fields and sorting does the same job without the round trip.
+	 */
 	,updatePositions: function(tabPanel, tab) {
 		if ( tab.id === 'redilTab' || tab.id === 'tbfill' ) return true;
 
-		console.log('Updating Tabs positions...');
-
 		var store = Ext.getStore('Services');
 		var align = 'left';
-		store.suspendEvent('remove');
+
+		store.suspendEvent('remove', 'add');
 		Ext.each(tabPanel.items.items, function(t, i) {
-			if ( t.id !== 'redilTab' && t.id !== 'tbfill' && t.record.get('enabled') ) {
-				var rec = store.getById(t.record.get('id'));
-				if ( align === 'right' ) i--;
-				rec.set('align', align);
-				rec.set('position', i);
-				rec.save();
-			}
-			else if ( t.id === 'tbfill' ) {
+			// Everything after the fill belongs to the right group, and the fill
+			// itself is one of the indexes, so the right side counts from one less.
+			if ( t.id === 'tbfill' ) {
 				align = 'right';
+				return;
 			}
+			if ( t.id === 'redilTab' || !t.record ) return;
 
+			var rec = store.getById(t.record.get('id'));
+			if ( !rec ) return;
+
+			rec.set({ align: align, position: align === 'right' ? i - 1 : i });
 		});
+		store.resumeEvent('remove', 'add');
 
-		store.load();
-		store.resumeEvent('remove');
+		// position is the store's sort field and the home tab's list reads the
+		// store, so the list follows the rail rather than the other way round.
+		store.sort();
 	}
 
 	,showServiceTab: function( view, record ) {

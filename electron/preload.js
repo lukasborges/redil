@@ -19,6 +19,7 @@ const TO_MAIN = [
 	,'getConfig'
 	,'media:askForAccess'
 	,'media:getAccessStatus'
+	,'net:isOnline'
 	,'relaunchApp'
 	,'reloadApp'
 	,'sConfig'
