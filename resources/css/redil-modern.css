@@ -12,16 +12,39 @@
  * thing only Rambox can tell you, which is where messages are waiting.
  */
 
+/*
+ * Every colour this layer paints is a token, and the dark theme at the bottom of
+ * the file changes nothing but their values. That is the only way a dark theme
+ * was affordable here: the crisp stylesheet underneath carries 102 colours
+ * across a megabyte of CSS that cannot be recompiled, so rather than fight it
+ * rule by rule, this layer paints over the surfaces that actually show and does
+ * it through names.
+ */
 :root {
 	--rx-ink: #12222E;        /* text, in place of a hard black */
 	--rx-brand: #2E658E;      /* unchanged Rambox blue */
 	--rx-chrome: #24506F;     /* command bar, a step behind the content */
+	--rx-on-chrome: #E8F1F8;  /* text and glyphs sitting on it */
 	--rx-surface: #FFFFFF;
+	--rx-raised: #FFFFFF;     /* windows and menus, which float over a surface */
 	--rx-sunken: #F3F6F8;     /* cool grey, in place of crisp's warm #f5f5f5 */
+	--rx-field: #FFFFFF;      /* what you type into */
 
 	--rx-line: #E3E9EE;       /* hairline, in place of crisp's #cecece */
+	--rx-line-strong: #B9C6D0;
 	--rx-muted: #5B7183;
 	--rx-alert: #E03131;      /* the unread badge, the one loud colour */
+	--rx-ok: #2F9E44;
+	--rx-info: #1971C2;
+
+	--rx-hover: rgba(46, 101, 142, 0.07);
+	--rx-hover-soft: rgba(46, 101, 142, 0.05);
+	--rx-focus: rgba(46, 101, 142, 0.15);
+	--rx-focus-strong: rgba(46, 101, 142, 0.25);
+
+	--rx-scroll: #C4CFD8;
+	--rx-scroll-hover: #9FB1BF;
+	--rx-shadow: rgba(18, 34, 46, 0.18);
 
 	--rx-radius: 6px;
 	--rx-radius-lg: 9px;
@@ -100,7 +123,7 @@ body {
 }
 
 .x-tab-default-top:not(.x-tab-active):hover {
-	background-color: rgba(46, 101, 142, 0.07);
+	background-color: var(--rx-hover);
 }
 
 .x-tab.x-tab-active.x-tab-default-top {
@@ -149,12 +172,12 @@ body {
 
 .x-badge.green-badge[data-badge-text]:after {
 	background-image: none;
-	background-color: #2F9E44;
+	background-color: var(--rx-ok);
 }
 
 .x-badge.blue-badge[data-badge-text]:after {
 	background-image: none;
-	background-color: #1971C2;
+	background-color: var(--rx-info);
 }
 
 /* -------------------------------------------------------- command bar */
@@ -185,7 +208,7 @@ body {
 .x-toolbar-main .x-btn-inner,
 .x-toolbar-main .x-btn-icon-el,
 .x-toolbar-main .x-btn-glyph {
-	color: #E8F1F8;
+	color: var(--rx-on-chrome);
 	font-size: 12.5px;
 }
 
@@ -223,7 +246,7 @@ body {
 
 .x-grid-item-over .x-grid-cell,
 .x-grid-item-over {
-	background-color: rgba(46, 101, 142, 0.05);
+	background-color: var(--rx-hover-soft);
 }
 
 /* --------------------------------------------------- service catalogue */
@@ -234,7 +257,7 @@ body {
 }
 
 .service:hover {
-	background-color: rgba(46, 101, 142, 0.07);
+	background-color: var(--rx-hover);
 }
 
 .service span {
@@ -254,12 +277,12 @@ body {
 .x-form-trigger-wrap-default {
 	border: 1px solid var(--rx-line);
 	border-radius: var(--rx-radius-lg);
-	background-color: #FFF;
+	background-color: var(--rx-field);
 	transition: border-color 0.12s ease, box-shadow 0.12s ease;
 }
 
 .x-form-trigger-wrap-default:hover {
-	border-color: #B9C6D0;
+	border-color: var(--rx-line-strong);
 }
 
 /* the focus ring reaches 3px past the border and was touching the label beside
@@ -291,9 +314,9 @@ body {
 	appearance: none;
 	width: 16px;
 	height: 16px;
-	border: 1.5px solid #B9C6D0;
+	border: 1.5px solid var(--rx-line-strong);
 	border-radius: 5px;
-	background-color: #FFF;
+	background-color: var(--rx-field);
 	background-image: none;
 	transition: background-color 0.12s ease, border-color 0.12s ease;
 }
@@ -313,7 +336,7 @@ body {
 
 .x-form-checkbox-default:focus-visible {
 	outline: none;
-	box-shadow: 0 0 0 3px rgba(46, 101, 142, 0.25);
+	box-shadow: 0 0 0 3px var(--rx-focus-strong);
 }
 
 /* crisp clears the absolutely positioned input with 19px, which left the label
@@ -325,7 +348,7 @@ body {
 
 .x-form-trigger-wrap-default.x-form-trigger-wrap-focus {
 	border-color: var(--rx-brand);
-	box-shadow: 0 0 0 3px rgba(46, 101, 142, 0.15);
+	box-shadow: 0 0 0 3px var(--rx-focus);
 }
 
 /* the ring is the wrapper's job; the input must not draw a second one */
@@ -353,14 +376,14 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-	background-color: #C4CFD8;
+	background-color: var(--rx-scroll);
 	border-radius: 999px;
 	border: 3px solid transparent;
 	background-clip: content-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-	background-color: #9FB1BF;
+	background-color: var(--rx-scroll-hover);
 }
 
 ::-webkit-scrollbar-corner {
@@ -377,7 +400,7 @@ body {
 
 .x-tab-default-focus {
 	outline: none;
-	box-shadow: inset 0 0 0 2px rgba(46, 101, 142, 0.35);
+	box-shadow: inset 0 0 0 2px var(--rx-focus-strong);
 }
 
 .x-tab.x-tab-active.x-tab-default-top.x-tab-default-focus {
@@ -391,5 +414,187 @@ body {
 		transition-duration: 0.01ms !important;
 		animation-duration: 0.01ms !important;
 		animation-iteration-count: 1 !important;
+	}
+}
+
+/* ------------------------------------------------ surfaces crisp paints */
+
+/*
+ * Everything below is a surface the crisp stylesheet fills with a colour of its
+ * own. In the light theme these rules resolve to what crisp already drew, so
+ * they change nothing; they exist so the dark theme has a name to change. Each
+ * carries at least as many classes as the crisp rule it outranks.
+ */
+
+.x-body,
+.x-panel-body-default,
+.x-grid-body,
+.x-grid-item,
+.x-grid-cell,
+.x-dataview-default {
+	background-color: var(--rx-surface);
+	color: var(--rx-ink);
+}
+
+.x-window-default,
+.x-window-body-default {
+	background-color: var(--rx-raised);
+	border-color: var(--rx-line);
+}
+
+.x-window-header-default {
+	background-color: var(--rx-sunken);
+	background-image: none;
+	border-color: var(--rx-line);
+}
+
+.x-window-header-title-default .x-title-text {
+	color: var(--rx-ink);
+}
+
+.x-window-default {
+	box-shadow: 0 16px 44px var(--rx-shadow);
+}
+
+/* Window footers and any toolbar that is not the command bar. */
+.x-toolbar-default,
+.x-toolbar-footer {
+	background-color: var(--rx-sunken);
+	background-image: none;
+	border-color: var(--rx-line);
+}
+
+/* Ordinary buttons, the ones inside windows rather than on the navy bar. */
+.x-btn-default-small,
+.x-btn-default-toolbar-small {
+	color: var(--rx-ink);
+}
+
+.x-btn-default-small .x-btn-inner,
+.x-btn-default-small .x-btn-glyph {
+	color: inherit;
+}
+
+/* Combo and menu drop-downs. */
+.x-boundlist,
+.x-menu-default {
+	background-color: var(--rx-raised);
+	border-color: var(--rx-line);
+}
+
+.x-boundlist-item,
+.x-menu-item-text {
+	color: var(--rx-ink);
+}
+
+.x-boundlist-item-over,
+.x-menu-item-active {
+	background-color: var(--rx-hover);
+	border-color: transparent;
+}
+
+.x-boundlist-selected {
+	background-color: var(--rx-focus);
+	border-color: transparent;
+}
+
+/* Form furniture: labels, fieldset legends, the text inside a message box. */
+.x-form-item-label-default,
+.x-form-display-field-default,
+.x-fieldset-header-text,
+.x-fieldset-header-default {
+	color: var(--rx-ink);
+}
+
+.x-fieldset-default {
+	border-color: var(--rx-line);
+}
+
+.x-form-invalid-field-default {
+	border-color: var(--rx-alert);
+}
+
+/*
+ * What you typed, and what a combo shows as its value. crisp fixes this to a
+ * near-black that vanishes on a dark field.
+ */
+.x-form-field,
+.x-form-text-default,
+.x-form-textarea-default {
+	color: var(--rx-ink);
+}
+
+.x-form-text-default::placeholder {
+	color: var(--rx-muted);
+}
+
+/* A grid with nothing in it draws its own panel, which stayed white. */
+.x-grid-empty,
+.x-grid-view {
+	background-color: var(--rx-surface);
+	color: var(--rx-muted);
+}
+
+/* The trigger glyph of a combo, which crisp paints its own blue. */
+.x-form-trigger-default {
+	color: var(--rx-muted);
+}
+
+.x-tip-default,
+.x-tip-body-default {
+	background-color: var(--rx-raised);
+	border-color: var(--rx-line);
+	color: var(--rx-ink);
+}
+
+.x-mask {
+	background-color: var(--rx-shadow);
+}
+
+/* --------------------------------------------------------- dark theme */
+
+/*
+ * One mechanism, and no attribute on the document. electron/main.js sets
+ * nativeTheme.themeSource from the `theme` preference, and Electron keeps
+ * prefers-color-scheme in step with it -- so "system" is the desktop's answer,
+ * and light and dark are the person's, all through this one query. It also
+ * means the native menus and dialogs follow along, which an attribute on the
+ * page could never have done.
+ */
+@media (prefers-color-scheme: dark) {
+	:root {
+		--rx-ink: #E6EDF3;
+		--rx-brand: #4E8FC4;
+		--rx-chrome: #16242F;
+		--rx-on-chrome: #C3D2DE;
+		--rx-surface: #0F1B24;
+		--rx-raised: #1A2A37;
+		--rx-sunken: #16242F;
+		--rx-field: #0B151C;
+
+		--rx-line: #24384A;
+		--rx-line-strong: #38536B;
+		--rx-muted: #8CA3B5;
+		--rx-alert: #FF6B6B;
+		--rx-ok: #51CF66;
+		--rx-info: #4DABF7;
+
+		--rx-hover: rgba(127, 179, 220, 0.10);
+		--rx-hover-soft: rgba(127, 179, 220, 0.07);
+		--rx-focus: rgba(127, 179, 220, 0.22);
+		--rx-focus-strong: rgba(127, 179, 220, 0.34);
+
+		--rx-scroll: #2E465A;
+		--rx-scroll-hover: #3F5A72;
+		--rx-shadow: rgba(0, 0, 0, 0.55);
+	}
+
+	/*
+	 * redil-theme.css paints the page behind everything in the brand blue, the
+	 * colour of the load screen. In the dark theme that flash is wrong, and the
+	 * viewport shows through at the edges while Ext lays out.
+	 */
+	body {
+		background-color: var(--rx-chrome);
 	}
 }

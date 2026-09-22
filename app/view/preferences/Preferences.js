@@ -156,6 +156,28 @@ Ext.define('Redil.view.preferences.Preferences',{
 					}
 					,{
 						 xtype: 'combo'
+						,name: 'theme'
+						// English, and untranslated, like every string added since the
+						// Crowdin pipeline stopped working. See CLAUDE.md on localization.
+						,fieldLabel: 'Theme'
+						,labelAlign: 'left'
+						,width: 380
+						,labelWidth: 180
+						,value: config.theme
+						,displayField: 'label'
+						,valueField: 'value'
+						,editable: false
+						,store: Ext.create('Ext.data.Store', {
+							 fields: ['value', 'label']
+							,data: [
+								 { 'value': 'system', 'label': 'Follow the system' }
+								,{ 'value': 'light', 'label': 'Light' }
+								,{ 'value': 'dark', 'label': 'Dark' }
+							]
+						})
+					}
+					,{
+						 xtype: 'combo'
 						,name: 'tabbar_location'
 						,fieldLabel: locale['preferences[11]']
 						,labelAlign: 'left'

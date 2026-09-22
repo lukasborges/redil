@@ -1,6 +1,6 @@
 'use strict';
 
-const {app, BrowserWindow, shell, Menu, ipcMain, nativeImage, session, desktopCapturer, dialog, systemPreferences, webContents} = require('electron');
+const {app, BrowserWindow, shell, Menu, ipcMain, nativeImage, session, desktopCapturer, dialog, systemPreferences, webContents, nativeTheme} = require('electron');
 // Tray
 const tray = require('./tray');
 // Context menus, built in this process for every webContents that gets one
@@ -48,6 +48,9 @@ const config = new Config({
 		,proxyLogin: ''
 		,proxyPassword: ''
 		,locale: 'en'
+		// system, light or dark. Driving nativeTheme rather than a class on the
+		// document means the menus and dialogs follow the choice too.
+		,theme: 'system'
 		,enable_hidpi_support: false
 		,user_agent: ''
 		,default_service: 'redilTab'
@@ -95,6 +98,9 @@ let mainWindow;
 let isQuitting = false;
 
 function createWindow () {
+	// Before the window exists, so the first paint is already the right theme.
+	applyTheme(config.get('theme'));
+
 	// Create the browser window using the state information
 	mainWindow = new BrowserWindow({
 		 title: 'Redil'
@@ -310,6 +316,8 @@ ipcMain.on('setConfig', function(event, values) {
 	if ( !isDev ) values.auto_launch ? appLauncher.enable() : appLauncher.disable();
 	// systemtray_indicator
 	updateBadge(mainWindow.getTitle());
+	// theme
+	applyTheme(values.theme);
 
 	mainWindow.webContents.executeJavaScript('(function(a){if(a)a.controller.initialize(a)})(Ext.cq1("app-main"))');
 
@@ -434,6 +442,13 @@ ipcMain.on('setDontDisturb', function(event, arg) {
 ipcMain.on('reloadApp', function(event) {
 	mainWindow.reload();
 });
+
+// resources/css/redil-modern.css reads nothing but prefers-color-scheme, which
+// Electron keeps in step with this. An unknown value falls back to the desktop's
+// own answer rather than forcing a theme nobody asked for.
+function applyTheme(theme) {
+	nativeTheme.themeSource = ['light', 'dark'].includes(theme) ? theme : 'system';
+}
 
 // Everything the renderer needs from this process, and the whole of what it can
 // reach: electron/preload.js allowlists these channels and exposes nothing else.

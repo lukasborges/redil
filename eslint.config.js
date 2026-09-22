@@ -74,7 +74,7 @@ module.exports = [
 		,languageOptions: {
 			 ecmaVersion: 2023
 			,sourceType: 'commonjs'
-			,globals: { ...node, Ext: 'readonly', Redil: 'readonly', redil: 'readonly', window: 'readonly', document: 'readonly', Notification: 'readonly' }
+			,globals: { ...node, Ext: 'readonly', Redil: 'readonly', redil: 'readonly', window: 'readonly', document: 'readonly', Notification: 'readonly', getComputedStyle: 'readonly', matchMedia: 'readonly' }
 		}
 		,rules: { ...recommended.rules, 'no-unused-vars': ['error', { args: 'none' }] }
 	}
