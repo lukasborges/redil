@@ -3,9 +3,8 @@
 const {app, BrowserWindow, shell, Menu, ipcMain, nativeImage, session, desktopCapturer, dialog, systemPreferences, webContents} = require('electron');
 // Tray
 const tray = require('./tray');
-// Remote module (replacement for the built-in one removed in Electron 14)
-const remoteMain = require('@electron/remote/main');
-remoteMain.initialize();
+// Context menus, built in this process for every webContents that gets one
+const contextMenu = require('./contextmenu');
 // AutoLaunch
 var AutoLaunch = require('auto-launch-patched');
 // Configuration
@@ -118,7 +117,7 @@ function createWindow () {
 		}
 	});
 
-	remoteMain.enable(mainWindow.webContents);
+	contextMenu.attach(mainWindow.webContents);
 
 	// Check if user has defined a custom User-Agent
 	if ( config.get('user_agent').length > 0 ) mainWindow.webContents.setUserAgent( config.get('user_agent') );
@@ -447,7 +446,7 @@ ipcMain.on('reloadApp', function(event) {
 });
 
 // Relaunch app
-// What the renderer used to reach through @electron/remote. It runs with
+// What the renderer used to reach through the remote bridge. It runs with
 // nodeIntegration, so anything already on its own `process` stays there; only
 // the calls that genuinely belong to the main process crossed over.
 ipcMain.on('app:getVersion', function(event) {
@@ -547,8 +546,7 @@ let allowPopUp = [
 
 app.on('web-contents-created', (webContentsCreatedEvent, contents) => {
 	if (contents.getType() !== 'webview') return;
-	// The service preload builds its context menu through @electron/remote.
-	remoteMain.enable(contents);
+	contextMenu.attach(contents);
 
 	// Held on its own, because reading it back off a destroyed webContents throws.
 	const contentsId = contents.id;

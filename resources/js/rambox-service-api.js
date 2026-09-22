@@ -3,7 +3,6 @@
  */
 
 const { ipcRenderer } = require('electron');
-const { ContextMenuBuilder, ContextMenuListener } = require('electron-contextmenu-wrapper');
 
 /**
  * Make the Rambox API available via a global "rambox" variable.
@@ -50,11 +49,6 @@ Notification = function(title, options) {
 Notification.prototype = NativeNotification.prototype;
 Notification.permission = NativeNotification.permission;
 Notification.requestPermission = NativeNotification.requestPermission.bind(Notification);
-
-window.rambox.contextMenuBuilder = new ContextMenuBuilder();
-window.rambox.contextMenuListener = new ContextMenuListener(function(event, info) {
-	window.rambox.contextMenuBuilder.showPopupMenu(info);
-});
 
 const mousetrap = require('mousetrap');
 mousetrap.bind(process.platform === 'darwin' ? ['command+left', 'command+right'] : ['alt+left', 'alt+right'], e => {
