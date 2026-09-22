@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-Redil is a fork of Rambox Community Edition, which upstream archived in 2022. It was renamed on 2026-09-21; the product, the app id, the Ext namespace and the repository all carry the new name. Version 0.9.0, GPL-3.0, Electron 44.
+Redil is a fork of Rambox Community Edition, which upstream archived in 2022. It was renamed on 2026-09-21; the product, the app id, the Ext namespace and the repository all carry the new name. The mark changed with it: `resources/logo/Logo.svg` is the source, a sheepdog in a gradient circle, and every PNG and ICO under `resources/` and `resources/installer/icons/` is generated from it. The circle and the gradient are inherited from Rambox deliberately; the animal and the direction the gradient lightens are what tell them apart. Head and ears are one outline, because separate shapes merge into a blur at 16px. The unread tray variant is the same mark with the animal in the alert colour, which is the convention the old icons already used. `resources/installer/icon.icns` was left alone: no tool here writes icns, and electron-builder builds the macOS icon from the icons directory anyway. Version 0.9.0, GPL-3.0, Electron 44.
 
 Upstream shipped Electron 13. The renderer has since been moved off three APIs that later releases removed, which is what allowed the jump: `remote` became `@electron/remote`, the `new-window` event became `setWindowOpenHandler`, and `desktopCapturer` moved to the main process. The `volta` pin in `package.json` named Node 14 until it was moved to 24.19.0, which is what this works on; CI builds on 22.
 

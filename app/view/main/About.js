@@ -26,8 +26,11 @@ Ext.define('Redil.view.main.About', {
 		,'<div><b>Chromium:</b> {chromium}</div>'
 		,'<div><b>Node:</b> {node}</div>'
 		,'<br />'
-		,'<div style="text-align:center;"><a href="https://github.com/saenzramiro/rambox" target="_blank">GitHub</a> - <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=WU75QWS7LH2CA" target="_blank">'+locale['app.main[25]']+'</a> - <a href="http://rambox.pro" target="_blank">rambox.pro</a></div>'
+		,'<div style="text-align:center;"><a href="https://github.com/lukasborges/redil" target="_blank">GitHub</a></div>'
 		,'<br />'
-		,'<div style="text-align:center;"><i>'+locale['app.about[4]']+' Ramiro Saenz</i></div>'
+		// Both credits, in the right order. The donate button and rambox.pro that
+		// stood here belong to the product Ramiro Saenz sells, not to this fork.
+		,'<div style="text-align:center;"><i>Redil by Lucas Borges</i></div>'
+		,'<div style="text-align:center; font-size:11px; color:#5B7183;"><i>fork of Rambox CE by Ramiro Saenz</i></div>'
 	]
 });
