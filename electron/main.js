@@ -47,7 +47,6 @@ const config = new Config({
 		,enable_hidpi_support: false
 		,user_agent: ''
 		,default_service: 'redilTab'
-		,sendStatistics: false
 
 		,x: undefined
 		,y: undefined
@@ -335,10 +334,6 @@ ipcMain.on('setConfig', function(event, values) {
 		default:
 			break;
 	}
-});
-
-ipcMain.on('sendStatistics', function(event) {
-	event.returnValue = config.get('sendStatistics');
 });
 
 ipcMain.on('validateMasterPassword', function(event, pass) {
@@ -689,70 +684,6 @@ app.on('web-contents-created', (webContentsCreatedEvent, contents) => {
 	});
 });
 
-// Code for downloading images as temporal files
-// Credit: Ghetto Skype (https://github.com/stanfieldr/ghetto-skype)
-const tmp = require('tmp');
-const mime = require('mime');
-var imageCache = {};
-ipcMain.on('image:download', function(event, url, partition) {
-	let file = imageCache[url];
-	if (file) {
-		if (file.complete) {
-			shell.openPath(file.path);
-		}
-
-		// Pending downloads intentionally do not proceed
-		return;
-	}
-
-	let tmpWindow = new BrowserWindow({
-		 show: false
-		,webPreferences: {
-			partition: partition
-		}
-	});
-
-	if ( config.get('user_agent').length > 0 ) tmpWindow.webContents.setUserAgent( config.get('user_agent') );
-
-	tmpWindow.webContents.session.once('will-download', (event, downloadItem) => {
-		imageCache[url] = file = {
-			 path: tmp.tmpNameSync() + '.' + mime.extension(downloadItem.getMimeType())
-			,complete: false
-		};
-
-		downloadItem.setSavePath(file.path);
-		downloadItem.once('done', () => {
-			tmpWindow.destroy();
-			tmpWindow = null;
-			shell.openPath(file.path);
-			file.complete = true;
-		});
-	});
-
-	tmpWindow.webContents.downloadURL(url);
-});
-
-// Hangouts
-ipcMain.on('image:popup', function(event, url, partition) {
-	let tmpWindow = new BrowserWindow({
-		 width: mainWindow.getBounds().width
-		,height: mainWindow.getBounds().height
-		,parent: mainWindow
-		,icon: __dirname + '/../resources/Icon.ico'
-		,backgroundColor: '#FFF'
-		,autoHideMenuBar: true
-		,skipTaskbar: true
-		,webPreferences: {
-			partition: partition
-		}
-	});
-
-	if ( config.get('user_agent').length > 0 ) tmpWindow.webContents.setUserAgent( config.get('user_agent') );
-
-	tmpWindow.maximize();
-
-	tmpWindow.loadURL(url);
-});
 
 ipcMain.on('toggleWin', function(event, allwaysShow) {
 	if ( config.get('window_display_behavior') !== 'show_trayIcon' ) mainWindow.setSkipTaskbar(false);

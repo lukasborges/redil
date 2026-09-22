@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-Redil is a fork of Rambox Community Edition, which upstream archived in 2022. It was renamed on 2026-09-21; the product, the app id, the Ext namespace and the repository all carry the new name. Version 0.8.0, GPL-3.0, Electron 44.
+Redil is a fork of Rambox Community Edition, which upstream archived in 2022. It was renamed on 2026-09-21; the product, the app id, the Ext namespace and the repository all carry the new name. Version 0.9.0, GPL-3.0, Electron 44.
 
 Upstream shipped Electron 13. The renderer has since been moved off three APIs that later releases removed, which is what allowed the jump: `remote` became `@electron/remote`, the `new-window` event became `setWindowOpenHandler`, and `desktopCapturer` moved to the main process behind the `screenShare:listSources` channel. The `volta` pin in `package.json` still names Node 14 and is stale; Node 24 installs and runs the project fine.
 
@@ -60,7 +60,7 @@ Tests are Mocha plus Chai driving the packaged app through Spectron. `test/helpe
 
 Two processes with very different technology stacks, bridged by IPC.
 
-**Main process** lives in `electron/`. `electron/main.js` owns the single `BrowserWindow`, the `electron-store` configuration object (its `defaults` block is the authoritative list of every preference key), tray, menu, auto-launch, proxy, master password window, and the screen-share picker. `electron/menu.js`, `electron/tray.js` and `electron/updater.js` are wired in from there. The updater reads releases from this repository's own GitHub releases, set as the feed in `electron/updater.js`; upstream pointed at the archived `ramboxapp/download`.
+**Main process** lives in `electron/`. `electron/main.js` owns the single `BrowserWindow`, the `electron-store` configuration object (its `defaults` block is the authoritative list of every preference key), tray, menu, auto-launch, proxy, master password window, and the screen-share picker. `electron/menu.js`, `electron/tray.js` and `electron/updater.js` are wired in from there. The updater forwards `update-available`, `update-not-available` and `update-downloaded` to the renderer, which has a dialog for each; it forwarded only the last one until the other two were connected, so Check for updates answered nothing unless an update had already downloaded. The updater reads releases from this repository's own GitHub releases, set as the feed in `electron/updater.js`; upstream pointed at the archived `ramboxapp/download`.
 
 **Renderer** is the ExtJS app: `index.html` loads the generated `bootstrap.js`, `app.js` bootstraps `Redil.Application` (`app/Application.js`) with `Redil.view.main.Main` as the viewport. `app/` follows Sencha MVVM conventions, with view, controller and model files side by side under `app/view/<feature>/`. The bulk of the behavior is in `app/view/main/MainController.js`, `app/view/preferences/`, `app/view/add/`, and `app/ux/WebView.js`.
 
@@ -92,8 +92,6 @@ Service webviews set `sandbox=no`. Their preload script uses `require` to pull i
 `electron/tray.js` does not use IPC to reach the renderer. It calls `win.webContents.executeJavaScript('ipc.send("toggleWin", false);')`, which depends on the global `ipc` that `app.js` defines near the top. Renaming that global silently breaks every tray interaction.
 
 The `validateMasterPassword` handler in `electron/main.js` assigns `event.returnValue` twice, so it reads like it always answers `false`. It does not. Electron dispatches the reply on the first assignment and ignores the second, so a correct password does return `true`. This was verified by calling the channel directly. Leave the redundant line alone unless you retest.
-
-`app.js` listens for `autoUpdater:update-available`, `autoUpdater:update-not-available` and `shortcut:tab`, none of which any main-process code sends. Three `ipcMain` handlers are likewise unreachable from this tree: `sendStatistics`, `image:download` and `image:popup`.
 
 ## Localization
 

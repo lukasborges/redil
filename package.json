@@ -171,7 +171,6 @@
 		]
 	},
 	"devDependencies": {
-		"asar": "0.12.4",
 		"chai": "3.5.0",
 		"crowdin": "1.0.0",
 		"csvjson": "4.3.3",
@@ -184,14 +183,10 @@
 	"dependencies": {
 		"auto-launch-patched": "5.0.2",
 		"electron-is-dev": "1.2.0",
-		"electron-log": "4.3.0",
 		"electron-store": "6.0.1",
 		"electron-updater": "4.5.2",
 		"is-online": "8.2.0",
-		"mime": "2.3.1",
-		"mousetrap": "1.6.3",
-		"rimraf": "2.6.1",
-		"tmp": "0.0.28"
+		"mousetrap": "1.6.3"
 	},
 	"volta": {
 		"node": "14.16.1"
