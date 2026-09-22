@@ -113,7 +113,8 @@
 				"entry": {
 					"Terminal": "false",
 					"Type": "Application",
-					"Categories": "GTK;GNOME;Network;Email;Chat;InstantMessaging;"
+					"Categories": "GTK;GNOME;Network;Email;Chat;InstantMessaging;",
+					"StartupWMClass": "redil"
 				}
 			},
 			"artifactName": "Redil-${version}-linux-${arch}.${ext}",

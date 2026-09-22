@@ -78,7 +78,18 @@ if (config.get('enable_hidpi_support') && (process.platform === 'win32')) {
  * is the system's own picker and the only one that works there. The hint falls
  * back to X11 on an X11 session, so it is safe to set unconditionally on Linux.
  */
-if ( process.platform === 'linux' ) app.commandLine.appendSwitch('ozone-platform-hint', 'auto');
+if ( process.platform === 'linux' ) {
+	app.commandLine.appendSwitch('ozone-platform-hint', 'auto');
+	/*
+	 * Wayland carries no window icon: the compositor matches the surface's
+	 * app_id to a .desktop file and takes the icon from there. Chromium's
+	 * --class sets that app_id (and WM_CLASS on X11), and `redil` is the name
+	 * of the desktop entry electron-builder writes, so the running window is
+	 * the same application the launcher knows rather than a second, iconless
+	 * one beside it. The BrowserWindow `icon` below still answers on X11.
+	 */
+	app.commandLine.appendSwitch('class', 'redil');
+}
 
 app.commandLine.appendSwitch('lang', config.get('locale') === 'en' ? 'en-US' :  config.get('locale'));
 
