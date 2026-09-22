@@ -105,6 +105,8 @@ Six buttons carry `ui: 'decline'`, and two toolbars carry `newversion` and `serv
 
   `app/store/Services.js` used to rewrite a configured `spark` service to type `webexteams` with logo `webexteams.png`, and neither the entry nor the icon has ever existed in this tree, so it repointed those tabs at nothing. The rewrite is gone and the entry, whose id is the storage key and cannot change, is now labelled Webex.
 
+  Google refreshed its whole icon set in 2026, and the seven Google entries here carry the new one. The products serve those icons themselves, from `https://www.gstatic.com/images/branding/productlogos/<product>_2026/v1/web-64dp/logo_<product>_2026_color_2x_web_64dp.png`, where `<product>` is `gmail`, `meet`, `calendar`, `chat`, `drive`, `voice` or `gemini`; at 2x a 64dp logo is 128px, which is the size every icon in `resources/icons` already is. Finding the current url for any service is the same move: fetch its page and read the `rel="icon"` link, which is how the `_2026` path turned up.
+
   Dropping an entry does not remove it from anyone's configured services, which live in localStorage keyed by the catalog id. Code that looks a service up by id must cope with a miss; `Notifier`, `WebView` and the Add window all do. For the same reason the icons of removed services stay in `resources/icons`, because existing tabs still point at them.
 - `Redil.store.Services` is the user's configured instances, persisted through an ExtJS localStorage proxy (`app/model/Service.js`). On load it turns each enabled record into a `webview` tab config and inserts it into the main tab panel, split by the `align` field into left and right groups.
 
