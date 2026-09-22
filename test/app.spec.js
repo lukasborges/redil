@@ -406,14 +406,21 @@ test('opens the catalogue from a service and goes back to it', async () => {
 		controlador.openCatalogue();
 		const aberto = { visivel: catalogo.isVisible(), ativo: painel.getActiveTab().id };
 
-		catalogo.hide();
+		// close(), not hide(): a panel closes by destroying itself unless it is
+		// told otherwise, and a destroyed catalogue makes every later + a no-op.
+		catalogo.close();
 		const fechado = { visivel: catalogo.isVisible(), ativo: painel.getActiveTab().id };
+
+		controlador.openCatalogue();
+		const reaberto = { visivel: catalogo.isVisible(), ativo: painel.getActiveTab().id };
+		catalogo.close();
 
 		Ext.getCmp('tab_7101').destroy();
 		store.remove(store.getById(7101));
-		return { aberto: aberto, fechado: fechado };
+		return { aberto: aberto, fechado: fechado, reaberto: reaberto };
 	}, fixture);
 
 	expect(passo.aberto).toEqual({ visivel: true, ativo: 'redilTab' });
 	expect(passo.fechado).toEqual({ visivel: false, ativo: 'tab_7101' });
+	expect(passo.reaberto).toEqual({ visivel: true, ativo: 'redilTab' });
 });

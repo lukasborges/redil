@@ -119,6 +119,10 @@ Ext.define('Redil.view.main.Main', {
 					,hidden: true
 					,modal: true
 					,closable: true
+					// A panel closes by destroying itself, so the first click on the
+					// cross took the catalogue out of the component tree and every
+					// later + found nothing to show.
+					,closeAction: 'hide'
 					,width: 900
 					,height: 660
 					,layout: 'fit'
