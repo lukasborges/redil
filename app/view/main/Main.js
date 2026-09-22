@@ -94,8 +94,6 @@ Ext.define('Redil.view.main.Main', {
 			]
 			,items: [
 				{
-					 xtype: 'panel'
-					,title: locale['app.main[0]']
 					/*
 					 * The catalogue used to take two thirds of the home tab, which
 					 * made a list of 104 services the app's front door. It is an
@@ -103,78 +101,92 @@ Ext.define('Redil.view.main.Main', {
 					 * out of the hbox while leaving it a child of this view, so the
 					 * string handlers below still resolve against MainController.
 					 */
+					 xtype: 'panel'
+					,title: locale['app.main[0]']
 					,itemId: 'catalogue'
+					,cls: 'rx-catalogue'
 					,floating: true
 					,hidden: true
 					,modal: true
 					,closable: true
 					,width: 900
-					,height: 620
-					,header: { height: 50 }
-					,tools: [
+					,height: 660
+					,layout: 'fit'
+					,dockedItems: [
 						{
-							 xtype: 'checkboxgroup'
+							 xtype: 'container'
+							,dock: 'top'
+							,cls: 'rx-catalogue-head'
 							,items: [
 								{
-									 xtype: 'checkbox'
-									,boxLabel: locale['app.main[1]']
-									,name: 'messaging'
-									,checked: true
-									,uncheckedValue: false
-									,inputValue: true
+									 xtype: 'textfield'
+									,itemId: 'catalogueSearch'
+									,emptyText: locale['app.main[0]']
+									,anchor: '100%'
+									,triggers: {
+										 clear: {
+											 weight: 0
+											,cls: Ext.baseCSSPrefix + 'form-clear-trigger'
+											,hidden: true
+											,handler: 'onClearClick'
+										}
+										,search: {
+											 weight: 1
+											,cls: Ext.baseCSSPrefix + 'form-search-trigger search-trigger'
+										}
+									}
+									,listeners: {
+										 change: 'onSearchServiceChange'
+										,afterrender: 'onSearchRender'
+										,specialkey: 'onSearchEnter'
+									}
 								}
 								,{
-									 xtype: 'checkbox'
-									,boxLabel: locale['app.main[2]']
-									,margin: '0 10 0 10'
-									,name: 'email'
-									,checked: true
-									,uncheckedValue: false
-									,inputValue: true
+									 xtype: 'container'
+									,layout: { type: 'hbox', align: 'middle' }
+									,cls: 'rx-catalogue-filters'
+									,items: [
+										{
+											/*
+											 * Two always-checked boxes are not a filter, they
+											 * are noise. Three states say the same thing and
+											 * read as one control. doTypeFilter takes this
+											 * now instead of the checkbox group.
+											 */
+											 xtype: 'segmentedbutton'
+											,itemId: 'catalogueFilter'
+											,value: 'all'
+											,items: [
+												 { text: 'All', value: 'all' }
+												,{ text: locale['app.main[1]'], value: 'messaging' }
+												,{ text: locale['app.main[2]'], value: 'email' }
+											]
+											,listeners: { toggle: 'doTypeFilter' }
+										}
+										,{ xtype: 'component', flex: 1 }
+										,{ xtype: 'component', itemId: 'catalogueCount', cls: 'rx-catalogue-count' }
+									]
 								}
 							]
-							,listeners: {
-								change: 'doTypeFilter'
-							}
-						}
-						,{
-							 xtype: 'textfield'
-							,grow: true
-							,growMin: 120
-							,growMax: 170
-							,triggers: {
-								 clear: {
-									 weight: 0
-									,cls: Ext.baseCSSPrefix + 'form-clear-trigger'
-									,hidden: true
-									,handler: 'onClearClick'
-								}
-								,search: {
-									 weight: 1
-									,cls: Ext.baseCSSPrefix + 'form-search-trigger search-trigger'
-								}
-							}
-							,listeners: {
-								 change: 'onSearchServiceChange'
-								,afterrender: 'onSearchRender'
-								,specialkey: 'onSearchEnter'
-							}
 						}
 					]
 					,items: [
 						{
 							 xtype: 'dataview'
+							,itemId: 'catalogueList'
+							,cls: 'rx-catalogue-list'
 							,store: 'ServicesList'
 							,itemSelector: 'div.service'
+							,scrollable: 'vertical'
 							,tpl: [
 								 '<tpl for=".">'
 									,'<div class="service" data-qtip="{description}">'
-										,'<img src="resources/icons/{logo}" width="48" />'
+										,'<img src="resources/icons/{logo}" alt="">'
 										,'<span>{name}</span>'
 									,'</div>'
 								,'</tpl>'
 							]
-							,emptyText: '<div style="padding: 20px;">'+locale['app.main[3]']+'</div>'
+							,emptyText: '<p class="rx-empty">' + locale['app.main[3]'] + '</p>'
 							,listeners: {
 								itemclick: 'onNewServiceSelect'
 							}
@@ -261,7 +273,12 @@ Ext.define('Redil.view.main.Main', {
 				}
 			]
 		}
-		,{ id: 'tbfill', tabConfig : { xtype : 'tbfill' } }
+		/*
+		 * Splits the services aligned left from those aligned right. In a vertical
+		 * rail that only needs to be a gap: left flexing, it shared the slack with
+		 * the rail's own fill and pushed the + button into the middle of the bar.
+		 */
+		,{ id: 'tbfill', tabConfig : { xtype : 'tbfill', flex: 0, height: 14 } }
 	]
 
 	,listeners: {

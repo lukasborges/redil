@@ -272,20 +272,33 @@ Ext.define('Redil.view.main.MainController', {
 		}
 	}
 
-	,doTypeFilter: function( cg, newValue, oldValue ) {
-		var me = this;
+	,doTypeFilter: function( segmentado ) {
+		var valor = segmentado.getValue() || 'all';
 
 		Ext.getStore('ServicesList').getFilters().replaceAll({
 			fn: function(record) {
-				return Ext.Array.contains(Ext.Object.getKeys(cg.getValue()), record.get('type')) || record.get('type') === 'custom';
+				var tipo = record.get('type');
+				// The synthetic custom entry belongs to every view of the list.
+				return tipo === 'custom' || valor === 'all' || tipo === valor;
 			}
 		});
+
+		this.updateCatalogueCount();
+	}
+
+	,updateCatalogueCount: function() {
+		var catalogo = Ext.getCmp('redilTab').down('#catalogue');
+		var contagem = catalogo && catalogo.down('#catalogueCount');
+		if ( !contagem ) return;
+
+		var total = Ext.getStore('ServicesList').getCount();
+		contagem.setHtml(total + (total === 1 ? ' service' : ' services'));
 	}
 
 	,onSearchServiceChange: function(field, newValue, oldValue) {
 		var me = this;
 
-		var cg = field.up().down('checkboxgroup');
+		var cg = field.up().up().down('segmentedbutton');
 		if ( !Ext.isEmpty(newValue) && newValue.length > 0 ) {
 			field.getTrigger('clear').show();
 
@@ -307,7 +320,7 @@ Ext.define('Redil.view.main.MainController', {
 	,onClearClick: function(field, trigger, e) {
 		var me = this;
 
-		var cg = field.up().down('checkboxgroup');
+		var cg = field.up().up().down('segmentedbutton');
 
 		field.reset();
 		field.getTrigger('clear').hide();
@@ -337,7 +350,9 @@ Ext.define('Redil.view.main.MainController', {
 
 		ipc.send('setDontDisturb', btn.pressed);
 
-		btn.setText(locale['app.main[16]']+': ' + ( btn.pressed ? locale['app.window[20]'] : locale['app.window[21]'] ));
+		// The rail shows icons only, so the state goes in the tooltip. This used to
+		// call setText, from when the button lived on a horizontal bar.
+		btn.setTooltip(locale['app.main[16]'] + ': ' + ( btn.pressed ? locale['app.window[20]'] : locale['app.window[21]'] ));
 
 		// var btn_icon = document.getElementById('disturbBtn-btnIconEl');
 		// btn_icon.innerHTML = btn.pressed ? "" : "";

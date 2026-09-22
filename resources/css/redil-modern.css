@@ -296,22 +296,28 @@ body {
 	color: var(--rx-muted);
 }
 
-/* The remove-all tool, which crisp draws as a filled button. */
-.rx-services .x-tool,
-.rx-services .x-tool .x-btn-default-toolbar-small {
+/*
+ * Remove every service. It sits in the panel header as a button rather than a
+ * tool, so crisp paints it as a filled blue control -- loud, for something that
+ * empties the list behind a confirmation.
+ */
+.rx-services > .x-panel-header .x-btn {
 	background: none;
 	background-color: transparent;
 	border: 0;
 	box-shadow: none;
 }
 
-.rx-services .x-tool .x-btn-glyph {
+.rx-services > .x-panel-header .x-btn-glyph,
+.rx-services > .x-panel-header .x-btn-icon-el {
 	color: var(--rx-muted);
 	font-size: 14px;
+	opacity: 0.7;
 }
 
-.rx-services .x-tool .x-btn-default-toolbar-small.x-btn-over .x-btn-glyph {
+.rx-services > .x-panel-header .x-btn.x-btn-over .x-btn-glyph {
 	color: var(--rx-alert);
+	opacity: 1;
 }
 
 .rx-service {
@@ -381,11 +387,14 @@ body {
 	width: 72px;
 }
 
-/* Quiet until the row is under the pointer, as the action columns were. */
+/*
+ * Always there, just quiet. The grid hid these until the row was hovered, which
+ * is how a row ends up with three controls nobody knows about.
+ */
 .rx-service-actions {
 	display: flex;
 	gap: 4px;
-	opacity: 0;
+	opacity: 0.55;
 	transition: opacity 0.12s ease;
 }
 
