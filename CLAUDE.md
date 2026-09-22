@@ -84,7 +84,7 @@ Two processes with very different technology stacks, bridged by IPC.
 
 **Webviews.** `app/ux/WebView.js` (the largest renderer file) wraps each service in an Electron `<webview>` with a persistent session partition and the preload script `resources/js/rambox-service-api.js`. That preload exposes `window.rambox.setUnreadCount`, `clearUnreadCount` and `showWindowAndActivateTab`, which post back to the host via `sendToHost`; the panel listens for those `ipc-message` events. Unread detection comes from the `js_unread` snippet in the catalog entry concatenated with the user's own per-service custom code, injected with `executeJavaScript`. Services with no `js_unread` fall back to watching page title changes. `Redil.util.UnreadCounter` aggregates per-service counts into the global badge; `Redil.util.Notifier` raises the desktop notifications.
 
-**Auxiliary windows** are plain HTML pages at the repo root loaded directly by the main process: `masterpassword.html` for the lock screen and `screenselector.html` for screen-share source selection.
+**Auxiliary windows** are plain HTML pages at the repo root loaded directly by the main process: `masterpassword.html` for the lock screen and `screenselector.html` for screen-share source selection. With a master password set, the lock window is the only one that opens: the main window is not created until the lock is cleared, which is why a test that starts from that state cannot wait for `index.html`.
 
 ## Traps worth knowing
 
@@ -94,7 +94,7 @@ Both channel lists in that preload are closed. Calling a channel that is not on 
 
 Two things the renderer could not keep. Mousetrap is a browser library it required as a module, and the generator now loads `node_modules/mousetrap/mousetrap.js` as a plain script, which works packaged because electron-builder keeps `node_modules` in the asar. `is-online` moved to the main process behind `net:isOnline`, where a network probe belonged anyway.
 
-`masterpassword.html` and `screenselector.html` still run with node. So do the service webviews, which set `contextIsolation=no, sandbox=no` explicitly.
+`masterpassword.html` and `screenselector.html` share the same preload and are isolated too; the three `screenShare:*` channels in its list belong to the second of them. The service webviews still run with node, and set `contextIsolation=no, sandbox=no` explicitly.
 
 `@electron/remote` is gone, and so is `remoteMain`. The renderer reaches main-process APIs through named IPC: `app:getVersion`, `app:quit`, `window:show`, `media:getAccessStatus`, `media:askForAccess` and `webview:clearData`. Three things that used to cross the bridge now live entirely in main, inside the `web-contents-created` handler that filters for webviews: the Google user-agent header rewrite, `certificate-error`, and `before-input-event`, which replays a shortcut typed inside a service into the host window so the app's Mousetrap sees it. Main decides a certificate error but cannot draw the warning, so it sends `webview:certificate-error` with the webContents id and the matching panel shows it; the renderer reports each service's `trust` flag over `webview:setTrust` as the service becomes ready, since the flag lives in its localStorage.
 

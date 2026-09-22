@@ -26,13 +26,21 @@ async function findAppWindow(app, timeout) {
 // developer's own configuration, opens whatever services they have configured
 // and talks to the network, so what the suite asserts depends on the machine it
 // runs on. Electron reads --user-data-dir itself; main.js is not involved.
-async function launchRedil(extraArgs = []) {
+// waitForApp is false for the locked case: with a master password set, main.js
+// opens the lock window and does not create the main window until it is
+// unlocked, so there is no index.html to wait for.
+async function launchRedil({ args = [], config = null, waitForApp = true } = {}) {
 	const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'redil-test-'));
+	// electron-store reads config.json straight out of userData, so a test can
+	// start the app in a state a person would have to configure by hand.
+	if (config) fs.writeFileSync(path.join(userDataDir, 'config.json'), JSON.stringify(config));
 
 	const app = await _electron.launch({
-		args: [path.join(repoRoot, 'electron', 'main.js'), `--user-data-dir=${userDataDir}`, ...extraArgs],
+		args: [path.join(repoRoot, 'electron', 'main.js'), `--user-data-dir=${userDataDir}`, ...args],
 		cwd: repoRoot
 	});
+
+	if (!waitForApp) return { app, window: null, userDataDir };
 
 	const window = await findAppWindow(app, 30000);
 	// The Ext application boots from the generated bootstrap.js, so the document

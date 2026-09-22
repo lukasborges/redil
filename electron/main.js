@@ -236,8 +236,9 @@ function createMasterPasswordWindow() {
 		 backgroundColor: '#0675A0'
 		,frame: false
 		,webPreferences: {
-			 nodeIntegration: true
-			,contextIsolation: false
+			 preload: path.join(__dirname, 'preload.js')
+			,nodeIntegration: false
+			,contextIsolation: true
 		}
 	});
 
@@ -447,10 +448,8 @@ ipcMain.on('reloadApp', function(event) {
 	mainWindow.reload();
 });
 
-// Relaunch app
-// What the renderer used to reach through the remote bridge. It runs with
-// nodeIntegration, so anything already on its own `process` stays there; only
-// the calls that genuinely belong to the main process crossed over.
+// Everything the renderer needs from this process, and the whole of what it can
+// reach: electron/preload.js allowlists these channels and exposes nothing else.
 ipcMain.handle('net:isOnline', async function() {
 	return isOnline();
 });
@@ -762,8 +761,9 @@ ipcMain.on('screenShare:show', (event, screenList) => {
 		frame: false,
 		hasShadow: true,
 		webPreferences: {
-			nodeIntegration: true,
-			contextIsolation: false,
+			preload: path.join(__dirname, 'preload.js'),
+			nodeIntegration: false,
+			contextIsolation: true,
 		},
 	});
 

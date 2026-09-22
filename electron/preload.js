@@ -31,6 +31,10 @@ const TO_MAIN = [
 	,'webview:clearData'
 	,'webview:setTrust'
 	,'window:show'
+	// screenselector.html, which shares this preload.
+	,'screenShare:cancelSelection'
+	,'screenShare:getSources'
+	,'screenShare:selectScreen'
 ];
 
 // Pushed by the main process, listened for by the renderer.
