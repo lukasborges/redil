@@ -74,3 +74,20 @@ test('rewrites a pinned user agent to the running Chromium', async () => {
 	// The platform half is the reason those entries exist; it must survive.
 	expect(agent.served).toContain('Windows NT 10.0; Win64; x64');
 });
+
+test('wires the two files the theme package still provides', async () => {
+	// Removing the Sencha Cmd scaffolding left only these behind: the Font
+	// Awesome the generator loads, and the one override that marks the theme.
+	const theme = await redil.window.evaluate(async () => {
+		await document.fonts.ready;
+		return {
+			 marker: typeof Ext.theme !== 'undefined' ? Ext.theme.name : null
+			,stylesheet: [...document.styleSheets].some(sheet => (sheet.href || '').includes('font-awesome'))
+			,glyphs: document.fonts.check('16px FontAwesome')
+		};
+	});
+
+	expect(theme.marker).toBe('redil-default-theme');
+	expect(theme.stylesheet).toBe(true);
+	expect(theme.glyphs).toBe(true);
+});

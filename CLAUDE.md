@@ -10,7 +10,7 @@ Upstream shipped Electron 13. The renderer has since been moved off three APIs t
 
 ## Build and run
 
-The renderer is a Sencha ExtJS 5.1.1 application that upstream compiled with **Sencha Cmd 6.6.0.13** plus Ruby 2.3 for Sass. That toolchain is no longer obtainable, so the project now boots without it:
+The renderer is a Sencha ExtJS 5.1.1 application that upstream compiled with **Sencha Cmd 6.6.0.13** plus Ruby 2.3 for Sass. That toolchain is no longer obtainable, and everything only it could read has been deleted: `.sencha/`, `ext/.sencha/`, `app.json`, `workspace.json`, both `build.xml` files and every `sass/` directory. The project boots with nothing but npm:
 
 ```bash
 npm install
@@ -21,15 +21,15 @@ npm run start:debug     # same, with --enable-logging
 
 `scripts/gen-bootstrap.js` generates the `bootstrap.js` that `index.html` loads. It serves the Ext JS build already vendored in `ext/build/` and the theme CSS already compiled in `ext/packages/`, then points `Ext.Loader` at `app/` so the framework resolves `Redil.*` classes by name. Only files the loader cannot discover by class name are listed explicitly: the theme marker, the `Ext.override` calls in `overrides/`, the loose helper in `resources/js/`, and `app.js` last because it calls `Ext.application`. Regenerate after adding files in `overrides/` or `resources/js/`; ordinary classes under `app/` need no regeneration. `bootstrap.js` stays gitignored.
 
-The Sass in `packages/local/redil-default-theme` is not compiled either. The app loads the stock `ext-theme-crisp` CSS that the custom theme extends, and `resources/css/redil-theme.css` then restates Redil's own look as plain CSS on top. That file must load last, which the generator guarantees.
+The custom theme's Sass is gone with the rest. The app loads the stock `ext-theme-crisp` CSS that the theme used to extend, and `resources/css/redil-theme.css` then restates Redil's own look as plain CSS on top. That file must load last, which the generator guarantees.
+
+What survives of `packages/local/redil-default-theme` is only what the generator loads: Font Awesome under `resources/fonts/`, and `overrides/init.js`, two lines that set `Ext.theme.name`. The directory keeps its Sencha package shape for no reason beyond those paths being wired into the generator and the build allowlist. Its icomoon font and toolbar images went with the Sass that referenced them.
 
 A second stylesheet, `resources/css/redil-modern.css`, loads after it and carries a light modernisation: the system interface font, hairlines and whitespace in place of crisp's hard borders, flat buttons that sit inside the navy command bar, smaller tab labels, an active tab that reads as a lifted surface instead of a full width strip, rounded hover on the service catalogue, thin scrollbars and a flat unread badge. Its organising idea is that Redil is a frame around other people's apps, so the chrome recedes and the unread badge is the only saturated colour left. Removing that one line from the generator returns the original look.
 
 Five things that file had to work around. Ext focuses the active tab programmatically, which matches `:focus-visible` and drew a detached ring, so keyboard focus is styled through Ext's own `.x-tab-default-focus` instead. The badge attribute stays on the element with an empty value at zero unread, which a restyled pseudo-element renders as a bare coloured pill unless it is explicitly hidden. The original theme padded the tab bar body down and pulled the strip back up to clear a strip this layer no longer draws, which left the body taller than the bar and showed as a white band under the tabs, so that padding is reset. Checkboxes are an `input` of type button wearing a sprite, so the rounded control is built by removing the sprite and drawing the box and tick in CSS, keyed off `.x-form-cb-checked` on the field wrapper three levels up. And a text field is an input and its triggers sitting side by side inside a wrapper, with the border on the wrapper alone, so the border, the corner and the focus ring all belong there; styling the input too produces two concentric rounded boxes, the inner one cutting across the trigger.
 
-Style work belongs in those CSS files, not in the Sass, which no longer builds. Where the original set a Sass variable and let a theme mixin expand it, the CSS writes the visible result directly and names the variable in a comment. Two things to watch. Crisp often wins on specificity, for instance it paints the active tab from `.x-tab.x-tab-active.x-tab-default`, so an override needs to carry as many classes. And the original pulled Roboto and Josefin Sans from Google Fonts on every launch; the CSS resolves Roboto locally instead and drops Josefin Sans, which no rule ever referenced.
-
-If Sencha Cmd is ever available again, `sencha app watch` still works and takes precedence, since it overwrites the same `bootstrap.js`.
+Style work belongs in those CSS files; there is no Sass left to change. Where the original set a Sass variable and let a theme mixin expand it, the CSS writes the visible result directly and names the variable in a comment. Two things to watch. Crisp often wins on specificity, for instance it paints the active tab from `.x-tab.x-tab-active.x-tab-default`, so an override needs to carry as many classes. And the original pulled Roboto and Josefin Sans from Google Fonts on every launch; the CSS resolves Roboto locally instead and drops Josefin Sans, which no rule ever referenced.
 
 Packaging runs from the repository itself:
 
