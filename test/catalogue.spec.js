@@ -59,3 +59,13 @@ test('marks the services whose purpose is calls', () => {
 	expect(comMedia).not.toContain('gmail');
 	expect(comMedia).not.toContain('chatgpt');
 });
+
+test('ships unread snippets that are valid JavaScript', () => {
+	// Three of them were not: `\'` inside the source, which is a syntax error, so
+	// the injection threw and those services never counted anything. Nothing said
+	// so -- the error went to a console nobody reads.
+	for (const entry of catalogue) {
+		if (!entry.js_unread) continue;
+		expect(() => new Function(entry.js_unread), `${entry.id} snippet`).not.toThrow();
+	}
+});
