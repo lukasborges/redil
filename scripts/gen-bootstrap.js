@@ -7,9 +7,11 @@
  * Ext JS build already vendored in ext/ and the theme CSS already compiled in
  * ext/packages/. That makes `npm start` work with nothing but npm installed.
  *
- * The Sass in packages/local/redil-default-theme is not compiled either. The app
- * loads the stock ext-theme-crisp CSS that the custom theme extends, and then
- * resources/css/redil-theme.css restates the original look as plain CSS on top.
+ * The custom theme's Sass is gone with the rest of the Sencha Cmd scaffolding.
+ * The app loads the stock ext-theme-crisp CSS that the theme used to extend, and
+ * then resources/css/redil-theme.css restates the original look as plain CSS on
+ * top. All that survives of the theme package is Font Awesome and the two lines
+ * of overrides/theme-init.js that name the theme.
  */
 
 'use strict';
@@ -21,7 +23,7 @@ const root = path.join(__dirname, '..');
 
 const STYLESHEETS = [
 	'ext/packages/ext-theme-crisp/build/resources/ext-theme-crisp-all-debug.css',
-	'packages/local/redil-default-theme/resources/fonts/font-awesome/css/font-awesome.css',
+	'resources/fonts/font-awesome/css/font-awesome.css',
 	// The app's own look, layered over crisp.
 	'resources/css/redil-theme.css',
 	// The modernisation pass. Drop this line to get the original look back.
@@ -36,10 +38,14 @@ const FRAMEWORK = ['ext/build/ext-all-rtl-debug.js'];
  * marker, the Ext.override calls, the loose renderer helper, and app.js last
  * because it calls Ext.application.
  */
+const THEME_MARKER = 'overrides/theme-init.js';
+
 function filesAfterFramework() {
 	return [
-		'packages/local/redil-default-theme/overrides/init.js',
-		...collectScripts('overrides'),
+		// First, and filtered out below, because collectScripts walks the same
+		// directory and would otherwise load it a second time.
+		THEME_MARKER,
+		...collectScripts('overrides').filter(file => file !== THEME_MARKER),
 		// Ext.ux classes the app pulls in by xtype or plugin alias. Preloaded
 		// because Ext.Loader would otherwise resolve them with a synchronous
 		// XMLHttpRequest, which Chromium refuses on file:// URLs.

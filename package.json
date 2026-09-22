@@ -157,7 +157,6 @@
 			"electron/**/*",
 			"app/**/*",
 			"overrides/**/*",
-			"packages/local/**/*",
 			"resources/**/*",
 			"index.html",
 			"app.js",
