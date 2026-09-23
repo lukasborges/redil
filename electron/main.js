@@ -517,13 +517,19 @@ function askAboutPermission(partition, permission, callback) {
 	}).catch(function() { callback(false); });
 }
 
+// Sessions the renderer has already configured. The renderer reports a
+// service's settings from the panel's afterRender, which races the guest's
+// creation, so the placeholder applied in web-contents-created must not land
+// on top of a real policy: it did, and every service lost its notifications.
+const configuredSessions = new WeakSet();
+
 /**
  * A null partition means the renderer has not reported this service's settings
  * yet. There is no key to remember an answer against in that state, so the
- * sensitive permissions are refused instead of prompted; the real policy
- * replaces this one as soon as the service reaches dom-ready.
+ * sensitive permissions are refused instead of prompted until it does.
  */
 function applyPermissionPolicy(serviceSession, partition, notificationsAllowed) {
+	if ( partition ) configuredSessions.add(serviceSession);
 	serviceSession.setPermissionRequestHandler(function(webContents, permission, callback) {
 		if ( permission === 'notifications' ) return callback(notificationsAllowed);
 		if ( SILENT_PERMISSIONS.indexOf(permission) !== -1 ) return callback(true);
@@ -808,7 +814,7 @@ app.on('web-contents-created', (webContentsCreatedEvent, contents) => {
 	contents.on('destroyed', () => trustedWebContents.delete(contentsId));
 	// Without this the session carries no handler until the renderer reports the
 	// service's settings, and Electron's own default is to grant.
-	applyPermissionPolicy(contents.session, null, false);
+	if ( !configuredSessions.has(contents.session) ) applyPermissionPolicy(contents.session, null, false);
 	// Block some Deep links to prevent that open its app (Ex: Slack)
 	contents.on('will-navigate', (event, url) => url.substring(0, 8) === 'slack://' && event.preventDefault());
 	// New Window handler. The about:blank case is finished in 'did-create-window'.
