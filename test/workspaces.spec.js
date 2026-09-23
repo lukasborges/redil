@@ -48,8 +48,12 @@ test('opens the switcher\'s menu from a real click', async () => {
 	const menu = await redil.window.evaluate(() => {
 		const m = Ext.getCmp('workspaceSwitcher').menu;
 		// the avatar chip, the unread dot and the shortcut are markup around the name
-		const texts = m.items.items.map(i => i.text).filter(Boolean)
-			.map(t => t.replace(/<span class="rx-ws-chip[^"]*"[^>]*>.*?<\/span>/, '').replace(/<[^>]+>.*$/, '').trim());
+		const texts = m.items.items.map(i => i.text).filter(Boolean).map(t => {
+			const holder = document.createElement('div');
+			holder.innerHTML = t;
+			holder.querySelectorAll('.rx-ws-chip, .rx-menu-dot, .rx-menu-shortcut').forEach(e => e.remove());
+			return holder.textContent.trim();
+		});
 		const shown = m.isVisible();
 		m.hide();
 		return { shown, texts };
@@ -97,15 +101,16 @@ test('draws an avatar for a new workspace, keeps it through a rename and lets th
 		const drawn = W.get(id).avatar;
 		W.setActive(id);
 		const shown = Ext.getCmp('workspaceSwitcher').getText();
+		const hasClsAtShow = Ext.getCmp('workspaceSwitcher').el.hasCls('rx-has-avatar');
 		W.rename(id, 'Renamed');
 		const kept = W.get(id).avatar;
 		W.setAvatar(id, null);
 		const initials = Ext.getCmp('workspaceSwitcher').getText();
-		const known = W.AVATARS.some(a => a.emoji === drawn.emoji) && W.tintOf(drawn) !== undefined;
+		const known = W.AVATARS.some(a => a.icon === drawn.icon);
 		W.remove(id);
-		return { known, shownIsEmoji: shown === drawn.emoji, keptSame: kept.emoji === drawn.emoji, initials, picker: W.AVATARS.length + 1 };
+		return { known, shownIsGlyph: shown === '' && hasClsAtShow, keptSame: kept.icon === drawn.icon, initials, picker: W.AVATARS.length + 1 };
 	});
 	// five full rows of six in the picker, the initials first
-	expect(steps).toEqual({ known: true, shownIsEmoji: true, keptSame: true, initials: 'RE', picker: 30 });
+	expect(steps).toEqual({ known: true, shownIsGlyph: true, keptSame: true, initials: 'RE', picker: 30 });
 });
 

@@ -22,33 +22,39 @@ Ext.define('Redil.util.Workspaces', {
 
 	/*
 	 * The avatars a workspace can wear instead of its initials, in the manner of
-	 * Chrome's profile picker. Chrome's own are Google's illustrations and cannot
-	 * be copied, so these are emoji, which the system's colour emoji font draws:
-	 * nothing is shipped but this list. Each carries the hue it is mostly made
-	 * of, and its tile is that hue from the Adwaita palette laid thin over the
-	 * surface -- the --rx-tint-* tokens -- so the colour echoes the emoji rather
-	 * than competing with it, and with the unread badge. Twenty-nine, so that
-	 * with the initials in front the picker is five full rows of six.
+	 * Chrome's profile picker. They are Font Awesome glyphs -- the face the rail's
+	 * bell, lock and gear are drawn in -- so the switcher speaks the rail's own
+	 * language. Each is monochrome: the glyph in a light shade of one Adwaita hue
+	 * on a thin tint of the same hue, the --rx-hue-* and --rx-tint-* tokens.
+	 * Emoji came first and did not fit: they arrive with colours of their own,
+	 * which fought the tint behind them, and the dark ones vanished into it.
+	 * Twenty-nine, so that with the initials in front the picker is five full
+	 * rows of six.
 	 */
 	,AVATARS: [
-		 { emoji: '🐱', tint: 'yellow' }, { emoji: '🐶', tint: 'brown' }, { emoji: '🦊', tint: 'orange' }, { emoji: '🐼', tint: 'neutral' }, { emoji: '🐧', tint: 'blue' }
-		,{ emoji: '🐰', tint: 'purple' }, { emoji: '🦉', tint: 'brown' }, { emoji: '🐙', tint: 'purple' }, { emoji: '🐢', tint: 'green' }, { emoji: '🦄', tint: 'purple' }
-		,{ emoji: '🐝', tint: 'yellow' }, { emoji: '🐳', tint: 'blue' }, { emoji: '🍕', tint: 'orange' }, { emoji: '🍣', tint: 'red' }, { emoji: '🥑', tint: 'green' }
-		,{ emoji: '🍉', tint: 'red' }, { emoji: '🧀', tint: 'yellow' }, { emoji: '☕', tint: 'brown' }, { emoji: '🚲', tint: 'blue' }, { emoji: '🏀', tint: 'orange' }
-		,{ emoji: '🎧', tint: 'purple' }, { emoji: '📚', tint: 'red' }, { emoji: '💼', tint: 'brown' }, { emoji: '🏠', tint: 'orange' }, { emoji: '🚀', tint: 'blue' }
-		,{ emoji: '🎨', tint: 'yellow' }, { emoji: '🌵', tint: 'green' }, { emoji: '🌻', tint: 'yellow' }, { emoji: '🎮', tint: 'neutral' }
+		 { icon: 'f0b1', tint: 'brown', name: 'briefcase' }, { icon: 'f015', tint: 'orange', name: 'home' }, { icon: 'f004', tint: 'red', name: 'heart' }, { icon: 'f135', tint: 'purple', name: 'rocket' }
+		,{ icon: 'f0f4', tint: 'brown', name: 'coffee' }, { icon: 'f11b', tint: 'purple', name: 'gamepad' }, { icon: 'f02d', tint: 'blue', name: 'book' }, { icon: 'f001', tint: 'purple', name: 'music' }
+		,{ icon: 'f025', tint: 'blue', name: 'headphones' }, { icon: 'f030', tint: 'neutral', name: 'camera' }, { icon: 'f072', tint: 'blue', name: 'plane' }, { icon: 'f06c', tint: 'green', name: 'leaf' }
+		,{ icon: 'f0e7', tint: 'yellow', name: 'bolt' }, { icon: 'f0ac', tint: 'blue', name: 'globe' }, { icon: 'f19d', tint: 'neutral', name: 'graduation cap' }, { icon: 'f1b0', tint: 'orange', name: 'paw' }
+		,{ icon: 'f206', tint: 'green', name: 'bicycle' }, { icon: 'f1e3', tint: 'neutral', name: 'football' }, { icon: 'f0c3', tint: 'green', name: 'flask' }, { icon: 'f1fc', tint: 'red', name: 'paint brush' }
+		,{ icon: 'f121', tint: 'blue', name: 'code' }, { icon: 'f06b', tint: 'red', name: 'gift' }, { icon: 'f13d', tint: 'blue', name: 'anchor' }, { icon: 'f0f5', tint: 'orange', name: 'cutlery' }
+		,{ icon: 'f1b9', tint: 'red', name: 'car' }, { icon: 'f1bb', tint: 'green', name: 'tree' }, { icon: 'f185', tint: 'yellow', name: 'sun' }, { icon: 'f091', tint: 'yellow', name: 'trophy' }
+		,{ icon: 'f005', tint: 'yellow', name: 'star' }
 	]
 
-	// The tint a stored avatar should wear. Stored avatars carry only the emoji
-	// that matters -- ones made before tints existed carry none, or an old colour
-	// -- so the tint is looked up rather than trusted.
+	// The tint a stored avatar should wear, looked up from the list rather than
+	// trusted from the record, so a change to the palette reaches old ones.
 	,tintOf: function(avatar) {
-		var entry = avatar && Ext.Array.findBy(this.AVATARS, function(item) { return item.emoji === avatar.emoji; });
+		var entry = avatar && Ext.Array.findBy(this.AVATARS, function(item) { return item.icon === avatar.icon; });
 		return entry ? entry.tint : 'neutral';
 	}
 
+	,glyph: function(avatar) {
+		return '<span class="rx-glyph" data-tint="' + this.tintOf(avatar) + '">&#x' + avatar.icon + ';</span>';
+	}
+
 	,randomAvatar: function() {
-		return Ext.apply({}, this.AVATARS[Math.floor(Math.random() * this.AVATARS.length)]);
+		return { icon: this.AVATARS[Math.floor(Math.random() * this.AVATARS.length)].icon };
 	}
 
 	,list: function() {
@@ -166,13 +172,15 @@ Ext.define('Redil.util.Workspaces', {
 	,mountSwitcher: function(tabBar) {
 		var me = this;
 
-		// Workspaces made before there were avatars draw one now. The key is
-		// absent on those; a person who picked the initials has it set to null,
-		// and that choice is left alone.
+		// Workspaces made before there were avatars draw one now: the key is
+		// absent on those, or holds one of the emoji the first avatars were. A
+		// person who picked the initials has it set to null, and that choice is
+		// left alone.
+		var needsOne = function(workspace) { return !('avatar' in workspace) || (workspace.avatar && !workspace.avatar.icon); };
 		var workspaces = me.list();
-		if ( workspaces.some(function(workspace) { return !('avatar' in workspace); }) ) {
+		if ( workspaces.some(needsOne) ) {
 			me.save(workspaces.map(function(workspace) {
-				return 'avatar' in workspace ? workspace : Ext.apply({ avatar: me.randomAvatar() }, workspace);
+				return needsOne(workspace) ? Ext.apply({}, { avatar: me.randomAvatar() }, workspace) : workspace;
 			}));
 		}
 
@@ -210,9 +218,9 @@ Ext.define('Redil.util.Workspaces', {
 		if ( !btn || !btn.rendered ) return;
 
 		var active = me.get(me.getActive());
-		var avatar = active && active.avatar;
-		btn.setText(avatar ? avatar.emoji : active ? Ext.String.htmlEncode(me.initials(active.name)) : '');
-		btn.setGlyph(active ? 0 : 'xf009@FontAwesome');
+		var avatar = active && active.avatar && active.avatar.icon ? active.avatar : null;
+		btn.setText(avatar || !active ? '' : Ext.String.htmlEncode(me.initials(active.name)));
+		btn.setGlyph(avatar ? 'x' + avatar.icon + '@FontAwesome' : active ? 0 : 'xf009@FontAwesome');
 		btn.el.toggleCls('rx-has-avatar', !!avatar);
 		btn.el.dom.setAttribute('data-tint', avatar ? me.tintOf(avatar) : '');
 		btn.setTooltip(active ? Ext.String.htmlEncode(active.name) : 'All services');
@@ -284,9 +292,9 @@ Ext.define('Redil.util.Workspaces', {
 
 	// The avatar, or the initials on a neutral disc, at menu size
 	,chip: function(workspace) {
-		var avatar = workspace.avatar;
+		var avatar = workspace.avatar && workspace.avatar.icon ? workspace.avatar : null;
 		return avatar
-			? '<span class="rx-ws-chip" data-tint="' + this.tintOf(avatar) + '">' + avatar.emoji + '</span>'
+			? '<span class="rx-ws-chip" data-tint="' + this.tintOf(avatar) + '">' + this.glyph(avatar) + '</span>'
 			: '<span class="rx-ws-chip rx-ws-chip-initials">' + Ext.String.htmlEncode(this.initials(workspace.name)) + '</span>';
 	}
 
@@ -297,13 +305,13 @@ Ext.define('Redil.util.Workspaces', {
 	,pickAvatar: function(id) {
 		var me = this;
 		var workspace = me.get(id);
-		var current = workspace.avatar;
+		var current = workspace.avatar && workspace.avatar.icon ? workspace.avatar : null;
 		var cells = ['<button type="button" class="rx-avatar rx-avatar-initials' + (current ? '' : ' rx-selected') + '" data-index="-1" title="Initials">'
 			+ Ext.String.htmlEncode(me.initials(workspace.name)) + '</button>'];
 
 		Ext.each(me.AVATARS, function(avatar, index) {
-			var selected = current && current.emoji === avatar.emoji;
-			cells.push('<button type="button" class="rx-avatar' + (selected ? ' rx-selected' : '') + '" data-index="' + index + '" data-tint="' + avatar.tint + '">' + avatar.emoji + '</button>');
+			var selected = current && current.icon === avatar.icon;
+			cells.push('<button type="button" class="rx-avatar' + (selected ? ' rx-selected' : '') + '" data-index="' + index + '" data-tint="' + avatar.tint + '" title="' + avatar.name + '">' + me.glyph(avatar) + '</button>');
 		});
 
 		var win = Ext.create('Ext.window.Window', {
@@ -322,7 +330,7 @@ Ext.define('Redil.util.Workspaces', {
 						,delegate: '.rx-avatar'
 						,fn: function(e, target) {
 							var index = parseInt(target.getAttribute('data-index'), 10);
-							me.setAvatar(id, index < 0 ? null : Ext.apply({}, me.AVATARS[index]));
+							me.setAvatar(id, index < 0 ? null : { icon: me.AVATARS[index].icon });
 							win.close();
 						}
 					}
@@ -330,6 +338,8 @@ Ext.define('Redil.util.Workspaces', {
 			}]
 		});
 		win.show();
+		// the emoji font arrives after the first layout, which Ext centred on
+		win.center();
 	}
 
 	,promptCreate: function() {

@@ -51,6 +51,15 @@
 	--rx-scroll-hover: #9FB1BF;
 	--rx-shadow: rgba(18, 34, 46, 0.18);
 
+	/* avatar glyphs on a light surface: Adwaita's darker shade of each hue */
+	--rx-hue-blue: #1A5FB4;
+	--rx-hue-green: #26A269;
+	--rx-hue-yellow: #C88800;
+	--rx-hue-orange: #C64600;
+	--rx-hue-red: #C01C28;
+	--rx-hue-purple: #813D9C;
+	--rx-hue-brown: #865E3C;
+
 	/* avatar tiles: Adwaita's third shade of each hue, laid thin */
 	--rx-tint-blue: rgba(53, 132, 228, 0.20);
 	--rx-tint-green: rgba(51, 209, 122, 0.22);
@@ -204,22 +213,50 @@ body {
 	background-color: var(--rx-badge-quiet);
 }
 
-/* an avatar in place of the initials: the emoji on its tint, which is laid over
-   the tile's own background rather than replacing it, so it sits on the rail */
-#mainTabBar .rx-workspace-switcher.rx-has-avatar .x-btn-inner {
-	font-size: 22px;
-	letter-spacing: 0;
-	/* colour emoji ignore color, but a text fallback would not */
-	color: #000000;
-}
+/*
+ * The avatar tiles. The glyph is one hue, the tile a thin tint of the same, so
+ * each avatar is a single colour; neutral ones are the plain tile. Scoped to the
+ * three places a tile appears, or the glyph inside, which carries the same
+ * attribute to pick its own colour, would get a tile of its own.
+ */
+:is(.rx-avatar, .rx-ws-chip, .rx-workspace-switcher)[data-tint="blue"] { background-image: linear-gradient(var(--rx-tint-blue), var(--rx-tint-blue)) !important; }
+:is(.rx-avatar, .rx-ws-chip, .rx-workspace-switcher)[data-tint="green"] { background-image: linear-gradient(var(--rx-tint-green), var(--rx-tint-green)) !important; }
+:is(.rx-avatar, .rx-ws-chip, .rx-workspace-switcher)[data-tint="yellow"] { background-image: linear-gradient(var(--rx-tint-yellow), var(--rx-tint-yellow)) !important; }
+:is(.rx-avatar, .rx-ws-chip, .rx-workspace-switcher)[data-tint="orange"] { background-image: linear-gradient(var(--rx-tint-orange), var(--rx-tint-orange)) !important; }
+:is(.rx-avatar, .rx-ws-chip, .rx-workspace-switcher)[data-tint="red"] { background-image: linear-gradient(var(--rx-tint-red), var(--rx-tint-red)) !important; }
+:is(.rx-avatar, .rx-ws-chip, .rx-workspace-switcher)[data-tint="purple"] { background-image: linear-gradient(var(--rx-tint-purple), var(--rx-tint-purple)) !important; }
+:is(.rx-avatar, .rx-ws-chip, .rx-workspace-switcher)[data-tint="brown"] { background-image: linear-gradient(var(--rx-tint-brown), var(--rx-tint-brown)) !important; }
 
-[data-tint="blue"] { background-image: linear-gradient(var(--rx-tint-blue), var(--rx-tint-blue)) !important; }
-[data-tint="green"] { background-image: linear-gradient(var(--rx-tint-green), var(--rx-tint-green)) !important; }
-[data-tint="yellow"] { background-image: linear-gradient(var(--rx-tint-yellow), var(--rx-tint-yellow)) !important; }
-[data-tint="orange"] { background-image: linear-gradient(var(--rx-tint-orange), var(--rx-tint-orange)) !important; }
-[data-tint="red"] { background-image: linear-gradient(var(--rx-tint-red), var(--rx-tint-red)) !important; }
-[data-tint="purple"] { background-image: linear-gradient(var(--rx-tint-purple), var(--rx-tint-purple)) !important; }
-[data-tint="brown"] { background-image: linear-gradient(var(--rx-tint-brown), var(--rx-tint-brown)) !important; }
+.rx-glyph {
+	font-family: FontAwesome;
+	font-style: normal;
+	font-weight: normal;
+	line-height: 1;
+	color: var(--rx-muted);
+	/* the picker's cells delegate the click to the button */
+	pointer-events: none;
+}
+.rx-glyph[data-tint="blue"] { color: var(--rx-hue-blue); }
+.rx-glyph[data-tint="green"] { color: var(--rx-hue-green); }
+.rx-glyph[data-tint="yellow"] { color: var(--rx-hue-yellow); }
+.rx-glyph[data-tint="orange"] { color: var(--rx-hue-orange); }
+.rx-glyph[data-tint="red"] { color: var(--rx-hue-red); }
+.rx-glyph[data-tint="purple"] { color: var(--rx-hue-purple); }
+.rx-glyph[data-tint="brown"] { color: var(--rx-hue-brown); }
+
+/* on the rail, which is dark in both themes, always the light shade */
+#mainTabBar .rx-workspace-switcher.rx-has-avatar .x-btn-glyph {
+	font-size: 18px;
+	opacity: 1;
+	color: var(--rx-on-chrome);
+}
+#mainTabBar .rx-workspace-switcher.rx-has-avatar[data-tint="blue"] .x-btn-glyph { color: #99C1F1; }
+#mainTabBar .rx-workspace-switcher.rx-has-avatar[data-tint="green"] .x-btn-glyph { color: #8FF0A4; }
+#mainTabBar .rx-workspace-switcher.rx-has-avatar[data-tint="yellow"] .x-btn-glyph { color: #F8E45C; }
+#mainTabBar .rx-workspace-switcher.rx-has-avatar[data-tint="orange"] .x-btn-glyph { color: #FFA348; }
+#mainTabBar .rx-workspace-switcher.rx-has-avatar[data-tint="red"] .x-btn-glyph { color: #F66151; }
+#mainTabBar .rx-workspace-switcher.rx-has-avatar[data-tint="purple"] .x-btn-glyph { color: #DC8ADD; }
+#mainTabBar .rx-workspace-switcher.rx-has-avatar[data-tint="brown"] .x-btn-glyph { color: #CDAB8F; }
 
 .rx-ws-chip {
 	background-color: var(--rx-sunken);
@@ -230,7 +267,7 @@ body {
 	height: 20px;
 	margin-right: 8px;
 	border-radius: 6px;
-	font-size: 12px;
+	font-size: 11px;
 	line-height: 20px;
 	vertical-align: middle;
 }
@@ -252,12 +289,15 @@ body {
 .rx-avatar {
 	width: 52px;
 	height: 52px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
 	border: 0;
 	background-color: var(--rx-sunken);
 	box-shadow: inset 0 0 0 1px var(--rx-line);
 	border-radius: 999px;
-	font-size: 26px;
-	line-height: 52px;
+	/* the glyph inside inherits it */
+	font-size: 20px;
 	padding: 0;
 	cursor: pointer;
 	transition: transform 0.1s ease, box-shadow 0.1s ease;
@@ -2032,6 +2072,15 @@ webview {
 		--rx-scroll: #45454C;
 		--rx-scroll-hover: #5A5A62;
 		--rx-shadow: rgba(0, 0, 0, 0.55);
+
+		/* avatar glyphs on a dark surface: Adwaita's light shade of each hue */
+		--rx-hue-blue: #99C1F1;
+		--rx-hue-green: #8FF0A4;
+		--rx-hue-yellow: #F8E45C;
+		--rx-hue-orange: #FFA348;
+		--rx-hue-red: #F66151;
+		--rx-hue-purple: #DC8ADD;
+		--rx-hue-brown: #CDAB8F;
 
 		--rx-tint-blue: rgba(53, 132, 228, 0.28);
 		--rx-tint-green: rgba(51, 209, 122, 0.22);
