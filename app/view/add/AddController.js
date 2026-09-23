@@ -34,7 +34,6 @@ Ext.define('Redil.view.add.AddController', {
 				,align: formValues.align
 				,notifications: formValues.notifications
 				,muted: formValues.muted
-				,statusbar: formValues.statusbar
 				,displayTabUnreadCounter: formValues.displayTabUnreadCounter
 				,includeInGlobalUnreadCounter: formValues.includeInGlobalUnreadCounter
 				,trust: formValues.trust
@@ -52,8 +51,6 @@ Ext.define('Redil.view.add.AddController', {
 			view.tab.setTooltip( formValues.serviceName );
 			// Change sound of the Tab
 			view.setAudioMuted(formValues.muted);
-			// Change statusbar of the Tab
-			view.setStatusBar(formValues.statusbar);
 			// Change notifications of the Tab
 			view.setNotifications(formValues.notifications);
 			// Change whether the service is asked about camera and microphone
@@ -95,7 +92,6 @@ Ext.define('Redil.view.add.AddController', {
 				,align: formValues.align
 				,notifications: formValues.notifications
 				,muted: formValues.muted
-				,statusbar: formValues.statusbar
 				,displayTabUnreadCounter: formValues.displayTabUnreadCounter
 				,includeInGlobalUnreadCounter: formValues.includeInGlobalUnreadCounter
 				,trust: formValues.trust

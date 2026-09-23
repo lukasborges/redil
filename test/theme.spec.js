@@ -27,12 +27,12 @@ test('paints light when the preference says light', async () => {
 });
 
 test('paints dark when the preference says dark', async () => {
-	expect(await paleta('dark')).toEqual({ escuro: true, ink: '#E6EDF3', surface: '#0F1B24' });
+	expect(await paleta('dark')).toEqual({ escuro: true, ink: '#EDEDEF', surface: '#1E1E21' });
 });
 
 test('leaves the choice to the desktop when the preference says system', async () => {
 	// Whatever the machine running the suite answers, the tokens have to agree
 	// with it: that pairing is the thing that breaks if the query is mistyped.
 	const { escuro, ink } = await paleta('system');
-	expect(ink).toBe(escuro ? '#E6EDF3' : '#12222E');
+	expect(ink).toBe(escuro ? '#EDEDEF' : '#12222E');
 });

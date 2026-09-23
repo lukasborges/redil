@@ -271,9 +271,11 @@ function createWindow () {
 
 let mainMasterPasswordWindow;
 function createMasterPasswordWindow() {
+	// This window opens before createWindow, so the theme is applied here too.
+	applyTheme(config.get('theme'));
 	mainMasterPasswordWindow = new BrowserWindow({
-		// the rail's navy, which is what the page paints over it
-		 backgroundColor: '#24506F'
+		// the rail's colour, --rx-chrome, which is what the page paints over it
+		 backgroundColor: nativeTheme.shouldUseDarkColors ? '#2A2A2E' : '#24506F'
 		,frame: false
 		,webPreferences: {
 			 preload: path.join(__dirname, 'preload.js')

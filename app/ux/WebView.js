@@ -19,6 +19,10 @@ Ext.define('Redil.ux.WebView',{
 
 	// CONFIG
 	,hideMode: 'offsets'
+	// the service runs edge to edge; a hairline around somebody else's page
+	// only framed it
+	,border: false
+	,bodyBorder: false
 	,initComponent: function(config) {
 		var me = this;
 
@@ -212,13 +216,13 @@ Ext.define('Redil.ux.WebView',{
 			}
 		});
 
-		if ( me.record.get('statusbar') ) {
-			Ext.apply(me, {
-				bbar: me.statusBarConstructor(false)
-			});
-		} else {
-			me.items.push(me.statusBarConstructor(true));
-		}
+		// The status bar floats in the corner and shows only while there is
+		// something to say, the way a browser's does. A strip docked under the
+		// page saying "Ready" for ever was the loudest piece of chrome left, so the
+		// per-service "Always display Status Bar" went with it; the record keeps
+		// the field and nothing reads it. A disabled service has no page to
+		// report on; setEnabled adds the bar along with the page.
+		if ( me.record.get('enabled') ) me.items.push(me.statusBarConstructor());
 
 		me.callParent(config);
 	}
@@ -298,19 +302,19 @@ Ext.define('Redil.ux.WebView',{
 		return pinned.replace(/Chrome\/[0-9.]+/i, 'Chrome/' + redil.versions.chrome);
 	}
 
-	,statusBarConstructor: function(floating) {
+	,statusBarConstructor: function() {
 		var me = this;
 
 		return {
 			 xtype: 'statusbar'
 			,id: me.id+'statusbar'
-			,hidden: !me.record.get('statusbar')
-			,keep: me.record.get('statusbar')
-			// the floating one hangs over the bottom of the page by its own height
-			,y: floating ? '-22px' : 'auto'
+			// Ext gives x-statusbar only to a docked bar, and the theme's rules key on it
+			,cls: Ext.baseCSSPrefix + 'statusbar rx-status'
+			,hidden: true
+			// kept on screen by a warning, until it is dismissed
+			,keep: false
 			,height: 22
-			,dock: 'bottom'
-			,defaultText: '<i class="fa fa-check fa-fw" aria-hidden="true"></i> Ready'
+			,defaultText: ''
 			,busyIconCls : ''
 			,busyText: '<i class="fa fa-circle-o-notch fa-spin fa-fw"></i> '+locale['app.webview[4]']
 			,items: [
@@ -325,10 +329,10 @@ Ext.define('Redil.ux.WebView',{
 					,ui: 'decline'
 					,padding: 0
 					,scope: me
-					,hidden: floating
+					,hidden: true
 					,handler: me.closeStatusBar
 					,tooltip: {
-						 text: 'Close statusbar until next time'
+						 text: 'Dismiss'
 						,mouseOffset: [0,-60]
 					}
 				}
@@ -351,13 +355,13 @@ Ext.define('Redil.ux.WebView',{
 		webview.addEventListener("did-start-loading", function() {
 			console.info('Start loading...', me.src);
 
-			if ( !me.down('statusbar').closed || !me.down('statusbar').keep ) me.down('statusbar').show();
+			me.down('statusbar').show();
 			me.down('statusbar').showBusy();
 		});
 
 		webview.addEventListener("did-stop-loading", function() {
 			me.down('statusbar').clearStatus({useDefaults: true});
-			if ( !me.down('statusbar').keep ) me.down('statusbar').hide();
+			me.syncStatusBar();
 		});
 
 		webview.addEventListener("did-finish-load", function(e) {
@@ -516,12 +520,7 @@ Ext.define('Redil.ux.WebView',{
 				me.certificateWarning = function(event, webContentsId) {
 					if (webContentsId !== webview.getWebContentsId()) return;
 
-					me.down('statusbar').keep = true;
-					me.down('statusbar').show();
-					me.down('statusbar').setStatus({
-						text: '<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Certification Warning',
-					});
-					me.down('statusbar').down('button').show();
+					me.showStatusWarning('<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Certification Warning');
 				};
 				ipc.on('webview:certificate-error', me.certificateWarning);
 				me.on('destroy', function() { ipc.removeListener('webview:certificate-error', me.certificateWarning); });
@@ -609,7 +608,9 @@ Ext.define('Redil.ux.WebView',{
 		});
 
 		webview.addEventListener('update-target-url', function( url ) {
-			me.down('statusbar #url').setText(url.url);
+			me.hoveredURL = url.url;
+			me.down('statusbar #url').setText(Ext.String.htmlEncode(url.url));
+			me.syncStatusBar();
 		});
 	}
 
@@ -761,7 +762,7 @@ Ext.define('Redil.ux.WebView',{
 	,onFailLoad: function(v) {
 		let me = this
 		me.errorCodeLog = []
-		setTimeout(() => Ext.getCmp(me.id+'statusbar').setStatus({ text: '<i class="fa fa-warning fa-fw" aria-hidden="true"></i> The service failed at loading, Error: '+ v }), 1000);
+		setTimeout(() => me.showStatusWarning('<i class="fa fa-warning fa-fw" aria-hidden="true"></i> The service failed at loading, Error: '+ v), 1000);
 	}
 
 	,showSearchBox: function(v) {
@@ -831,25 +832,33 @@ Ext.define('Redil.ux.WebView',{
 		if ( me.record.get('enabled') ) webview.setAudioMuted(muted);
 	}
 
-	,closeStatusBar: function() {
-		var me = this;
+	// A warning stays until it is dismissed, which is what the button is for.
+	,showStatusWarning: function(text) {
+		var statusbar = this.down('statusbar');
 
-		me.down('statusbar').hide();
-		me.down('statusbar').closed = true;
-		me.down('statusbar').keep = me.record.get('statusbar');
+		statusbar.keep = true;
+		statusbar.setStatus({ text: text });
+		statusbar.down('button').show();
+		statusbar.show();
 	}
 
-	,setStatusBar: function(keep) {
+	,closeStatusBar: function() {
+		var statusbar = this.down('statusbar');
+
+		statusbar.keep = false;
+		statusbar.down('button').hide();
+		statusbar.clearStatus({ useDefaults: true });
+		this.syncStatusBar();
+	}
+
+	// Shown while the page loads, while the pointer is over a link, or while a
+	// warning is waiting; hidden the rest of the time.
+	,syncStatusBar: function() {
 		var me = this;
+		var statusbar = me.down('statusbar');
+		var loading = me.record.get('enabled') && me.getWebView().isLoading && me.getWebView().isLoading();
 
-		me.removeDocked(me.down('statusbar'), true);
-
-		if ( keep ) {
-			me.addDocked(me.statusBarConstructor(false));
-		} else {
-			me.add(me.statusBarConstructor(true));
-		}
-		me.down('statusbar').keep = keep;
+		statusbar.setVisible(!!(statusbar.keep || loading || me.hoveredURL));
 	}
 
 	,setNotifications: function(notification, calledFromDisturb) {
@@ -930,6 +939,7 @@ Ext.define('Redil.ux.WebView',{
 
 		me.removeAll();
 		me.add(me.webViewConstructor(enabled));
+		if ( enabled ) me.add(me.statusBarConstructor());
 		if ( enabled ) {
 			me.resumeEvent('afterrender');
 			me.show();

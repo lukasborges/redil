@@ -1344,16 +1344,45 @@ webview {
 /* --------------------------------------------------------- status bar */
 
 /*
- * The strip under a service, which says what is loading and where a link goes.
- * It was a second navy bar, the same colour as the rail, running the full width
- * of somebody else's page: the loudest thing on screen for the least important
- * thing the app has to say. It is a hairline and grey text now. The !important
- * answers redil-theme.css, which states the original in the same terms.
+ * What is loading and where a link goes. It was a second navy bar the width of
+ * somebody else's page, then a hairline strip saying "Ready" for ever; now it
+ * is what a browser shows, a small label in the bottom corner that is there
+ * only while there is something to say. WebView.syncStatusBar decides when.
+ * The !important answers redil-theme.css, and Ext's own inline geometry.
  */
-.x-statusbar {
-	background-color: var(--rx-surface) !important;
-	border-top: 1px solid var(--rx-line) !important;
-	padding: 0 10px !important;
+.x-statusbar.rx-status {
+	position: absolute !important;
+	left: 0 !important;
+	top: auto !important;
+	bottom: 0 !important;
+	width: auto !important;
+	max-width: 60%;
+	z-index: 2;
+	background-color: var(--rx-raised) !important;
+	border: 1px solid var(--rx-line) !important;
+	border-width: 1px 1px 0 0 !important;
+	border-top-right-radius: var(--rx-radius);
+	padding: 0 8px !important;
+}
+
+.x-statusbar.rx-status .x-box-inner,
+.x-statusbar.rx-status .x-box-target {
+	position: static !important;
+	width: auto !important;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.x-statusbar.rx-status .x-box-item {
+	position: static !important;
+	min-width: 0;
+}
+
+/* a label with nothing in it would still take its padding */
+.x-statusbar.rx-status .x-status-text:empty,
+.x-statusbar.rx-status .x-toolbar-text-default:empty {
+	display: none;
 }
 
 .x-statusbar .x-toolbar-text-default,
@@ -1616,32 +1645,39 @@ webview {
  * page could never have done.
  */
 @media (prefers-color-scheme: dark) {
+	/*
+	 * Neutral greys rather than a dark navy. The services Redil frames paint
+	 * their dark themes in grey -- Claude, Gmail, Chat, WhatsApp -- and a blue
+	 * rail beside them read as a second application. The rail is a step lighter
+	 * than the content, the way Adwaita's sidebars are, and blue is left to the
+	 * accent alone: Adwaita's blue 2 is its dark-theme accent.
+	 */
 	:root {
-		--rx-ink: #E6EDF3;
-		--rx-brand: #4E8FC4;
-		--rx-on-brand: #0B151C;
-		--rx-brand-over: #6AA3D2;
-		--rx-chrome: #16242F;
-		--rx-on-chrome: #C3D2DE;
-		--rx-surface: #0F1B24;
-		--rx-raised: #1A2A37;
-		--rx-sunken: #16242F;
-		--rx-field: #0B151C;
+		--rx-ink: #EDEDEF;
+		--rx-brand: #78AEED;
+		--rx-on-brand: #111114;
+		--rx-brand-over: #99C1F1;
+		--rx-chrome: #2A2A2E;
+		--rx-on-chrome: #D0D0D6;
+		--rx-surface: #1E1E21;
+		--rx-raised: #2C2C31;
+		--rx-sunken: #252528;
+		--rx-field: #18181B;
 
-		--rx-line: #24384A;
-		--rx-line-strong: #38536B;
-		--rx-muted: #8CA3B5;
+		--rx-line: #37373D;
+		--rx-line-strong: #4C4C53;
+		--rx-muted: #A2A2AB;
 		--rx-alert: #FF6B6B;
 		--rx-ok: #51CF66;
-		--rx-info: #4DABF7;
+		--rx-info: #78AEED;
 
-		--rx-hover: rgba(127, 179, 220, 0.10);
-		--rx-hover-soft: rgba(127, 179, 220, 0.07);
-		--rx-focus: rgba(127, 179, 220, 0.22);
-		--rx-focus-strong: rgba(127, 179, 220, 0.34);
+		--rx-hover: rgba(255, 255, 255, 0.07);
+		--rx-hover-soft: rgba(255, 255, 255, 0.05);
+		--rx-focus: rgba(120, 174, 237, 0.24);
+		--rx-focus-strong: rgba(120, 174, 237, 0.36);
 
-		--rx-scroll: #2E465A;
-		--rx-scroll-hover: #3F5A72;
+		--rx-scroll: #45454C;
+		--rx-scroll-hover: #5A5A62;
 		--rx-shadow: rgba(0, 0, 0, 0.55);
 	}
 

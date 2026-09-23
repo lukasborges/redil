@@ -191,14 +191,6 @@ Ext.define('Redil.view.add.Add',{
 										,inputValue: true
 									}
 									,{
-										 xtype: 'checkbox'
-										,boxLabel: 'Always display Status Bar'
-										,name: 'statusbar'
-										,checked: me.edit ? me.record.get('statusbar') : true
-										,uncheckedValue: false
-										,inputValue: true
-									}
-									,{
 										xtype: 'checkbox'
 										,boxLabel: 'Disable auto-reload on fail'
 										,name: 'disableAutoReloadOnFail'

@@ -25,6 +25,8 @@ Ext.define('Redil.view.main.Main', {
 	,autoRender: true
 	,autoShow: true
 	,deferredRender: false
+	,border: false
+	,bodyBorder: false
 	,tabBar: {
 		 id: 'mainTabBar'
 		,cls: JSON.parse(localStorage.getItem('dontDisturb')) ? 'dontdisturb' : ''
