@@ -40,3 +40,6 @@ electron/dev-app-update.yml
 # Playwright output
 test-results/
 playwright-report/
+
+# Claude Code's notes on this repository, kept on the maintainer's machine
+CLAUDE.md

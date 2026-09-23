@@ -116,7 +116,7 @@ Ext.define('Shep.view.preferences.Preferences',{
 										 xtype: 'combo'
 										,name: 'theme'
 										// English, and untranslated, like every string added since
-										// the Crowdin pipeline stopped working. See CLAUDE.md.
+										// the Crowdin pipeline stopped working. See README.md.
 										,fieldLabel: 'Theme'
 										,width: LARGURA
 										,value: config.theme

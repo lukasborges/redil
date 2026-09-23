@@ -55,8 +55,6 @@ npm run build:linux     # AppImage, deb and tar.gz into dist/
 npm run check:services  # report catalogue entries whose URLs have rotted
 ```
 
-`CLAUDE.md` documents the architecture, the build, and the parts of this codebase that behave in ways you would not guess from reading them.
-
 ## Privacy
 
 No account is needed and none is offered. The app stores nothing remotely: your list of services lives in the renderer's local storage, and each service keeps its own session in a persistent Electron partition, so you stay signed in between launches until you remove the service.
@@ -72,6 +70,18 @@ Translations live generated in `resources/languages`. The download half of that 
 ## Disclosure
 
 Shep is not affiliated with any of the messaging services it opens, nor with Rambox LLC or its product.
+
+## Credits
+
+The unread counting for Gmail, Discord, Element and Google Chat is ported from [ferdium-recipes](https://github.com/ferdium/ferdium-recipes), and WhatsApp's follows its approach. Their work is under the MIT licence:
+
+> Copyright (c) 2022 Ferdium Contributors
+>
+> Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+>
+> The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+>
+> THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ## Licence
 

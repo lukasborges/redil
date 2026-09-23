@@ -10,7 +10,7 @@
  * still maintained, and its getMessages does the same job as our js_unread.
  *
  * This only reports. Porting is a judgement call, one service at a time, and
- * the licence asks for the credit that CLAUDE.md carries.
+ * the licence asks for the credit that README.md carries.
  */
 
 const path = require('path');

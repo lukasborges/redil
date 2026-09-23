@@ -16,8 +16,6 @@ npm start
 
 On Linux, `npm start` may abort with a fatal GPU error, because the Electron that npm installs ships its sandbox helper without the setuid bit. Start it with `--no-sandbox`, which is what the packaged Linux builds already do.
 
-Read `CLAUDE.md` before changing much. It covers the architecture and, more usefully, the handful of places in this codebase that behave in ways the code does not suggest.
-
 ## Branches and commits
 
 Never commit to `main`. Branch as `fix/short-description` or `feature/short-description`.
