@@ -5,6 +5,7 @@ const {app, BrowserWindow, shell, Menu, ipcMain, nativeImage, session, desktopCa
 const tray = require('./tray');
 // Context menus, built in this process for every webContents that gets one
 const contextMenu = require('./contextmenu');
+const { isPopupRequested } = require('./popup');
 // AutoLaunch
 var AutoLaunch = require('auto-launch-patched');
 // Configuration
@@ -818,8 +819,12 @@ app.on('web-contents-created', (webContentsCreatedEvent, contents) => {
 	// Block some Deep links to prevent that open its app (Ex: Slack)
 	contents.on('will-navigate', (event, url) => url.substring(0, 8) === 'slack://' && event.preventDefault());
 	// New Window handler. The about:blank case is finished in 'did-create-window'.
-	contents.setWindowOpenHandler(({ url }) => {
+	contents.setWindowOpenHandler(({ url, features }) => {
 		if (['about:blank', 'about:blank#blocked'].includes(url)) {
+			// A popup asked for with window features is the page's own window,
+			// which it fills itself without navigating, as Meet's "Open in new
+			// window" does; hidden, it never appeared.
+			if (isPopupRequested(features)) return { action: 'allow' };
 			return { action: 'allow', overrideBrowserWindowOptions: { show: false } };
 		}
 
@@ -867,7 +872,17 @@ app.on('web-contents-created', (webContentsCreatedEvent, contents) => {
 		win.center();
 		// The following code is for handling the about:blank cases only.
 		if (!['about:blank', 'about:blank#blocked'].includes(details.url)) return;
+		// A popup was let through shown; only the hidden ones are routed here.
+		if (details.options.show !== false) return;
 		let once = false;
+		// A blank window that is written into rather than navigated is a window
+		// the page wants shown, even when it asked for no features.
+		setTimeout(() => {
+			if (once || win.isDestroyed()) return;
+			win.webContents.executeJavaScript('!!document.body && document.body.childElementCount > 0')
+				.then(written => written && !once && !win.isDestroyed() && win.show())
+				.catch(() => {});
+		}, 1000);
 		win.webContents.on('will-navigate', (e, nextURL) => {
 			if (once) return;
 			if (['about:blank', 'about:blank#blocked'].includes(nextURL)) return;
