@@ -51,6 +51,15 @@
 	--rx-scroll-hover: #9FB1BF;
 	--rx-shadow: rgba(18, 34, 46, 0.18);
 
+	/* avatar tiles: Adwaita's third shade of each hue, laid thin */
+	--rx-tint-blue: rgba(53, 132, 228, 0.20);
+	--rx-tint-green: rgba(51, 209, 122, 0.22);
+	--rx-tint-yellow: rgba(246, 211, 45, 0.30);
+	--rx-tint-orange: rgba(255, 120, 0, 0.20);
+	--rx-tint-red: rgba(224, 27, 36, 0.16);
+	--rx-tint-purple: rgba(145, 65, 172, 0.18);
+	--rx-tint-brown: rgba(152, 106, 68, 0.22);
+
 	--rx-radius: 6px;
 	--rx-radius-lg: 9px;
 }
@@ -195,13 +204,22 @@ body {
 	background-color: var(--rx-badge-quiet);
 }
 
-/* an avatar in place of the initials: the emoji on the same neutral tile */
+/* an avatar in place of the initials: the emoji on its tint, which is laid over
+   the tile's own background rather than replacing it, so it sits on the rail */
 #mainTabBar .rx-workspace-switcher.rx-has-avatar .x-btn-inner {
 	font-size: 22px;
 	letter-spacing: 0;
 	/* colour emoji ignore color, but a text fallback would not */
 	color: #000000;
 }
+
+[data-tint="blue"] { background-image: linear-gradient(var(--rx-tint-blue), var(--rx-tint-blue)) !important; }
+[data-tint="green"] { background-image: linear-gradient(var(--rx-tint-green), var(--rx-tint-green)) !important; }
+[data-tint="yellow"] { background-image: linear-gradient(var(--rx-tint-yellow), var(--rx-tint-yellow)) !important; }
+[data-tint="orange"] { background-image: linear-gradient(var(--rx-tint-orange), var(--rx-tint-orange)) !important; }
+[data-tint="red"] { background-image: linear-gradient(var(--rx-tint-red), var(--rx-tint-red)) !important; }
+[data-tint="purple"] { background-image: linear-gradient(var(--rx-tint-purple), var(--rx-tint-purple)) !important; }
+[data-tint="brown"] { background-image: linear-gradient(var(--rx-tint-brown), var(--rx-tint-brown)) !important; }
 
 .rx-ws-chip {
 	background-color: var(--rx-sunken);
@@ -2014,6 +2032,14 @@ webview {
 		--rx-scroll: #45454C;
 		--rx-scroll-hover: #5A5A62;
 		--rx-shadow: rgba(0, 0, 0, 0.55);
+
+		--rx-tint-blue: rgba(53, 132, 228, 0.28);
+		--rx-tint-green: rgba(51, 209, 122, 0.22);
+		--rx-tint-yellow: rgba(246, 211, 45, 0.22);
+		--rx-tint-orange: rgba(255, 120, 0, 0.24);
+		--rx-tint-red: rgba(224, 27, 36, 0.28);
+		--rx-tint-purple: rgba(145, 65, 172, 0.34);
+		--rx-tint-brown: rgba(152, 106, 68, 0.34);
 	}
 
 	/*
