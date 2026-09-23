@@ -37,6 +37,8 @@
 	--rx-line-strong: #B9C6D0;
 	--rx-muted: #5B7183;
 	--rx-alert: #E03131;      /* the unread badge, the one loud colour */
+	--rx-quiet: #F8E45C;      /* don't disturb, on the rail: Adwaita yellow 2 */
+	--rx-badge-quiet: #8A9BA8; /* a count nobody will be told about */
 	--rx-ok: #2F9E44;
 	--rx-info: #1971C2;
 
@@ -192,6 +194,33 @@ body {
 #mainTabBar .x-btn-default-small.x-btn-over .x-btn-glyph,
 #mainTabBar .x-btn-default-small.x-btn-pressed .x-btn-glyph {
 	color: #FFFFFF;
+}
+
+/*
+ * Don't disturb. redil-theme.css restates the original, which turned the whole
+ * bar #c3c3c3 and left the white glyphs on it unreadable. The rail keeps its
+ * colour; the bell turns yellow and crossed out, and the badges go grey,
+ * because the counts are still true but nobody is going to be told about them.
+ */
+#mainTabBar.dontdisturb,
+#mainTabBar.dontdisturb .x-tab-bar-body {
+	background-color: var(--rx-chrome) !important;
+}
+
+#mainTabBar.dontdisturb .x-tab {
+	background-color: transparent;
+}
+
+#mainTabBar #disturbBtn.x-btn-pressed {
+	background-color: transparent;
+}
+
+#mainTabBar #disturbBtn.x-btn-pressed .x-btn-glyph {
+	color: var(--rx-quiet);
+}
+
+#mainTabBar.dontdisturb .x-badge[data-badge-text]:after {
+	background-color: var(--rx-badge-quiet);
 }
 
 /* ----------------------------------------------------- the decline ui */
@@ -1668,6 +1697,7 @@ webview {
 		--rx-line-strong: #4C4C53;
 		--rx-muted: #A2A2AB;
 		--rx-alert: #FF6B6B;
+		--rx-badge-quiet: #6E6E76;
 		--rx-ok: #51CF66;
 		--rx-info: #78AEED;
 
