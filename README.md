@@ -6,8 +6,8 @@
 </div>
 
 <p align="center">
-  <img src="./resources/screenshots/linux.png" width="49%" alt="Shep on Linux, light theme" />
-  <img src="./resources/screenshots/linux-dark.png" width="49%" alt="Shep on Linux, dark theme" />
+  <img src="./resources/screenshots/shep-light.png" width="49%" alt="Shep on Linux, light theme" />
+  <img src="./resources/screenshots/shep-dark.png" width="49%" alt="Shep on Linux, dark theme" />
 </p>
 
 ---
