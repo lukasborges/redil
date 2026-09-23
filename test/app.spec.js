@@ -185,7 +185,7 @@ test('splits the preferences into sections without unbinding a field', async () 
 
 test('opens on a welcome page, with the catalogue behind a button', async () => {
 	const inicio = await redil.window.evaluate(() => {
-		const catalogo = Ext.getCmp('redilTab').down('#catalogue');
+		const catalogo = Ext.cq1('app-main').getController().getCatalogue();
 		return {
 			 ativo: Ext.cq1('app-main').getActiveTab().id
 			,flutuante: !!catalogo.floating
@@ -203,7 +203,7 @@ test('opens on a welcome page, with the catalogue behind a button', async () => 
 
 	const aberto = await redil.window.evaluate(() => {
 		Ext.cq1('app-main').getController().openCatalogue();
-		const catalogo = Ext.getCmp('redilTab').down('#catalogue');
+		const catalogo = Ext.cq1('app-main').getController().getCatalogue();
 		const visivel = catalogo.isVisible();
 		catalogo.hide();
 		return visivel;
@@ -271,7 +271,7 @@ test('filters the catalogue by type and by name at the same time', async () => {
 	// tally under them counts what is left, minus the synthetic custom entry.
 	const filtro = await redil.window.evaluate(() => {
 		const controlador = Ext.cq1('app-main').getController();
-		const catalogo = Ext.getCmp('redilTab').down('#catalogue');
+		const catalogo = Ext.cq1('app-main').getController().getCatalogue();
 		controlador.openCatalogue();
 
 		const contagem = () => catalogo.down('#catalogueCount').el.dom.textContent;
@@ -391,10 +391,12 @@ test('exposes the online check the renderer runs at boot', async () => {
 	expect(exposto).toBe(true);
 });
 
-test('opens the catalogue from a service and goes back to it', async () => {
-	// The catalogue is a floating child of the home tab, so the card layout hid
-	// it with the card: from a service the + did nothing. Reordering made this
-	// easy to hit, because the reorderer activates the tab it just moved.
+test('opens the catalogue over a service and leaves the service on screen', async () => {
+	// The catalogue was a floating child of the home tab, so the card layout hid
+	// it with the card: from a service the + did nothing, and the fix was to
+	// switch to the welcome page first, which put it over that page's near-black
+	// rather than over the service. It is a panel of its own now, so the service
+	// stays active behind it, dimmed by the mask like Preferences.
 	const fixture = 'file://' + path.join(repoRoot, 'test', 'fixtures', 'service.html');
 	const passo = await redil.window.evaluate(url => {
 		const painel = Ext.cq1('app-main');
@@ -409,7 +411,7 @@ test('opens the catalogue from a service and goes back to it', async () => {
 		painel.setActiveTab('tab_7101');
 
 		const controlador = painel.getController();
-		const catalogo = Ext.getCmp('redilTab').down('#catalogue');
+		const catalogo = Ext.cq1('app-main').getController().getCatalogue();
 
 		controlador.openCatalogue();
 		const aberto = { visivel: catalogo.isVisible(), ativo: painel.getActiveTab().id };
@@ -428,9 +430,9 @@ test('opens the catalogue from a service and goes back to it', async () => {
 		return { aberto: aberto, fechado: fechado, reaberto: reaberto };
 	}, fixture);
 
-	expect(passo.aberto).toEqual({ visivel: true, ativo: 'redilTab' });
+	expect(passo.aberto).toEqual({ visivel: true, ativo: 'tab_7101' });
 	expect(passo.fechado).toEqual({ visivel: false, ativo: 'tab_7101' });
-	expect(passo.reaberto).toEqual({ visivel: true, ativo: 'redilTab' });
+	expect(passo.reaberto).toEqual({ visivel: true, ativo: 'tab_7101' });
 });
 
 test('seeds the media permission from the catalogue and exposes the channel', async () => {

@@ -159,20 +159,21 @@ Ext.define('Redil.view.main.MainController', {
 	 * keep resolving to the methods below without a second controller.
 	 */
 	/*
-	 * The catalogue's element lives inside the home tab's card, and the card
-	 * layout hides the card by hiding its element, so from a service the + did
-	 * nothing at all: the panel was shown inside something display:none. Opening
-	 * it brings the home tab forward, and closing it puts the service back,
-	 * unless one was picked, in which case the add window decides where you end.
+	 * Built the first time it is asked for, from Main's catalogueConfig, as a
+	 * floating panel of its own: it opens over whatever is on screen, the way
+	 * Preferences does, rather than over the welcome page. See the comment there.
 	 */
-	,openCatalogue: function() {
-		var painel = Ext.cq1('app-main');
-		var catalogo = Ext.getCmp('redilTab').down('#catalogue');
+	,getCatalogue: function() {
+		var me = this;
 
-		if ( painel.getActiveTab().id !== 'redilTab' ) {
-			catalogo.previousTab = painel.getActiveTab().id;
-			painel.setActiveTab('redilTab');
+		if ( !me.catalogue || me.catalogue.destroyed ) {
+			me.catalogue = Ext.widget(Ext.apply({ ownerCmp: me.getView() }, me.getView().catalogueConfig));
 		}
+		return me.catalogue;
+	}
+
+	,openCatalogue: function() {
+		var catalogo = this.getCatalogue();
 
 		catalogo.show();
 		this.placeCatalogue();
@@ -263,11 +264,11 @@ Ext.define('Redil.view.main.MainController', {
 	 * the window changes size while it is open, which initialize wires up.
 	 */
 	,placeCatalogue: function() {
-		var cartao = Ext.getCmp('redilTab');
-		var catalogo = cartao.down('#catalogue');
-		if ( !catalogo.isVisible() ) return;
+		var catalogo = this.catalogue;
+		if ( !catalogo || !catalogo.isVisible() ) return;
 
-		var area = cartao.body.getBox();
+		// the content area, right of the rail and under the title bar
+		var area = this.getView().body.getBox();
 		var largura = Math.min(900, area.width - 48);
 		var altura = Math.min(660, area.height - 48);
 
@@ -278,19 +279,7 @@ Ext.define('Redil.view.main.MainController', {
 		]);
 	}
 
-	,onCatalogueHide: function( catalogo ) {
-		var anterior = catalogo.previousTab;
-		delete catalogo.previousTab;
-
-		if ( anterior && Ext.getCmp(anterior) ) Ext.cq1('app-main').setActiveTab(anterior);
-	}
-
 	,onNewServiceSelect: function( view, record, item, index, e ) {
-		// Picking a service ends the trip: the add window, and then the new
-		// service's own tab, decide where you are, not the tab you came from.
-		var catalogo = Ext.getCmp('redilTab').down('#catalogue');
-		if ( catalogo ) delete catalogo.previousTab;
-
 		Ext.create('Redil.view.add.Add', {
 			record: record
 		});
@@ -417,7 +406,7 @@ Ext.define('Redil.view.main.MainController', {
 	 * which type is selected, and picking a type no longer clears the search.
 	 */
 	,applyCatalogueFilter: function() {
-		var catalogo = Ext.getCmp('redilTab').down('#catalogue');
+		var catalogo = this.catalogue;
 		if ( !catalogo ) return;
 
 		var tipo = catalogo.down('#catalogueFilter').getValue() || 'all';
@@ -440,7 +429,7 @@ Ext.define('Redil.view.main.MainController', {
 	}
 
 	,updateCatalogueCount: function() {
-		var catalogo = Ext.getCmp('redilTab').down('#catalogue');
+		var catalogo = this.catalogue;
 		var contagem = catalogo && catalogo.down('#catalogueCount');
 		if ( !contagem ) return;
 

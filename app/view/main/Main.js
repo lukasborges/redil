@@ -118,7 +118,7 @@ Ext.define('Redil.view.main.Main', {
 			,layout: { type: 'vbox', align: 'center', pack: 'center' }
 			/*
 			 * Hidden, not absent: the card is still a tab, so the shortcuts and
-			 * setActiveTab keep working, and the catalogue below floats inside it.
+			 * setActiveTab keep working.
 			 * It is what the app opens on, and all it has to say is where to go; the
 			 * + in the rail is right beside it, so it needs no button of its own.
 			 */
@@ -134,116 +134,6 @@ Ext.define('Redil.view.main.Main', {
 						,'<p>' + locale['app.welcome[1]'] + '</p>'
 					].join('')
 				}
-				,{
-					/*
-					 * The catalogue used to take two thirds of the home tab, which
-					 * made a list of 104 services the app's front door. It is an
-					 * overlay now, opened by the + in the rail. Floating keeps it
-					 * out of the vbox while leaving it a child of this view, so the
-					 * string handlers below still resolve against MainController.
-					 */
-					 xtype: 'panel'
-					,title: locale['app.main[0]']
-					,itemId: 'catalogue'
-					,cls: 'rx-catalogue'
-					,listeners: {
-						hide: 'onCatalogueHide'
-					}
-					,floating: true
-					,hidden: true
-					,modal: true
-					,closable: true
-					// A panel closes by destroying itself, so the first click on the
-					// cross took the catalogue out of the component tree and every
-					// later + found nothing to show.
-					,closeAction: 'hide'
-					,width: 900
-					,height: 660
-					,layout: 'fit'
-					,dockedItems: [
-						{
-							 xtype: 'container'
-							,dock: 'top'
-							,cls: 'rx-catalogue-head'
-							// Without a layout the field keeps its own width and the
-							// search ends up a 170px box in a 900px window.
-							,layout: { type: 'vbox', align: 'stretch' }
-							,items: [
-								{
-									 xtype: 'textfield'
-									,itemId: 'catalogueSearch'
-									// The title above already says what the window is for.
-									,emptyText: 'Search services'
-									,triggers: {
-										 clear: {
-											 weight: 0
-											,cls: Ext.baseCSSPrefix + 'form-clear-trigger'
-											,hidden: true
-											,handler: 'onClearClick'
-										}
-										,search: {
-											 weight: 1
-											,cls: Ext.baseCSSPrefix + 'form-search-trigger search-trigger'
-										}
-									}
-									,listeners: {
-										 change: 'onSearchServiceChange'
-										,afterrender: 'onSearchRender'
-										,specialkey: 'onSearchEnter'
-									}
-								}
-								,{
-									 xtype: 'container'
-									,layout: { type: 'hbox', align: 'middle' }
-									,cls: 'rx-catalogue-filters'
-									,items: [
-										{
-											/*
-											 * Two always-checked boxes are not a filter, they
-											 * are noise. Three states say the same thing and
-											 * read as one control. doTypeFilter takes this
-											 * now instead of the checkbox group.
-											 */
-											 xtype: 'segmentedbutton'
-											,itemId: 'catalogueFilter'
-											,value: 'all'
-											,items: [
-												 { text: 'All', value: 'all' }
-												,{ text: locale['app.main[1]'], value: 'messaging' }
-												,{ text: locale['app.main[2]'], value: 'email' }
-											]
-											,listeners: { toggle: 'doTypeFilter' }
-										}
-										,{ xtype: 'component', flex: 1 }
-										,{ xtype: 'component', itemId: 'catalogueCount', cls: 'rx-catalogue-count' }
-									]
-								}
-							]
-						}
-					]
-					,items: [
-						{
-							 xtype: 'dataview'
-							,itemId: 'catalogueList'
-							,cls: 'rx-catalogue-list'
-							,store: 'ServicesList'
-							,itemSelector: 'div.service'
-							,scrollable: 'vertical'
-							,tpl: [
-								 '<tpl for=".">'
-									,'<div class="service" data-qtip="{description}">'
-										,'<img src="resources/icons/{logo}" alt="">'
-										,'<span>{name}</span>'
-									,'</div>'
-								,'</tpl>'
-							]
-							,emptyText: '<p class="rx-empty">' + locale['app.main[3]'] + '</p>'
-							,listeners: {
-								itemclick: 'onNewServiceSelect'
-							}
-						}
-					]
-				}
 			]
 		}
 		/*
@@ -253,6 +143,118 @@ Ext.define('Redil.view.main.Main', {
 		 */
 		,{ id: 'tbfill', tabConfig : { xtype : 'tbfill', flex: 0, height: 14 } }
 	]
+
+	/*
+	 * The catalogue used to take two thirds of the home tab, which made a list of
+	 * 104 services the app's front door. It is an overlay now, opened by the + in
+	 * the rail, and MainController.getCatalogue builds it from this the first
+	 * time. It is a floating panel of its own rather than a child of the home
+	 * card: as a child it could only show while that card did, so opening it from
+	 * a service meant switching to the welcome page first, and it floated over
+	 * that page's near-black instead of over the service, unlike every other
+	 * window. ownerCmp is what still resolves its string handlers against
+	 * MainController.
+	 */
+	,catalogueConfig: {
+		 xtype: 'panel'
+		,title: locale['app.main[0]']
+		,itemId: 'catalogue'
+		,cls: 'rx-catalogue'
+		,floating: true
+		,hidden: true
+		,modal: true
+		,closable: true
+		// A panel closes by destroying itself, so the first click on the
+		// cross took the catalogue out of the component tree and every
+		// later + found nothing to show.
+		,closeAction: 'hide'
+		,width: 900
+		,height: 660
+		,layout: 'fit'
+		,dockedItems: [
+			{
+				 xtype: 'container'
+				,dock: 'top'
+				,cls: 'rx-catalogue-head'
+				// Without a layout the field keeps its own width and the
+				// search ends up a 170px box in a 900px window.
+				,layout: { type: 'vbox', align: 'stretch' }
+				,items: [
+					{
+						 xtype: 'textfield'
+						,itemId: 'catalogueSearch'
+						// The title above already says what the window is for.
+						,emptyText: 'Search services'
+						,triggers: {
+							 clear: {
+								 weight: 0
+								,cls: Ext.baseCSSPrefix + 'form-clear-trigger'
+								,hidden: true
+								,handler: 'onClearClick'
+							}
+							,search: {
+								 weight: 1
+								,cls: Ext.baseCSSPrefix + 'form-search-trigger search-trigger'
+							}
+						}
+						,listeners: {
+							 change: 'onSearchServiceChange'
+							,afterrender: 'onSearchRender'
+							,specialkey: 'onSearchEnter'
+						}
+					}
+					,{
+						 xtype: 'container'
+						,layout: { type: 'hbox', align: 'middle' }
+						,cls: 'rx-catalogue-filters'
+						,items: [
+							{
+								/*
+								 * Two always-checked boxes are not a filter, they
+								 * are noise. Three states say the same thing and
+								 * read as one control. doTypeFilter takes this
+								 * now instead of the checkbox group.
+								 */
+								 xtype: 'segmentedbutton'
+								,itemId: 'catalogueFilter'
+								,value: 'all'
+								,items: [
+									 { text: 'All', value: 'all' }
+									,{ text: locale['app.main[1]'], value: 'messaging' }
+									,{ text: locale['app.main[2]'], value: 'email' }
+								]
+								,listeners: { toggle: 'doTypeFilter' }
+							}
+							,{ xtype: 'component', flex: 1 }
+							,{ xtype: 'component', itemId: 'catalogueCount', cls: 'rx-catalogue-count' }
+						]
+					}
+				]
+			}
+		]
+		,items: [
+			{
+				 xtype: 'dataview'
+				,itemId: 'catalogueList'
+				,cls: 'rx-catalogue-list'
+				,store: 'ServicesList'
+				,itemSelector: 'div.service'
+				,scrollable: 'vertical'
+				,tpl: [
+					 '<tpl for=".">'
+						,'<div class="service" data-qtip="{description}">'
+							,'<img src="resources/icons/{logo}" alt="">'
+							,'<span>{name}</span>'
+						,'</div>'
+					,'</tpl>'
+				]
+				,emptyText: '<p class="rx-empty">' + locale['app.main[3]'] + '</p>'
+				,listeners: {
+					itemclick: 'onNewServiceSelect'
+				}
+			}
+		]
+	}
 
 	,listeners: {
 		 tabchange: 'onTabChange'
