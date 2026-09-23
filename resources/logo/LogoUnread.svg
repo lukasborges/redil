@@ -13,7 +13,7 @@
 
     Colours are the Adwaita palette. The blue is blue 5, the darkest of the
     five, which is as close as the palette comes to the navy this fork used
-    before -- the circle and the gradient it inherited from Rambox were neither
+    before; the circle and the gradient it inherited from Rambox were neither
     one of the three template shapes nor a flat surface, which is why the mark
     looked out of place beside GNOME's own.
 
