@@ -972,7 +972,7 @@ body {
  */
 
 .x-window-header-default {
-	background-color: var(--rx-surface);
+	background-color: var(--rx-raised);
 	background-image: none;
 	border-color: var(--rx-line);
 	padding: 18px 22px 14px;
@@ -985,7 +985,7 @@ body {
 
 /* The footer carries the seam, so the body does not draw one too. */
 .x-window .x-toolbar-footer {
-	background-color: var(--rx-surface);
+	background-color: var(--rx-raised);
 	background-image: none;
 	border-top: 1px solid var(--rx-line);
 	padding: 12px 22px;
@@ -1481,12 +1481,18 @@ body {
 	color: var(--rx-ink);
 }
 
+/*
+ * A window is one sheet, so its header, body and footer are all the raised
+ * colour. The form inside painted the surface colour over the body, and in the
+ * dark theme that showed as a darker box whose edge ran flush with the labels.
+ */
 .rx-plain > .x-panel-body-default {
 	border-width: 0;
+	background-color: transparent;
 }
 
 .x-window-header-default {
-	background-color: var(--rx-surface);
+	background-color: var(--rx-raised);
 	background-image: none;
 	border-color: var(--rx-line);
 }
