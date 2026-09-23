@@ -132,6 +132,32 @@ if ( !isDev ) {
 let mainWindow;
 let isQuitting = false;
 
+/*
+ * The system title bar is replaced by a strip the renderer draws in the rail's
+ * colour, with the window's own buttons laid over it. Hiding the bar outright
+ * would have put those buttons on the top right of every service, which is
+ * where Gmail, Chat and Claude keep the account menu. Which buttons show and on
+ * which side is the desktop's: GNOME's button-layout, Windows' three on the
+ * right, macOS's traffic lights on the left. Only Linux has been run.
+ * The colours are --rx-chrome and --rx-on-chrome in redil-modern.css; macOS
+ * draws its own buttons and ignores them.
+ */
+const TITLE_BAR_HEIGHT = 32;
+
+function titleBarOverlay() {
+	const dark = nativeTheme.shouldUseDarkColors;
+	return {
+		 color: dark ? '#2A2A2E' : '#24506F'
+		,symbolColor: dark ? '#D0D0D6' : '#E8F1F8'
+		,height: TITLE_BAR_HEIGHT
+	};
+}
+
+nativeTheme.on('updated', () => {
+	// setTitleBarOverlay does not exist on macOS, where the colours mean nothing
+	if ( process.platform !== 'darwin' && mainWindow && !mainWindow.isDestroyed() ) mainWindow.setTitleBarOverlay(titleBarOverlay());
+});
+
 function createWindow () {
 	// Before the window exists, so the first paint is already the right theme.
 	applyTheme(config.get('theme'));
@@ -149,6 +175,10 @@ function createWindow () {
 		,skipTaskbar: config.get('window_display_behavior') === 'show_trayIcon'
 		,show: !config.get('start_minimized')
 		,acceptFirstMouse: true
+		,titleBarStyle: 'hidden'
+		,titleBarOverlay: titleBarOverlay()
+		// the traffic lights are 12px tall; this centres them in the strip
+		,trafficLightPosition: { x: 12, y: 10 }
 		,webPreferences: {
 			 plugins: true
 			,partition: 'persist:rambox' // storage key, not a name: renaming it empties

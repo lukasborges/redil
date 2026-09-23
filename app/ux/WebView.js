@@ -595,6 +595,9 @@ Ext.define('Redil.ux.WebView',{
 		 * answers to believe; see effectiveUnreadCount.
 		 */
 		webview.addEventListener("page-title-updated", function(e) {
+			me.pageTitle = e.title;
+			me.syncTitleBarIfActive();
+
 			var count = e.title.match(/\(([^)]+)\)/); // Get text between (...)
 			count = count ? count[1] : '0';
 			count = count === '•' ? count : Ext.isArray(count.match(/\d+/g)) ? count.match(/\d+/g).join("") : count.match(/\d+/g); // Some services have special characters. Example: (•)
@@ -603,7 +606,10 @@ Ext.define('Redil.ux.WebView',{
 			me.reportTitleUnread(count);
 		});
 
+		// back and forward in the title bar follow the page's own history
+		webview.addEventListener('did-navigate-in-page', function() { me.syncTitleBarIfActive(); });
 		webview.addEventListener('did-navigate', function( e ) {
+			me.syncTitleBarIfActive();
 			if ( e.isMainFrame && me.record.get('type') === 'tweetdeck' ) Ext.defer(function() { webview.loadURL(e.newURL); }, 1000); // Applied a defer because sometimes is not redirecting. TweetDeck 2FA is an example.
 		});
 
@@ -949,6 +955,22 @@ Ext.define('Redil.ux.WebView',{
 			me.suspendEvent('afterrender');
 			me.tab.setStyle('-webkit-filter', 'grayscale(1)');
 		}
+	}
+
+	,syncTitleBarIfActive: function() {
+		var me = this;
+		// deferred: the navigation events arrive before the history they report
+		// has been committed, so canGoBack still answers for the page before
+		Ext.defer(function() {
+			var main = Ext.cq1('app-main');
+			if ( main && main.getActiveTab() === me ) main.getController().syncTitleBar();
+		}, 50);
+	}
+
+	// The page itself, where the service menu's reload goes back to the start
+	,reloadPage: function() {
+		var webview = this.getWebView();
+		if ( webview ) webview.reload();
 	}
 
 	,goBack: function() {

@@ -223,6 +223,126 @@ body {
 	background-color: var(--rx-badge-quiet);
 }
 
+/* ------------------------------------------------------ the title bar */
+
+/*
+ * The strip that stands in for the system title bar, and the rail's other half:
+ * the same colour, the same muted glyphs, the same hover. It says which service
+ * is open and what page it is on, left-aligned with the content below, and
+ * carries back, forward, reload and find for that page. The window buttons are
+ * laid over one end by the system -- the right on Windows and GNOME's default,
+ * the left on macOS or wherever GNOME is told to put them -- painted the same
+ * colour from electron/main.js. The strip is the drag region; its buttons are
+ * not, or they could not be clicked.
+ */
+.rx-titlebar.x-toolbar {
+	background-color: var(--rx-chrome) !important;
+	background-image: none !important;
+	border: 0 !important;
+	-webkit-app-region: drag;
+	user-select: none;
+	/* the window buttons are whatever the title bar area leaves out, at either
+	   end; the page's buttons start at the left edge, over the rail, unless the
+	   window's own are there */
+	--rx-controls-left: env(titlebar-area-x, 0px);
+	--rx-controls-right: calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, 100vw));
+	padding: 0 calc(var(--rx-controls-right) + 6px) 0 calc(var(--rx-controls-left) + 6px) !important;
+}
+
+.rx-titlebar-identity {
+	/* centred on the window rather than on what is left between the buttons,
+	   so it does not shift as they come and go; the !important answers the
+	   position the toolbar's box layout writes inline */
+	position: absolute !important;
+	left: 50% !important;
+	top: 0 !important;
+	transform: translateX(-50%);
+	display: flex !important;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	height: 32px;
+	max-width: calc(100vw - 2 * (var(--rx-controls-right) + 200px));
+	color: var(--rx-on-chrome);
+	font-size: 12.5px;
+	white-space: nowrap;
+	overflow: hidden;
+	pointer-events: none;
+}
+
+.rx-titlebar-identity img {
+	width: 16px;
+	height: 16px;
+	flex: none;
+}
+
+.rx-titlebar-identity b {
+	font-weight: 600;
+	flex: none;
+}
+
+/* the page title, which is somebody else's words: quieter, and cut first */
+.rx-titlebar-identity span {
+	opacity: 0.6;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.rx-titlebar-identity span::before {
+	content: '\00B7';
+	margin-right: 8px;
+}
+
+.rx-titlebar .x-btn.rx-titlebar-btn {
+	-webkit-app-region: no-drag;
+	background: none;
+	background-image: none;
+	border: 0;
+	box-shadow: none;
+	border-radius: var(--rx-radius);
+	width: 28px !important;
+	height: 24px;
+	padding: 0;
+	transition: background-color 0.12s ease;
+}
+
+.rx-titlebar .x-btn.rx-titlebar-btn.x-btn-over {
+	background-color: rgba(255, 255, 255, 0.08);
+}
+
+/* The glyph's box and its line are the same height, or the glyph is drawn low:
+   a 24px line in Ext's 16px box put it three pixels under the name. */
+.rx-titlebar .x-btn.rx-titlebar-btn .x-btn-wrap,
+.rx-titlebar .x-btn.rx-titlebar-btn .x-btn-button {
+	height: 24px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.rx-titlebar .x-btn.rx-titlebar-btn .x-btn-glyph {
+	color: var(--rx-on-chrome);
+	opacity: 0.72;
+	font-size: 12px;
+	width: 28px;
+	height: 24px;
+	line-height: 24px;
+	top: 0;
+	margin: 0;
+	/* Font Awesome's ink sits above the middle of its em box, so a centred box
+	   still drew the glyphs 1.3px high against the title beside them; measured
+	   on the running bar, this puts both on the same line */
+	transform: translateY(1px);
+}
+
+.rx-titlebar .x-btn.rx-titlebar-btn.x-btn-over .x-btn-glyph {
+	opacity: 1;
+}
+
+.rx-titlebar .x-btn.rx-titlebar-btn.x-btn-disabled .x-btn-glyph {
+	opacity: 0.3;
+}
+
 /* ----------------------------------------------------- the decline ui */
 
 /*

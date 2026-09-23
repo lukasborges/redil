@@ -29,6 +29,8 @@ Ext.define('Redil.view.main.MainController', {
 
 		localStorage.setItem('last_active_service', newTab.id);
 
+		me.syncTitleBar();
+
 		if ( newTab.id === 'redilTab' ) {
 			if ( Redil.app.getTotalNotifications() > 0 ) {
 				document.title = 'Redil ('+ Redil.app.getTotalNotifications() +')';
@@ -60,6 +62,48 @@ Ext.define('Redil.view.main.MainController', {
 		} else {
 			document.title = 'Redil - ' + newTab.record.get('name');
 		}
+	}
+
+	/*
+	 * The title bar follows the active service: its icon and name, the page it
+	 * is on, and back and forward only while there is somewhere to go. The home
+	 * tab and a disabled service have no page, so they get the name alone.
+	 */
+	,syncTitleBar: function() {
+		var bar = this.getView().down('#titleBar');
+		if ( !bar ) return;
+
+		var tab = this.getView().getActiveTab();
+		var page = tab && tab.getWebView ? tab.getWebView() : false;
+		var identity = bar.down('#identity');
+
+		if ( !page ) {
+			identity.update('<b>Redil</b>');
+		} else {
+			// a service puts its unread count in the title; the rail already says it
+			var title = (tab.pageTitle || '').replace(/^\([^)]*\)\s*/, '');
+			var name = tab.record.get('name');
+			identity.update(
+				 '<img src="' + Ext.String.htmlEncode(tab.icon) + '" alt="">'
+				+'<b>' + Ext.String.htmlEncode(name) + '</b>'
+				+( title && title !== name ? '<span>' + Ext.String.htmlEncode(title) + '</span>' : '' )
+			);
+		}
+
+		Ext.each(['back', 'forward', 'reload', 'find'], function(id) { bar.down('#' + id).setVisible(!!page); });
+		if ( page && page.canGoBack ) {
+			try {
+				bar.down('#back').setDisabled(!page.canGoBack());
+				bar.down('#forward').setDisabled(!page.canGoForward());
+			} catch (e) {
+				// a webview that has not attached yet cannot answer
+			}
+		}
+	}
+
+	,titleBarAction: function(btn) {
+		var tab = this.getView().getActiveTab();
+		if ( tab && tab.getWebView && tab.getWebView() ) tab[btn.action](true);
 	}
 
 	/*

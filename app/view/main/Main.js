@@ -25,6 +25,31 @@ Ext.define('Redil.view.main.Main', {
 	,autoRender: true
 	,autoShow: true
 	,deferredRender: false
+	/*
+	 * The window's title bar: electron/main.js hides the system's and lays the
+	 * window buttons over one end of this. It spans the whole width, rail
+	 * included, in the rail's colour, so the two read as one frame. It says which
+	 * service is open and what page it is on, and carries what acts on that page;
+	 * MainController.syncTitleBar keeps it current.
+	 */
+	,dockedItems: [{
+		 xtype: 'toolbar'
+		,dock: 'top'
+		,itemId: 'titleBar'
+		,height: 32
+		,cls: 'rx-titlebar'
+		,defaults: { xtype: 'button', scale: 'small', cls: 'rx-titlebar-btn', hidden: true }
+		,items: [
+			 { itemId: 'back', glyph: 'xf053@FontAwesome', tooltip: 'Back', handler: 'titleBarAction', action: 'goBack' }
+			,{ itemId: 'forward', glyph: 'xf054@FontAwesome', tooltip: 'Forward', handler: 'titleBarAction', action: 'goForward' }
+			,{ itemId: 'reload', glyph: 'xf021@FontAwesome', tooltip: 'Reload page', handler: 'titleBarAction', action: 'reloadPage' }
+			,{ xtype: 'tbfill', hidden: false }
+			// centred on the window by the stylesheet, whatever sits either side
+			,{ xtype: 'component', itemId: 'identity', cls: 'rx-titlebar-identity', hidden: false, html: '<b>Redil</b>' }
+			,{ xtype: 'tbfill', hidden: false }
+			,{ itemId: 'find', glyph: 'xf002@FontAwesome', tooltip: 'Find in page', handler: 'titleBarAction', action: 'showSearchBox' }
+		]
+	}]
 	,border: false
 	,bodyBorder: false
 	,tabBar: {
@@ -81,6 +106,8 @@ Ext.define('Redil.view.main.Main', {
 	,items: [
 		{
 			 id: 'redilTab'
+			,border: false
+			,bodyBorder: false
 			,closable: false
 			,reorderable: false
 			,autoScroll: true
