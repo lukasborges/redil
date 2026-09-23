@@ -172,7 +172,7 @@ Ext.define('Redil.view.add.Add',{
 						,valueField: 'id'
 						,store: {
 							 fields: ['id', 'name']
-							,data: [{ id: '', name: 'None: show in every workspace' }].concat(Redil.util.Workspaces.list())
+							,data: [{ id: '', name: 'All' }].concat(Redil.util.Workspaces.list())
 						}
 						,value: me.edit ? me.record.get('workspace') : Redil.util.Workspaces.getActive()
 						,labelAlign: 'top'

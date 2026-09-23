@@ -114,3 +114,30 @@ test('draws an avatar for a new workspace, keeps it through a rename and lets th
 	expect(steps).toEqual({ known: true, shownIsGlyph: true, keptSame: true, initials: 'RE', picker: 30 });
 });
 
+test('moves a service to another workspace from its right click', async () => {
+	const result = await redil.window.evaluate(() => {
+		const W = Redil.util.Workspaces;
+		const target = W.create('Elsewhere');
+		W.setActive('');
+		const tab = Ext.getCmp('tab_9104');
+		const menu = tab.tab.menu;
+		menu.show();
+		const item = menu.down('#moveToWorkspace');
+		const expected = W.list().map(w => w.name).concat('All');
+		const names = item.menu.items.items.filter(i => !i.isXType('menuseparator')).map(i => { const d = document.createElement('div'); d.innerHTML = i.text; d.querySelectorAll('.rx-ws-chip').forEach(e => e.remove()); return d.textContent.trim(); });
+		const pick = item.menu.items.items.find(i => i.text && i.text.includes('Elsewhere'));
+		pick.handler();
+		menu.hide();
+		W.setActive(target.id);
+		const rail = W.visibleServiceTabs().map(t => t.record.get('name'));
+		const stored = tab.record.get('workspace') === target.id;
+		W.remove(target.id);
+		return { shown: !item.isHidden(), names, expected, rail, stored };
+	});
+	expect(result.shown).toBe(true);
+	expect(result.names).toEqual(result.expected);
+	expect(result.stored).toBe(true);
+	// Mail and Tracker lost their workspace when it was deleted, so they show everywhere
+	expect(result.rail).toContain('Chat');
+});
+

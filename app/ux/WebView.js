@@ -11,6 +11,7 @@ Ext.define('Redil.ux.WebView',{
 		,'Redil.util.Notifier'
 		,'Redil.util.UnreadCounter'
 		,'Redil.util.IconLoader'
+		,'Redil.util.Workspaces'
 	]
 
 	// private
@@ -147,6 +148,13 @@ Ext.define('Redil.ux.WebView',{
 							,glyph: 'xf013@FontAwesome'
 							,scope: me
 							,handler: me.editService
+						}
+						,{
+							// filled as the menu opens; hidden until there is a workspace
+							 text: 'Move to workspace'
+							,itemId: 'moveToWorkspace'
+							,glyph: 'xf0ec@FontAwesome'
+							,menu: { plain: true, items: [] }
 						}
 						,{
 							 text: locale['app.service[0]']
@@ -922,6 +930,46 @@ Ext.define('Redil.ux.WebView',{
 		});
 		menu.down('#disableService').setHidden(!ligado);
 		menu.down('#enableService').setHidden(ligado);
+		this.syncWorkspaceMenu(menu.down('#moveToWorkspace'));
+	}
+
+	/*
+	 * The workspaces, with this service's own ticked, and None for every one.
+	 * Moving it out of the workspace on screen takes it off the rail, and the
+	 * rail moves on to the next service if this one was open.
+	 */
+	,syncWorkspaceMenu: function( item ) {
+		var me = this;
+		var workspaces = Redil.util.Workspaces;
+		var list = workspaces.list();
+		var current = me.record.get('workspace');
+
+		item.setHidden(Ext.isEmpty(list));
+		if ( Ext.isEmpty(list) ) return;
+
+		var move = function(id) {
+			me.record.set('workspace', id);
+			workspaces.apply();
+		};
+		var entries = list.map(function(workspace) {
+			return {
+				 text: workspaces.chip(workspace) + Ext.String.htmlEncode(workspace.name)
+				,checked: workspace.id === current
+				,group: 'moveToWorkspace'
+				,handler: function() { move(workspace.id); }
+			};
+		});
+		entries.push('-', {
+			 text: 'All'
+			,checked: !current
+			,group: 'moveToWorkspace'
+			,handler: function() { move(''); }
+		});
+
+		Ext.suspendLayouts();
+		item.menu.removeAll();
+		item.menu.add(entries);
+		Ext.resumeLayouts(true);
 	}
 
 	,mainController: function() {
