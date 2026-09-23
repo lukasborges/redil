@@ -47,7 +47,9 @@ test('opens the switcher\'s menu from a real click', async () => {
 	await redil.window.mouse.click(box.x, box.y);
 	const menu = await redil.window.evaluate(() => {
 		const m = Ext.getCmp('workspaceSwitcher').menu;
-		const texts = m.items.items.map(i => i.text).filter(Boolean).map(t => t.replace(/<[^>]+>.*$/, ''));
+		// the avatar chip, the unread dot and the shortcut are markup around the name
+		const texts = m.items.items.map(i => i.text).filter(Boolean)
+			.map(t => t.replace(/<span class="rx-ws-chip[^"]*"[^>]*>.*?<\/span>/, '').replace(/<[^>]+>.*$/, '').trim());
 		const shown = m.isVisible();
 		m.hide();
 		return { shown, texts };
@@ -85,5 +87,25 @@ test('keeps a deleted workspace\'s services, in every workspace', async () => {
 		W.setActive(W.list()[0].id);
 	});
 	expect(await rail()).toEqual(['Mail', 'Tracker', 'Family', 'Chat']);
-	expect(await redil.window.evaluate(() => Ext.getCmp('workspaceSwitcher').getText())).toBe('PE');
+	expect(await redil.window.evaluate(() => Redil.util.Workspaces.list().map(w => w.name))).toEqual(['Personal']);
 });
+
+test('draws an avatar for a new workspace, keeps it through a rename and lets the initials back', async () => {
+	const steps = await redil.window.evaluate(() => {
+		const W = Redil.util.Workspaces;
+		const id = W.create('Avatars').id;
+		const drawn = W.get(id).avatar;
+		W.setActive(id);
+		const shown = Ext.getCmp('workspaceSwitcher').getText();
+		W.rename(id, 'Renamed');
+		const kept = W.get(id).avatar;
+		W.setAvatar(id, null);
+		const initials = Ext.getCmp('workspaceSwitcher').getText();
+		const known = W.AVATARS.some(a => a.emoji === drawn.emoji && a.color === drawn.color);
+		W.remove(id);
+		return { known, shownIsEmoji: shown === drawn.emoji, keptSame: kept.emoji === drawn.emoji, initials, picker: W.AVATARS.length + 1 };
+	});
+	// five full rows of six in the picker, the initials first
+	expect(steps).toEqual({ known: true, shownIsEmoji: true, keptSame: true, initials: 'RE', picker: 30 });
+});
+

@@ -195,6 +195,76 @@ body {
 	background-color: var(--rx-badge-quiet);
 }
 
+/* an avatar in place of the initials: the emoji on its own colour */
+#mainTabBar .rx-workspace-switcher.rx-has-avatar .x-btn-inner {
+	font-size: 22px;
+	letter-spacing: 0;
+	/* colour emoji ignore color, but a text fallback would not */
+	color: #000000;
+}
+
+.rx-ws-chip {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 20px;
+	height: 20px;
+	margin-right: 8px;
+	border-radius: 6px;
+	font-size: 12px;
+	line-height: 20px;
+	vertical-align: middle;
+}
+
+.rx-ws-chip-initials {
+	background-color: var(--rx-sunken);
+	color: var(--rx-muted);
+	font-size: 9px;
+	font-weight: 700;
+}
+
+.rx-avatar-grid {
+	display: grid;
+	grid-template-columns: repeat(6, 52px);
+	gap: 12px;
+	justify-content: center;
+	padding: 16px 0 20px;
+}
+
+.rx-avatar {
+	width: 52px;
+	height: 52px;
+	border: 0;
+	border-radius: 999px;
+	font-size: 26px;
+	line-height: 52px;
+	padding: 0;
+	cursor: pointer;
+	transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.rx-avatar:hover {
+	transform: scale(1.06);
+}
+
+.rx-avatar:focus-visible,
+.rx-avatar.rx-selected {
+	outline: none;
+	box-shadow: 0 0 0 3px var(--rx-surface), 0 0 0 5px var(--rx-brand);
+}
+
+.rx-avatar-initials {
+	background-color: var(--rx-sunken);
+	color: var(--rx-muted);
+	font-size: 15px;
+	font-weight: 700;
+	box-shadow: inset 0 0 0 1px var(--rx-line-strong);
+}
+
+.rx-avatar-initials.rx-selected {
+	box-shadow: inset 0 0 0 1px var(--rx-line-strong), 0 0 0 3px var(--rx-surface), 0 0 0 5px var(--rx-brand);
+}
+
 .rx-menu-shortcut {
 	float: right;
 	margin-left: 24px;

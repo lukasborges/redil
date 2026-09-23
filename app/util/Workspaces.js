@@ -20,6 +20,31 @@ Ext.define('Redil.util.Workspaces', {
 		'Redil.util.UnreadCounter'
 	]
 
+	/*
+	 * The avatars a workspace can wear instead of its initials, in the manner of
+	 * Chrome's profile picker. Chrome's own are Google's illustrations and cannot
+	 * be copied, so these are emoji, which the system's colour emoji font draws,
+	 * on the light end of the Adwaita palette: nothing is shipped but this list.
+	 * Twenty-nine, so that with the initials in front the picker is five full
+	 * rows of six.
+	 */
+	,AVATARS: [
+		 { emoji: '🐱', color: '#99C1F1' }, { emoji: '🐶', color: '#F9F06B' }, { emoji: '🦊', color: '#FFBE6F' }
+		,{ emoji: '🐼', color: '#DC8ADD' }, { emoji: '🐧', color: '#F66151' }, { emoji: '🐰', color: '#8FF0A4' }
+		,{ emoji: '🦉', color: '#CDAB8F' }, { emoji: '🐙', color: '#99C1F1' }, { emoji: '🐢', color: '#8FF0A4' }
+		,{ emoji: '🦄', color: '#DC8ADD' }, { emoji: '🐝', color: '#F9F06B' }, { emoji: '🐳', color: '#99C1F1' }
+		,{ emoji: '🍕', color: '#FFBE6F' }, { emoji: '🍣', color: '#F66151' }, { emoji: '🥑', color: '#8FF0A4' }
+		,{ emoji: '🍉', color: '#F66151' }, { emoji: '🧀', color: '#F9F06B' }, { emoji: '☕', color: '#CDAB8F' }
+		,{ emoji: '🚲', color: '#99C1F1' }, { emoji: '🏀', color: '#FFBE6F' }, { emoji: '🎧', color: '#DC8ADD' }
+		,{ emoji: '📚', color: '#CDAB8F' }, { emoji: '💼', color: '#99C1F1' }, { emoji: '🏠', color: '#8FF0A4' }
+		,{ emoji: '🚀', color: '#DC8ADD' }, { emoji: '🎨', color: '#F9F06B' }, { emoji: '🌵', color: '#8FF0A4' }
+		,{ emoji: '🌻', color: '#F9F06B' }, { emoji: '🎮', color: '#F66151' }
+	]
+
+	,randomAvatar: function() {
+		return Ext.apply({}, this.AVATARS[Math.floor(Math.random() * this.AVATARS.length)]);
+	}
+
 	,list: function() {
 		try {
 			var stored = JSON.parse(localStorage.getItem('workspaces'));
@@ -52,18 +77,29 @@ Ext.define('Redil.util.Workspaces', {
 		var workspaces = this.list();
 		// the time alone is not unique: two created in the same millisecond, as a
 		// script or a fast pair of clicks can, would share an id and a filter
-		var workspace = { id: 'ws' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: name };
+		// a new workspace draws an avatar at random, the way a Chrome profile does
+		var workspace = { id: 'ws' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: name, avatar: this.randomAvatar() };
 
 		workspaces.push(workspace);
 		this.save(workspaces);
 		return workspace;
 	}
 
-	,rename: function(id, name) {
+	// Whatever else a workspace carries -- its avatar -- survives a change to one field
+	,update: function(id, changes) {
 		this.save(Ext.Array.map(this.list(), function(workspace) {
-			return workspace.id === id ? { id: id, name: name } : workspace;
+			return workspace.id === id ? Ext.apply({}, changes, workspace) : workspace;
 		}));
 		this.apply();
+	}
+
+	,rename: function(id, name) {
+		this.update(id, { name: name });
+	}
+
+	// null goes back to the initials
+	,setAvatar: function(id, avatar) {
+		this.update(id, { avatar: avatar });
 	}
 
 	// The services in it are not removed: they belong to no workspace afterwards,
@@ -124,6 +160,16 @@ Ext.define('Redil.util.Workspaces', {
 	,mountSwitcher: function(tabBar) {
 		var me = this;
 
+		// Workspaces made before there were avatars draw one now. The key is
+		// absent on those; a person who picked the initials has it set to null,
+		// and that choice is left alone.
+		var workspaces = me.list();
+		if ( workspaces.some(function(workspace) { return !('avatar' in workspace); }) ) {
+			me.save(workspaces.map(function(workspace) {
+				return 'avatar' in workspace ? workspace : Ext.apply({ avatar: me.randomAvatar() }, workspace);
+			}));
+		}
+
 		me.switcher = Ext.create('Ext.button.Button', {
 			 renderTo: tabBar.el
 			,id: 'workspaceSwitcher'
@@ -146,8 +192,8 @@ Ext.define('Redil.util.Workspaces', {
 	}
 
 	/**
-	 * The switcher shows the active workspace's initials, or a grid for all
-	 * services, and a dot when a workspace that is not on screen has something
+	 * The switcher shows the active workspace's avatar, or its initials when it
+	 * has none, or a grid for all services, and a dot when a workspace that is not on screen has something
 	 * unread: the rail only shows the badges of what it shows, so without the dot
 	 * a message in the other workspace would be invisible until the taskbar badge
 	 * was noticed.
@@ -158,8 +204,11 @@ Ext.define('Redil.util.Workspaces', {
 		if ( !btn || !btn.rendered ) return;
 
 		var active = me.get(me.getActive());
-		btn.setText(active ? Ext.String.htmlEncode(me.initials(active.name)) : '');
+		var avatar = active && active.avatar;
+		btn.setText(avatar ? avatar.emoji : active ? Ext.String.htmlEncode(me.initials(active.name)) : '');
 		btn.setGlyph(active ? 0 : 'xf009@FontAwesome');
+		btn.el.toggleCls('rx-has-avatar', !!avatar);
+		btn.el.setStyle('background-color', avatar ? avatar.color : '');
 		btn.setTooltip(active ? Ext.String.htmlEncode(active.name) : 'All services');
 		btn.el.toggleCls('rx-unread-elsewhere', me.hasUnreadElsewhere());
 	}
@@ -198,7 +247,7 @@ Ext.define('Redil.util.Workspaces', {
 
 		Ext.each(workspaces, function(workspace, index) {
 			items.push({
-				 text: Ext.String.htmlEncode(workspace.name)
+				 text: me.chip(workspace) + Ext.String.htmlEncode(workspace.name)
 					+ (me.unreadIn(workspace.id) && workspace.id !== active ? ' <span class="rx-menu-dot"></span>' : '')
 					// Ext 5's menu items have no shortcut of their own to show
 					+ (index < 9 ? '<span class="rx-menu-shortcut">' + (redil.platform === 'darwin' ? '⌘⌥' : 'Ctrl+Alt+') + (index + 1) + '</span>' : '')
@@ -217,6 +266,7 @@ Ext.define('Redil.util.Workspaces', {
 		items.push({ text: 'New workspace…', glyph: 'xf067@FontAwesome', handler: function() { me.promptCreate(); } });
 		if ( active ) {
 			items.push({ text: 'Rename “' + Ext.String.htmlEncode(me.get(active).name) + '”…', glyph: 'xf040@FontAwesome', handler: function() { me.promptRename(active); } });
+			items.push({ text: 'Change icon…', glyph: 'xf118@FontAwesome', handler: function() { me.pickAvatar(active); } });
 			items.push({ text: 'Delete “' + Ext.String.htmlEncode(me.get(active).name) + '”', glyph: 'xf1f8@FontAwesome', handler: function() { me.confirmRemove(active); } });
 		}
 
@@ -224,6 +274,56 @@ Ext.define('Redil.util.Workspaces', {
 		menu.removeAll();
 		menu.add(items);
 		Ext.resumeLayouts(true);
+	}
+
+	// The avatar, or the initials on a neutral disc, at menu size
+	,chip: function(workspace) {
+		var avatar = workspace.avatar;
+		return avatar
+			? '<span class="rx-ws-chip" style="background-color:' + avatar.color + '">' + avatar.emoji + '</span>'
+			: '<span class="rx-ws-chip rx-ws-chip-initials">' + Ext.String.htmlEncode(this.initials(workspace.name)) + '</span>';
+	}
+
+	/**
+	 * A grid of the avatars, with the initials first, as Chrome's picker puts its
+	 * default first. Picking one applies it and closes the window.
+	 */
+	,pickAvatar: function(id) {
+		var me = this;
+		var workspace = me.get(id);
+		var current = workspace.avatar;
+		var cells = ['<button type="button" class="rx-avatar rx-avatar-initials' + (current ? '' : ' rx-selected') + '" data-index="-1" title="Initials">'
+			+ Ext.String.htmlEncode(me.initials(workspace.name)) + '</button>'];
+
+		Ext.each(me.AVATARS, function(avatar, index) {
+			var selected = current && current.emoji === avatar.emoji && current.color === avatar.color;
+			cells.push('<button type="button" class="rx-avatar' + (selected ? ' rx-selected' : '') + '" data-index="' + index + '" style="background-color:' + avatar.color + '">' + avatar.emoji + '</button>');
+		});
+
+		var win = Ext.create('Ext.window.Window', {
+			 title: 'Pick an icon'
+			,modal: true
+			,resizable: false
+			,width: 432
+			,cls: 'rx-avatar-window'
+			,items: [{
+				 xtype: 'component'
+				,cls: 'rx-avatar-grid'
+				,html: cells.join('')
+				,listeners: {
+					click: {
+						 element: 'el'
+						,delegate: '.rx-avatar'
+						,fn: function(e, target) {
+							var index = parseInt(target.getAttribute('data-index'), 10);
+							me.setAvatar(id, index < 0 ? null : Ext.apply({}, me.AVATARS[index]));
+							win.close();
+						}
+					}
+				}
+			}]
+		});
+		win.show();
 	}
 
 	,promptCreate: function() {
