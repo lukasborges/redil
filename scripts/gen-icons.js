@@ -2,14 +2,8 @@
 'use strict';
 
 /*
- * Every icon in the repository, from the SVGs in resources/logo.
- *
- * The masters are drawn to the GNOME app icon guidelines: the template's
- * square guide, 104 by 104 with a radius of 8 on a 128 canvas, flat colour,
- * no shadow, Adwaita colours. Everything below is
- * a rendering of one of them -- there is no icon in this tree that is drawn by
- * hand, and a change to the mark means running this and committing what it
- * writes.
+ * There is no icon in this tree that is drawn by hand: a change to the mark
+ * means running this and committing what it writes.
  *
  * It needs inkscape and ImageMagick's convert on the PATH, which is why it is
  * not part of the build: it runs when the mark changes, which is rarely.
@@ -25,8 +19,8 @@ const logo = path.join(root, 'resources', 'logo');
 const MASTER = path.join(logo, 'Logo.svg');
 const UNREAD = path.join(logo, 'LogoUnread.svg');
 const MARK = path.join(logo, 'Mark.svg');
-const TRAY = path.join(logo, 'LogoTray.svg');
-const TRAY_UNREAD = path.join(logo, 'LogoTrayUnread.svg');
+const LINUX_TRAY = path.join(logo, 'LogoTray.svg');
+const LINUX_TRAY_UNREAD = path.join(logo, 'LogoTrayUnread.svg');
 
 // resources/logo keeps one of each size, which nothing loads: it is the place
 // to take a mark from when something outside this tree needs one.
@@ -36,16 +30,15 @@ const GALLERY = [16, 24, 32, 48, 64, 96, 128, 256, 512, 1024];
 const INSTALLER = [16, 24, 32, 48, 64, 96, 128, 256, 512];
 
 // The window and dock icon, and the tray at the three densities Electron asks
-// for. The tray is small: 24 is what a panel gives it. The tray PNGs are Linux's
-// alone and monochrome, like everything else in a panel; Windows reads the ICOs.
+// for. The tray is small: 24 is what a panel gives it.
 const APP = [
 	{ from: MASTER, to: 'resources/Icon.png', size: 256 },
-	{ from: TRAY, to: 'resources/IconTray.png', size: 24 },
-	{ from: TRAY, to: 'resources/IconTray@2x.png', size: 48 },
-	{ from: TRAY, to: 'resources/IconTray@4x.png', size: 96 },
-	{ from: TRAY_UNREAD, to: 'resources/IconTrayUnread.png', size: 24 },
-	{ from: TRAY_UNREAD, to: 'resources/IconTrayUnread@2x.png', size: 48 },
-	{ from: TRAY_UNREAD, to: 'resources/IconTrayUnread@4x.png', size: 96 },
+	{ from: LINUX_TRAY, to: 'resources/IconTray.png', size: 24 },
+	{ from: LINUX_TRAY, to: 'resources/IconTray@2x.png', size: 48 },
+	{ from: LINUX_TRAY, to: 'resources/IconTray@4x.png', size: 96 },
+	{ from: LINUX_TRAY_UNREAD, to: 'resources/IconTrayUnread.png', size: 24 },
+	{ from: LINUX_TRAY_UNREAD, to: 'resources/IconTrayUnread@2x.png', size: 48 },
+	{ from: LINUX_TRAY_UNREAD, to: 'resources/IconTrayUnread@4x.png', size: 96 },
 	// the boxless mark, for the lock screen, which paints its own background
 	{ from: MARK, to: 'resources/Mark.png', size: 256 }
 ];
