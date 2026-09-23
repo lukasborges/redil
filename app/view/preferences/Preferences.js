@@ -464,6 +464,12 @@ Ext.define('Redil.view.preferences.Preferences',{
 											,{
 												 xtype: 'numberfield'
 												,fieldLabel: 'Port'
+												// nobody steps through port numbers one at a time, and the
+												// spinner is crisp's sprite, a light box in a dark field
+												,hideTrigger: true
+												,allowDecimals: false
+												,minValue: 1
+												,maxValue: 65535
 												,name: 'proxyPort'
 												,value: config.proxyPort
 											}

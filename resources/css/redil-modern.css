@@ -1020,6 +1020,22 @@ body {
 	margin-right: 8px;
 }
 
+/*
+ * A checkbox row is at least 28px tall, and the legend's checkbox is one, so
+ * its box hung below the 18px sentence beside it. The legend is one centred
+ * line instead, and its checkbox only as tall as the box.
+ */
+.x-fieldset-header:has(.x-form-cb-wrap) {
+	display: flex;
+	align-items: center;
+}
+
+.x-fieldset-header-checkbox.x-form-type-checkbox,
+.x-fieldset-header-checkbox .x-form-cb-wrap {
+	min-height: 0;
+	height: auto;
+}
+
 /* The note the Add window shows for services that need a setting changed
    inside them. It was a cyan panel; it is a quiet aside now. */
 .rx-note {
@@ -1044,6 +1060,85 @@ body {
 	   a margin as well for the case where the container is not laid out as flex */
 	margin-right: 12px;
 	flex-shrink: 0;
+}
+
+/* ------------------------------------------------------- tag field */
+
+/*
+ * The spelling languages. crisp draws each choice as a light grey chip with a
+ * sprite for its cross, which in the dark theme was pale text on a pale chip,
+ * and it puts the input on a line of its own under the chips, so the field was
+ * a row taller than what it held. The chips and the input share one wrapping
+ * row now, and the cross is a glyph that takes its colour from the token.
+ */
+.x-tagfield .x-tagfield-list {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 4px;
+	padding: 4px 6px;
+}
+
+.x-tagfield-item {
+	margin: 0;
+	padding: 0 2px 0 8px !important;
+	border: 1px solid var(--rx-line-strong);
+	border-radius: 5px;
+	background-color: var(--rx-sunken);
+	color: var(--rx-ink);
+}
+
+.x-field:not(.x-item-disabled) .x-tagfield-item:hover {
+	background: var(--rx-hover);
+	border: 1px solid var(--rx-muted);
+}
+
+.x-field:not(.x-item-disabled) .x-tagfield-item.x-tagfield-item-selected {
+	border: 1px solid var(--rx-brand) !important;
+	background: var(--rx-focus) !important;
+	color: var(--rx-ink) !important;
+}
+
+.x-tagfield-item-text {
+	font-size: 12px;
+	line-height: 22px;
+	padding-right: 20px;
+}
+
+.x-tagfield-item-close,
+.x-field:not(.x-item-disabled) .x-tagfield-item .x-tagfield-item-close {
+	top: 50%;
+	right: 3px;
+	width: 16px;
+	height: 16px;
+	margin-top: -8px;
+	border-radius: 4px;
+	background-image: none;
+	color: var(--rx-muted);
+	font-size: 14px;
+	line-height: 16px;
+	text-align: center;
+}
+
+.x-tagfield-item-close::before {
+	content: "\00d7";
+}
+
+.x-field:not(.x-item-disabled) .x-tagfield-item .x-tagfield-item-close:hover {
+	background-color: var(--rx-hover);
+	color: var(--rx-ink);
+}
+
+.x-tagfield-input {
+	flex: 1 1 60px;
+	min-width: 60px;
+}
+
+.x-tagfield-input-field {
+	height: 22px;
+	line-height: 22px;
+	padding: 0 2px;
+	color: var(--rx-ink);
 }
 
 /* ------------------------------------------------------- the url row */
