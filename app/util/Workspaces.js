@@ -23,26 +23,22 @@ Ext.define('Redil.util.Workspaces', {
 	/*
 	 * The avatars a workspace can wear instead of its initials, in the manner of
 	 * Chrome's profile picker. Chrome's own are Google's illustrations and cannot
-	 * be copied, so these are emoji, which the system's colour emoji font draws,
-	 * on the light end of the Adwaita palette: nothing is shipped but this list.
-	 * Twenty-nine, so that with the initials in front the picker is five full
-	 * rows of six.
+	 * be copied, so these are emoji, which the system's colour emoji font draws:
+	 * nothing is shipped but this list. They sit on the rail's own neutral tile
+	 * rather than on a colour of their own, because the unread badge is the one
+	 * saturated colour the chrome allows itself. Twenty-nine, so that with the
+	 * initials in front the picker is five full rows of six.
 	 */
 	,AVATARS: [
-		 { emoji: '🐱', color: '#99C1F1' }, { emoji: '🐶', color: '#F9F06B' }, { emoji: '🦊', color: '#FFBE6F' }
-		,{ emoji: '🐼', color: '#DC8ADD' }, { emoji: '🐧', color: '#F66151' }, { emoji: '🐰', color: '#8FF0A4' }
-		,{ emoji: '🦉', color: '#CDAB8F' }, { emoji: '🐙', color: '#99C1F1' }, { emoji: '🐢', color: '#8FF0A4' }
-		,{ emoji: '🦄', color: '#DC8ADD' }, { emoji: '🐝', color: '#F9F06B' }, { emoji: '🐳', color: '#99C1F1' }
-		,{ emoji: '🍕', color: '#FFBE6F' }, { emoji: '🍣', color: '#F66151' }, { emoji: '🥑', color: '#8FF0A4' }
-		,{ emoji: '🍉', color: '#F66151' }, { emoji: '🧀', color: '#F9F06B' }, { emoji: '☕', color: '#CDAB8F' }
-		,{ emoji: '🚲', color: '#99C1F1' }, { emoji: '🏀', color: '#FFBE6F' }, { emoji: '🎧', color: '#DC8ADD' }
-		,{ emoji: '📚', color: '#CDAB8F' }, { emoji: '💼', color: '#99C1F1' }, { emoji: '🏠', color: '#8FF0A4' }
-		,{ emoji: '🚀', color: '#DC8ADD' }, { emoji: '🎨', color: '#F9F06B' }, { emoji: '🌵', color: '#8FF0A4' }
-		,{ emoji: '🌻', color: '#F9F06B' }, { emoji: '🎮', color: '#F66151' }
+		 '🐱', '🐶', '🦊', '🐼', '🐧', '🐰'
+		,'🦉', '🐙', '🐢', '🦄', '🐝', '🐳'
+		,'🍕', '🍣', '🥑', '🍉', '🧀', '☕'
+		,'🚲', '🏀', '🎧', '📚', '💼', '🏠'
+		,'🚀', '🎨', '🌵', '🌻', '🎮'
 	]
 
 	,randomAvatar: function() {
-		return Ext.apply({}, this.AVATARS[Math.floor(Math.random() * this.AVATARS.length)]);
+		return { emoji: this.AVATARS[Math.floor(Math.random() * this.AVATARS.length)] };
 	}
 
 	,list: function() {
@@ -208,7 +204,6 @@ Ext.define('Redil.util.Workspaces', {
 		btn.setText(avatar ? avatar.emoji : active ? Ext.String.htmlEncode(me.initials(active.name)) : '');
 		btn.setGlyph(active ? 0 : 'xf009@FontAwesome');
 		btn.el.toggleCls('rx-has-avatar', !!avatar);
-		btn.el.setStyle('background-color', avatar ? avatar.color : '');
 		btn.setTooltip(active ? Ext.String.htmlEncode(active.name) : 'All services');
 		btn.el.toggleCls('rx-unread-elsewhere', me.hasUnreadElsewhere());
 	}
@@ -280,7 +275,7 @@ Ext.define('Redil.util.Workspaces', {
 	,chip: function(workspace) {
 		var avatar = workspace.avatar;
 		return avatar
-			? '<span class="rx-ws-chip" style="background-color:' + avatar.color + '">' + avatar.emoji + '</span>'
+			? '<span class="rx-ws-chip">' + avatar.emoji + '</span>'
 			: '<span class="rx-ws-chip rx-ws-chip-initials">' + Ext.String.htmlEncode(this.initials(workspace.name)) + '</span>';
 	}
 
@@ -295,9 +290,9 @@ Ext.define('Redil.util.Workspaces', {
 		var cells = ['<button type="button" class="rx-avatar rx-avatar-initials' + (current ? '' : ' rx-selected') + '" data-index="-1" title="Initials">'
 			+ Ext.String.htmlEncode(me.initials(workspace.name)) + '</button>'];
 
-		Ext.each(me.AVATARS, function(avatar, index) {
-			var selected = current && current.emoji === avatar.emoji && current.color === avatar.color;
-			cells.push('<button type="button" class="rx-avatar' + (selected ? ' rx-selected' : '') + '" data-index="' + index + '" style="background-color:' + avatar.color + '">' + avatar.emoji + '</button>');
+		Ext.each(me.AVATARS, function(emoji, index) {
+			var selected = current && current.emoji === emoji;
+			cells.push('<button type="button" class="rx-avatar' + (selected ? ' rx-selected' : '') + '" data-index="' + index + '">' + emoji + '</button>');
 		});
 
 		var win = Ext.create('Ext.window.Window', {
@@ -316,7 +311,7 @@ Ext.define('Redil.util.Workspaces', {
 						,delegate: '.rx-avatar'
 						,fn: function(e, target) {
 							var index = parseInt(target.getAttribute('data-index'), 10);
-							me.setAvatar(id, index < 0 ? null : Ext.apply({}, me.AVATARS[index]));
+							me.setAvatar(id, index < 0 ? null : { emoji: me.AVATARS[index] });
 							win.close();
 						}
 					}

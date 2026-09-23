@@ -101,7 +101,7 @@ test('draws an avatar for a new workspace, keeps it through a rename and lets th
 		const kept = W.get(id).avatar;
 		W.setAvatar(id, null);
 		const initials = Ext.getCmp('workspaceSwitcher').getText();
-		const known = W.AVATARS.some(a => a.emoji === drawn.emoji && a.color === drawn.color);
+		const known = W.AVATARS.includes(drawn.emoji) && !('color' in drawn);
 		W.remove(id);
 		return { known, shownIsEmoji: shown === drawn.emoji, keptSame: kept.emoji === drawn.emoji, initials, picker: W.AVATARS.length + 1 };
 	});

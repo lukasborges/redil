@@ -195,7 +195,7 @@ body {
 	background-color: var(--rx-badge-quiet);
 }
 
-/* an avatar in place of the initials: the emoji on its own colour */
+/* an avatar in place of the initials: the emoji on the same neutral tile */
 #mainTabBar .rx-workspace-switcher.rx-has-avatar .x-btn-inner {
 	font-size: 22px;
 	letter-spacing: 0;
@@ -204,6 +204,7 @@ body {
 }
 
 .rx-ws-chip {
+	background-color: var(--rx-sunken);
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
@@ -217,7 +218,6 @@ body {
 }
 
 .rx-ws-chip-initials {
-	background-color: var(--rx-sunken);
 	color: var(--rx-muted);
 	font-size: 9px;
 	font-weight: 700;
@@ -235,6 +235,8 @@ body {
 	width: 52px;
 	height: 52px;
 	border: 0;
+	background-color: var(--rx-sunken);
+	box-shadow: inset 0 0 0 1px var(--rx-line);
 	border-radius: 999px;
 	font-size: 26px;
 	line-height: 52px;
@@ -245,16 +247,16 @@ body {
 
 .rx-avatar:hover {
 	transform: scale(1.06);
+	background-color: var(--rx-hover);
 }
 
 .rx-avatar:focus-visible,
 .rx-avatar.rx-selected {
 	outline: none;
-	box-shadow: 0 0 0 3px var(--rx-surface), 0 0 0 5px var(--rx-brand);
+	box-shadow: inset 0 0 0 1px var(--rx-line), 0 0 0 3px var(--rx-surface), 0 0 0 5px var(--rx-brand);
 }
 
 .rx-avatar-initials {
-	background-color: var(--rx-sunken);
 	color: var(--rx-muted);
 	font-size: 15px;
 	font-weight: 700;
