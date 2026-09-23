@@ -5,8 +5,8 @@
  * Every icon in the repository, from the three SVGs in resources/logo.
  *
  * The masters are drawn to the GNOME app icon guidelines: the template's
- * square guide, 104 by 104 with a radius of 8 on a 128 canvas, a flat base,
- * a gradient only on the head, no shadow, Adwaita colours. Everything below is
+ * square guide, 104 by 104 with a radius of 8 on a 128 canvas, flat colour,
+ * no shadow, Adwaita colours. Everything below is
  * a rendering of one of them -- there is no icon in this tree that is drawn by
  * hand, and a change to the mark means running this and committing what it
  * writes.
