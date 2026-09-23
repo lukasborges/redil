@@ -488,7 +488,17 @@ Ext.define('Redil.ux.WebView',{
 				+ 'return n};'
 				+ 'window.Notification.prototype=__native.prototype;'
 				+ 'window.Notification.permission=__native.permission;'
-				+ 'window.Notification.requestPermission=__native.requestPermission.bind(__native);}';
+				+ 'window.Notification.requestPermission=__native.requestPermission.bind(__native);'
+				// Electron never displays a notification a service worker shows,
+				// and Google Chat sends its messages that way, so they vanished.
+				// They become page notifications; actions are dropped because the
+				// constructor throws on them outside a service worker.
+				+ 'if(window.ServiceWorkerRegistration){'
+				+ 'ServiceWorkerRegistration.prototype.showNotification=function(t,o){'
+				+ 'var p=Object.assign({},o);delete p.actions;'
+				+ 'try{new window.Notification(t,p)}catch(e){return Promise.reject(e)}'
+				+ 'return Promise.resolve()};'
+				+ 'ServiceWorkerRegistration.prototype.getNotifications=function(){return Promise.resolve([])};}}';
 
 			// Scroll always to top (bug)
 			js_inject += 'document.body.scrollTop=0;';
