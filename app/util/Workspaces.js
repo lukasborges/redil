@@ -129,9 +129,17 @@ Ext.define('Redil.util.Workspaces', {
 			,id: 'workspaceSwitcher'
 			,cls: 'rx-workspace-switcher'
 			,arrowVisible: false
-			,menu: { plain: true, cls: 'rx-workspace-menu', items: [] }
-			,listeners: {
-				menushow: function(btn, menu) { me.buildMenu(menu); }
+			// The items are built as the menu opens, so they are current. Ext will
+			// not open an empty menu from a click, which is what this menu is until
+			// then: without showEmptyMenu the switcher did nothing when clicked.
+			,showEmptyMenu: true
+			,menu: {
+				 plain: true
+				,cls: 'rx-workspace-menu'
+				,items: []
+				,listeners: {
+					beforeshow: function(menu) { me.buildMenu(menu); }
+				}
 			}
 		});
 		me.refreshSwitcher();

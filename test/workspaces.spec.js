@@ -34,6 +34,28 @@ test.afterAll(async () => {
 	await closeRedil(redil);
 });
 
+test('opens the switcher\'s menu from a real click', async () => {
+	// Ext will not open an empty menu from a click, and the items are built as
+	// it opens; calling showMenu() skips that check, so only a click proves it.
+	// onTabChange focuses the new tab's page 300ms after the switch in
+	// beforeAll, and a focus change in the middle of the click closes the menu
+	await new Promise(resolve => setTimeout(resolve, 500));
+	const box = await redil.window.evaluate(() => {
+		const r = Ext.getCmp('workspaceSwitcher').el.dom.getBoundingClientRect();
+		return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
+	});
+	await redil.window.mouse.click(box.x, box.y);
+	const menu = await redil.window.evaluate(() => {
+		const m = Ext.getCmp('workspaceSwitcher').menu;
+		const texts = m.items.items.map(i => i.text).filter(Boolean).map(t => t.replace(/<[^>]+>.*$/, ''));
+		const shown = m.isVisible();
+		m.hide();
+		return { shown, texts };
+	});
+	expect(menu.shown).toBe(true);
+	expect(menu.texts.slice(0, 3)).toEqual(['Work', 'Personal', 'All services']);
+});
+
 test('gives two workspaces created at once different ids', async () => {
 	const ids = await redil.window.evaluate(() => Redil.util.Workspaces.list().map(w => w.id));
 	expect(new Set(ids).size).toBe(2);
