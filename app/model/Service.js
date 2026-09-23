@@ -77,6 +77,12 @@ Ext.define('Redil.model.Service', {
 		,type: 'boolean'
 		,defaultValue: true
 	},{
+		// The id of the workspace it belongs to, or '' for none, which means it
+		// is shown in every workspace. See Redil.util.Workspaces.
+		 name: 'workspace'
+		,type: 'string'
+		,defaultValue: ''
+	},{
 		 name: 'js_unread'
 		,type: 'string'
 		,defaultValue: ''

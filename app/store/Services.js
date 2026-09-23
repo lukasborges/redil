@@ -53,11 +53,15 @@ Ext.define('Redil.store.Services', {
 			if ( !Ext.isEmpty(servicesLeft) ) Ext.cq1('app-main').insert(1, servicesLeft);
 			if ( !Ext.isEmpty(servicesRight) ) Ext.cq1('app-main').add(servicesRight);
 
+			// before the default service is chosen, which must be one on show
+			Redil.util.Workspaces.apply();
+
 			// Set default active service
 			const config = ipc.sendSync('getConfig');
 			switch ( config.default_service ) {
 				case 'last':
-					Ext.cq1('app-main').setActiveTab(localStorage.getItem('last_active_service'));
+					var last = Ext.getCmp(localStorage.getItem('last_active_service'));
+					if ( last && !(last.tab && last.tab.isHidden()) ) Ext.cq1('app-main').setActiveTab(last);
 					break;
 				case 'redilTab':
 					break;

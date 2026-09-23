@@ -6,6 +6,7 @@ Ext.define('Redil.view.main.Main', {
 		,'Redil.ux.WebView'
 		,'Redil.ux.mixin.Badge'
 		,'Redil.view.add.Add'
+		,'Redil.util.Workspaces'
 		,'Ext.ux.TabReorderer'
 	]
 
@@ -54,6 +55,9 @@ Ext.define('Redil.view.main.Main', {
 	,bodyBorder: false
 	,tabBar: {
 		 id: 'mainTabBar'
+		,listeners: {
+			afterrender: function(tabBar) { Redil.util.Workspaces.mountSwitcher(tabBar); }
+		}
 		,cls: JSON.parse(localStorage.getItem('dontDisturb')) ? 'dontdisturb' : ''
 		/*
 		 * These three used to be the home tab's own toolbar, which meant they

@@ -150,34 +150,30 @@ Ext.define('Redil.Application', {
 			};
 			// Add shortcuts to switch services using CTRL + Number
 			Mousetrap.bind(platform === 'darwin' ? ["command+1","command+2","command+3","command+4","command+5","command+6","command+7","command+8","command+9"] : ["ctrl+1","ctrl+2","ctrl+3","ctrl+4","ctrl+5","ctrl+6","ctrl+7","ctrl+8","ctrl+9"], function(e, combo) { // GROUPS
-				var tabPanel = Ext.cq1('app-main');
-				var arg = parseInt(e.key);
-				if ( arg >= tabPanel.items.indexOf(Ext.getCmp('tbfill')) ) arg++;
-				tabPanel.setActiveTab(arg);
+				// counted over the services the rail is showing, which in a workspace
+				// is not every service there is
+				var tab = Redil.util.Workspaces.visibleServiceTabs()[parseInt(e.key, 10) - 1];
+				if ( tab ) Ext.cq1('app-main').setActiveTab(tab);
+			});
+			// Ctrl+Alt+1..9 switches workspace, beside Ctrl+1..9 for the services in it
+			Mousetrap.bind([1,2,3,4,5,6,7,8,9].map(n => (platform === 'darwin' ? 'command+alt+' : 'ctrl+alt+') + n), function(e) {
+				Redil.util.Workspaces.activateByNumber(parseInt(e.key, 10));
 			});
 			// Add shortcut to main tab (ctrl+,)
 			Mousetrap.bind(platform === 'darwin' ? 'command+,' : 'ctrl+,', (e, combo) => {
 				Ext.cq1('app-main').setActiveTab(0);
 			});
-			// Add shortcuts to navigate through services
-			Mousetrap.bind(['ctrl+tab', 'ctrl+pagedown'], (e, combo) => {
-				var tabPanel = Ext.cq1('app-main');
-				var activeIndex = tabPanel.items.indexOf(tabPanel.getActiveTab());
-				var i = activeIndex + 1;
-				// "cycle" (go to the start) when the end is reached or the end is the spacer "tbfill"
-				if (i === tabPanel.items.items.length || i === tabPanel.items.items.length - 1 && tabPanel.items.items[i].id === 'tbfill') i = 0;
-				// skip spacer
-				while (tabPanel.items.items[i].id === 'tbfill') i++;
-				tabPanel.setActiveTab(i);
-			});
-			Mousetrap.bind(['ctrl+shift+tab', 'ctrl+pageup'], (e, combo) => {
-				var tabPanel = Ext.cq1('app-main');
-				var activeIndex = tabPanel.items.indexOf(tabPanel.getActiveTab());
-				var i = activeIndex - 1;
-				if ( i < 0 ) i = tabPanel.items.items.length - 1;
-				while ( tabPanel.items.items[i].id === 'tbfill' || i < 0 ) i--;
-				tabPanel.setActiveTab(i);
-			});
+			// Add shortcuts to navigate through services: the ones on show, cycling
+			var cycleServices = function(step) {
+				var tabs = Redil.util.Workspaces.visibleServiceTabs();
+				if ( !tabs.length ) return;
+				var i = tabs.indexOf(Ext.cq1('app-main').getActiveTab());
+				// from the home tab, forward is the first and back is the last
+				i = i === -1 ? (step > 0 ? 0 : tabs.length - 1) : (i + step + tabs.length) % tabs.length;
+				Ext.cq1('app-main').setActiveTab(tabs[i]);
+			};
+			Mousetrap.bind(['ctrl+tab', 'ctrl+pagedown'], () => cycleServices(1));
+			Mousetrap.bind(['ctrl+shift+tab', 'ctrl+pageup'], () => cycleServices(-1));
 			// Add shortcut to search inside a service
 			Mousetrap.bind(redil.platform === 'darwin' ? ['command+alt+f'] : ['shift+alt+f'], (e, combo) => {
 				var currentTab = Ext.cq1('app-main').getActiveTab();

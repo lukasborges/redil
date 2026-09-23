@@ -701,6 +701,8 @@ Ext.define('Redil.ux.WebView',{
 		// '•' is a service saying there is something without saying how much. It
 		// is not a number, so it stays out of the total and is remembered apart.
 		Redil.util.UnreadCounter.setSomethingUnreadForService(me.record.get('id'), newUnreadCount === '•');
+		// the switcher's dot, for a count in a workspace that is not on screen
+		Redil.util.Workspaces.refreshSwitcher();
 
 		me.setTabBadgeText(Redil.util.Format.formatNumber(newUnreadCount));
 

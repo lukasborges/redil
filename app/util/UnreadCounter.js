@@ -51,6 +51,16 @@ Ext.define('Redil.util.UnreadCounter', {
 		};
 
 		/**
+		 * The count one service reported, 0 when it has reported none.
+		 *
+		 * @param {*} id	Id of the service.
+		 * @return {number}
+		 */
+		this.getUnreadCountForService = function(id) {
+			return unreadCountByService.get(id) || 0;
+		};
+
+		/**
 		 * Whether a service is saying "there is something" without a number.
 		 *
 		 * @param {*} id	Id of the service.

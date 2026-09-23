@@ -40,6 +40,7 @@ Ext.define('Redil.view.add.AddController', {
 				,media: formValues.media
 				,js_unread: formValues.js_unread
 				,disableAutoReloadOnFail: formValues.disableAutoReloadOnFail
+				,workspace: formValues.workspace || ''
 			});
 
 			var view = Ext.getCmp('tab_'+win.record.get('id'));
@@ -100,6 +101,7 @@ Ext.define('Redil.view.add.AddController', {
 				// The edit branch has always written this one and the add branch
 				// never did, so a service added with it ticked came back unticked.
 				,disableAutoReloadOnFail: formValues.disableAutoReloadOnFail
+				,workspace: formValues.workspace || ''
 			});
 			service.save();
 			Ext.getStore('Services').add(service);
@@ -128,7 +130,15 @@ Ext.define('Redil.view.add.AddController', {
 			} else {
 				Ext.cq1('app-main').add(tabData).show();
 			}
+
+			// a service added to a workspace that is not on screen takes you there,
+			// or it would vanish from the rail the moment it was added
+			var workspaces = Redil.util.Workspaces;
+			if ( !workspaces.isVisible(service, workspaces.getActive()) ) workspaces.setActive(service.get('workspace'));
 		}
+
+		// a service moved to another workspace leaves the rail
+		Redil.util.Workspaces.apply();
 
 		win.close();
 	}

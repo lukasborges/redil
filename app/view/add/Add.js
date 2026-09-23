@@ -158,6 +158,29 @@ Ext.define('Redil.view.add.Add',{
 						,listeners: { specialkey: 'onEnter' }
 					}
 					,{
+						/*
+						 * One workspace or none. A new service joins the workspace on
+						 * screen, which is where somebody adding one expects to find it.
+						 */
+						 xtype: 'combobox'
+						,fieldLabel: 'Workspace'
+						,name: 'workspace'
+						,hidden: Ext.isEmpty(Redil.util.Workspaces.list())
+						,editable: false
+						,queryMode: 'local'
+						,displayField: 'name'
+						,valueField: 'id'
+						,store: {
+							 fields: ['id', 'name']
+							,data: [{ id: '', name: 'None: show in every workspace' }].concat(Redil.util.Workspaces.list())
+						}
+						,value: me.edit ? me.record.get('workspace') : Redil.util.Workspaces.getActive()
+						,labelAlign: 'top'
+						,labelSeparator: ''
+						,anchor: '100%'
+						,margin: '10 0 0 0'
+					}
+					,{
 						 xtype: 'fieldset'
 						,title: locale['app.window[3]']
 						,margin: '10 0 0 0'
