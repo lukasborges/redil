@@ -732,6 +732,19 @@ let allowPopUp = [
 	'=?print=true' // esta ultima checkea como anda imprimir un pedf desde gmail, si no va bie sacala
 ];
 
+/*
+ * What Google's sign-in is told: Chrome on the system this runs on, with no
+ * version and nothing of Electron or Redil in it. A plain, current Chrome was
+ * not enough -- it was still met with "This browser or app may not be secure"
+ * -- while a Chrome with no version number signs in. It is what Station does,
+ * and it has to be the same in the header and in the page's own navigator.
+ */
+const GOOGLE_SIGN_IN_USER_AGENT = 'Mozilla/5.0 (' + ({
+	 darwin: 'Macintosh; Intel Mac OS X 10_15_7'
+	,win32: 'Windows NT 10.0; Win64; x64'
+}[process.platform] || 'X11; Linux x86_64') + ') AppleWebKit/537.36 (KHTML, like Gecko) Chrome Safari/537.36';
+const isGoogleSignIn = url => /^https:\/\/accounts\.google\.com(\/|$)/.test(url || '');
+
 app.on('web-contents-created', (webContentsCreatedEvent, contents) => {
 	if (contents.getType() !== 'webview') return;
 	contextMenu.attach(contents);
@@ -766,15 +779,28 @@ app.on('web-contents-created', (webContentsCreatedEvent, contents) => {
 	// Held on its own, because reading it back off a destroyed webContents throws.
 	const contentsId = contents.id;
 
-	// Google turns its sign-in away when it arrives from an embedded Chrome, so
-	// the request that carries it announces Firefox instead. Installed here
-	// rather than from the renderer, which reached the session over the remote
-	// bridge to say something only the main process can act on.
+	// Google's sign-in, in the header. It used to be told it was Firefox 97,
+	// which worked while that was a recent browser; by now Google refuses it, and
+	// it contradicted the Chrome the page itself went on reporting.
 	contents.session.webRequest.onBeforeSendHeaders((details, callback) => {
-		if ( /^https:\/\/accounts\.google\.com(\/|$)/.test(details.url) ) {
-			details.requestHeaders['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0';
+		if ( isGoogleSignIn(details.url) ) {
+			details.requestHeaders['User-Agent'] = GOOGLE_SIGN_IN_USER_AGENT;
 		}
 		callback({ cancel: false, requestHeaders: details.requestHeaders });
+	});
+
+	// And in the page, which reads navigator.userAgent: switched as the sign-in
+	// starts and given back as it leaves, so the service itself keeps its own.
+	let userAgentBeforeSignIn = null;
+	contents.on('did-start-navigation', (event) => {
+		if ( !event.isMainFrame || event.isSameDocument ) return;
+		if ( isGoogleSignIn(event.url) ) {
+			if ( userAgentBeforeSignIn === null ) userAgentBeforeSignIn = contents.getUserAgent();
+			contents.setUserAgent(GOOGLE_SIGN_IN_USER_AGENT);
+		} else if ( userAgentBeforeSignIn !== null ) {
+			contents.setUserAgent(userAgentBeforeSignIn);
+			userAgentBeforeSignIn = null;
+		}
 	});
 
 	// A bad certificate is refused unless the user marked the service trusted.
