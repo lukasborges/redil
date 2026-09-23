@@ -86,9 +86,8 @@ Ext.define('Redil.view.main.Main', {
 			/*
 			 * Hidden, not absent: the card is still a tab, so the shortcuts and
 			 * setActiveTab keep working, and the catalogue below floats inside it.
-			 * It is what the app opens on, and all it has to say is where to go:
-			 * everything a service can have done to it is on its own icon's right
-			 * click, which is where the list that used to be here sent you anyway.
+			 * It is what the app opens on, and all it has to say is where to go; the
+			 * + in the rail is right beside it, so it needs no button of its own.
 			 */
 			,tabConfig: { hidden: true }
 			,items: [
@@ -101,20 +100,6 @@ Ext.define('Redil.view.main.Main', {
 						,'<h1>' + locale['app.welcome[0]'] + '</h1>'
 						,'<p>' + locale['app.welcome[1]'] + '</p>'
 					].join('')
-				}
-				,{
-					 xtype: 'button'
-					,cls: 'rx-primary'
-					,text: locale['app.window[10]']
-					,glyph: 'xf067@FontAwesome'
-					,handler: 'openCatalogue'
-					,margin: '22 0 0 0'
-				}
-				,{
-					 xtype: 'component'
-					,cls: 'rx-welcome-hint'
-					,html: locale['app.welcome[2]']
-					,margin: '18 0 0 0'
 				}
 				,{
 					/*

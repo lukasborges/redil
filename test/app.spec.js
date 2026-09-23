@@ -191,7 +191,6 @@ test('opens on a welcome page, with the catalogue behind a button', async () => 
 			,flutuante: !!catalogo.floating
 			,oculto: catalogo.isHidden()
 			,boasVindas: Ext.getCmp('redilTab').down('#welcome').el.dom.innerText.trim()
-			,botao: Ext.getCmp('redilTab').down('button[cls=rx-primary]').handler
 		};
 	});
 
@@ -201,7 +200,6 @@ test('opens on a welcome page, with the catalogue behind a button', async () => 
 	expect(inicio.flutuante).toBe(true);
 	expect(inicio.oculto).toBe(true);
 	expect(inicio.boasVindas).toContain('Welcome to Redil');
-	expect(inicio.botao).toBe('openCatalogue');
 
 	const aberto = await redil.window.evaluate(() => {
 		Ext.cq1('app-main').getController().openCatalogue();
