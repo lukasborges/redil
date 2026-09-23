@@ -552,7 +552,7 @@
 		"type": "messaging",
 		"allow_popups": false,
 		"manual_notifications": false,
-		"js_unread": "function checkUnread(){var notif=document.querySelector('link[rel*=\"icon\"][href*=\"favicon_chat_new_notif_\"]');rambox.setUnreadCount(notif?'•':0)}setInterval(checkUnread,3e3);",
+		"js_unread": "function checkUnread(){function section(t){var e=document.querySelector('div[data-section-type=\"'+t+'\"] div.TeR7uc');var n=e?parseInt(e.textContent,10):0;return isNaN(n)?0:n}var direct=section(1);if(direct>0)return rambox.setUnreadCount(direct);var notif=document.querySelector('link[rel*=\"icon\"][href*=\"favicon_chat_new_notif_\"]');rambox.setUnreadCount(section(2)>0||notif?'•':0)}setInterval(checkUnread,3e3);",
 		"userAgent": "",
 		"note": "",
 		"titleBlink": true,
