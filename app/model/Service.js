@@ -1,4 +1,4 @@
-Ext.define('Redil.model.Service', {
+Ext.define('Shep.model.Service', {
 	 extend: 'Ext.data.Model'
 
 	,identifier: 'sequential'
@@ -78,7 +78,7 @@ Ext.define('Redil.model.Service', {
 		,defaultValue: true
 	},{
 		// The id of the workspace it belongs to, or '' for none, which means it
-		// is shown in every workspace. See Redil.util.Workspaces.
+		// is shown in every workspace. See Shep.util.Workspaces.
 		 name: 'workspace'
 		,type: 'string'
 		,defaultValue: ''

@@ -1,4 +1,4 @@
-Ext.define('Redil.model.ServiceList', {
+Ext.define('Shep.model.ServiceList', {
 	 extend: 'Ext.data.Model'
 
 	,fields: [{

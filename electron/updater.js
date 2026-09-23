@@ -6,7 +6,7 @@ const { autoUpdater } = require("electron-updater");
 autoUpdater.setFeedURL({
 	"provider": "github",
 	"owner": "lukasborges",
-	"repo": "redil",
+	"repo": "shep",
 	"vPrefixedTagName": false
 });
 

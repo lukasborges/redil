@@ -29,8 +29,8 @@ async function findAppWindow(app, timeout) {
 // waitForApp is false for the locked case: with a master password set, main.js
 // opens the lock window and does not create the main window until it is
 // unlocked, so there is no index.html to wait for.
-async function launchRedil({ args = [], config = null, waitForApp = true } = {}) {
-	const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'redil-test-'));
+async function launchShep({ args = [], config = null, waitForApp = true } = {}) {
+	const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'shep-test-'));
 	// electron-store reads config.json straight out of userData, so a test can
 	// start the app in a state a person would have to configure by hand.
 	if (config) fs.writeFileSync(path.join(userDataDir, 'config.json'), JSON.stringify(config));
@@ -54,10 +54,10 @@ async function launchRedil({ args = [], config = null, waitForApp = true } = {})
 	return { app, window, userDataDir };
 }
 
-async function closeRedil(context) {
+async function closeShep(context) {
 	if (!context) return;
 	await context.app.close();
 	fs.rmSync(context.userDataDir, { recursive: true, force: true });
 }
 
-module.exports = { launchRedil, closeRedil, repoRoot };
+module.exports = { launchShep, closeShep, repoRoot };

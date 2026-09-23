@@ -1,7 +1,7 @@
 /*
- * A light modernisation layer, loaded after redil-theme.css.
+ * A light modernisation layer, loaded after shep-theme.css.
  *
- * redil-theme.css restates the 2015 theme faithfully and stays traceable to the
+ * shep-theme.css restates the 2015 theme faithfully and stays traceable to the
  * original Sass. This file is the opinionated part and is meant to be readable
  * on its own: drop it from the STYLESHEETS list in scripts/gen-bootstrap.js and
  * the app returns to the original look, unchanged.
@@ -125,7 +125,7 @@ body {
 	background-color: var(--rx-chrome);
 	border: 0;
 	/* the top 58px are the workspace switcher's, which is not a tab bar item;
-	   see Redil.util.Workspaces */
+	   see Shep.util.Workspaces */
 	padding: 58px 0 8px;
 }
 
@@ -430,7 +430,7 @@ body {
 }
 
 /*
- * Don't disturb. redil-theme.css restates the original, which turned the whole
+ * Don't disturb. shep-theme.css restates the original, which turned the whole
  * bar #c3c3c3 and left the white glyphs on it unreadable. The rail keeps its
  * colour; the bell turns yellow and crossed out, and the badges go grey,
  * because the counts are still true but nobody is going to be told about them.
@@ -1730,7 +1730,7 @@ webview {
  * somebody else's page, then a hairline strip saying "Ready" for ever; now it
  * is what a browser shows, a small label in the bottom corner that is there
  * only while there is something to say. WebView.syncStatusBar decides when.
- * The !important answers redil-theme.css, and Ext's own inline geometry.
+ * The !important answers shep-theme.css, and Ext's own inline geometry.
  */
 .x-statusbar.rx-status {
 	position: absolute !important;
@@ -2038,7 +2038,7 @@ webview {
  */
 @media (prefers-color-scheme: dark) {
 	/*
-	 * Neutral greys rather than a dark navy. The services Redil frames paint
+	 * Neutral greys rather than a dark navy. The services Shep frames paint
 	 * their dark themes in grey -- Claude, Gmail, Chat, WhatsApp -- and a blue
 	 * rail beside them read as a second application. The rail is a step lighter
 	 * than the content, the way Adwaita's sidebars are, and blue is left to the
@@ -2092,7 +2092,7 @@ webview {
 	}
 
 	/*
-	 * redil-theme.css paints the page behind everything in the brand blue, the
+	 * shep-theme.css paints the page behind everything in the brand blue, the
 	 * colour of the load screen. In the dark theme that flash is wrong, and the
 	 * viewport shows through at the edges while Ext lays out.
 	 */

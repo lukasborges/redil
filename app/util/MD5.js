@@ -1,4 +1,4 @@
-Ext.define('Redil.util.MD5', {
+Ext.define('Shep.util.MD5', {
 	 singleton: true
 
 	,encypt: function(s, raw, hexcase, chrsz) {

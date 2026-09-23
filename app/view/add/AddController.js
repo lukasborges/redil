@@ -1,9 +1,9 @@
-Ext.define('Redil.view.add.AddController', {
+Ext.define('Shep.view.add.AddController', {
 	extend: 'Ext.app.ViewController',
 	alias: 'controller.add-add',
 
 	requires: [
-		'Redil.util.UnreadCounter'
+		'Shep.util.UnreadCounter'
 	],
 
 	doCancel: function( btn ) {
@@ -70,7 +70,7 @@ Ext.define('Redil.view.add.AddController', {
 			}
 			// Apply the JS Code of the Tab
 			if ( win.down('textarea').isDirty() ) {
-				Ext.Msg.confirm(locale['app.window[8]'].toUpperCase(), 'Redil needs to reload the service to execute the new JavaScript code. Do you want to do it now?', function( btnId ) {
+				Ext.Msg.confirm(locale['app.window[8]'].toUpperCase(), 'Shep needs to reload the service to execute the new JavaScript code. Do you want to do it now?', function( btnId ) {
 					if ( btnId === 'yes' ) view.reloadService();
 				});
 			}
@@ -85,7 +85,7 @@ Ext.define('Redil.view.add.AddController', {
 				formValues.url = formValues.cycleValue === '1' ? win.record.get('url').replace('___', formValues.url) : formValues.url;
 			}
 
-			var service = Ext.create('Redil.model.Service', {
+			var service = Ext.create('Shep.model.Service', {
 				 type: win.record.get('id')
 				,logo: formValues.logo
 				,name: formValues.serviceName
@@ -133,12 +133,12 @@ Ext.define('Redil.view.add.AddController', {
 
 			// a service added to a workspace that is not on screen takes you there,
 			// or it would vanish from the rail the moment it was added
-			var workspaces = Redil.util.Workspaces;
+			var workspaces = Shep.util.Workspaces;
 			if ( !workspaces.isVisible(service, workspaces.getActive()) ) workspaces.setActive(service.get('workspace'));
 		}
 
 		// a service moved to another workspace leaves the rail
-		Redil.util.Workspaces.apply();
+		Shep.util.Workspaces.apply();
 
 		win.close();
 	}

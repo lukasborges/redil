@@ -2,7 +2,7 @@
  * Rambox's own look, expressed as plain CSS on top of the stock ext-theme-crisp
  * stylesheet that bootstrap.js loads before this file.
  *
- * Upstream this lived in packages/local/redil-default-theme as Sass compiled by
+ * Upstream this lived in packages/local/shep-default-theme as Sass compiled by
  * Sencha Cmd. That toolchain is gone, so the rules below restate the same design
  * against the class names the crisp build actually emits. Where the original set
  * a Sass variable and let a theme mixin expand it, the visible result is written
@@ -14,9 +14,9 @@
 
 :root {
 	/* $base-color in the original theme */
-	--redil-base: #2E658E;
-	--redil-base-light-20: #5999c9;
-	--redil-base-light-55: #e0ecf5;
+	--shep-base: #2E658E;
+	--shep-base-light-20: #5999c9;
+	--shep-base-light-55: #e0ecf5;
 }
 
 /* ------------------------------------------------------------------ base */
@@ -29,7 +29,7 @@
  */
 body {
 	margin: 0;
-	background-color: var(--redil-base);
+	background-color: var(--shep-base);
 	font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 	overflow: hidden;
 }
@@ -97,8 +97,8 @@ body {
 /* $tabbar-strip-background-color, $tabbar-strip-height */
 .x-tab-bar-strip-default,
 .x-tab-bar-top > .x-tab-bar-strip {
-	background-color: var(--redil-base);
-	border-color: var(--redil-base);
+	background-color: var(--shep-base);
+	border-color: var(--shep-base);
 	height: 3px;
 }
 
@@ -145,7 +145,7 @@ body {
 .x-tab-inner-default {
 	font-size: 18px;
 	line-height: 22px;
-	color: var(--redil-base);
+	color: var(--shep-base);
 }
 
 /* $tab-color-active */
@@ -226,8 +226,8 @@ body {
 /* extjs-toolbar-ui($ui: 'main') */
 .x-toolbar-main {
 	background-image: none;
-	background-color: var(--redil-base);
-	border-color: var(--redil-base);
+	background-color: var(--shep-base);
+	border-color: var(--shep-base);
 }
 
 /* extjs-toolbar-ui($ui: 'newversion') */
@@ -258,7 +258,7 @@ body {
 }
 
 .x-btn-inner-decline-small {
-	color: var(--redil-base);
+	color: var(--shep-base);
 }
 
 .x-btn-inner-decline-small:hover {
@@ -272,14 +272,14 @@ body {
 
 .x-btn-icon-el-default-small.x-btn-glyph {
 	cursor: pointer;
-	color: var(--redil-base);
+	color: var(--shep-base);
 }
 
 /* ------------------------------------------------------------ status bar */
 
 .x-statusbar {
 	padding: 0 !important;
-	background-color: var(--redil-base) !important;
+	background-color: var(--shep-base) !important;
 }
 
 .x-statusbar.x-docked-bottom {
@@ -298,11 +298,11 @@ body {
 	line-height: 16px;
 	width: 16px;
 	margin: 0 5px;
-	color: var(--redil-base-light-20);
+	color: var(--shep-base-light-20);
 }
 
 .x-action-col-glyph:hover {
-	color: var(--redil-base);
+	color: var(--shep-base);
 }
 
 .x-grid-item-over .x-hidden-display,
@@ -319,7 +319,7 @@ body {
 	line-height: 44px !important;
 }
 
-#redilTab .x-grid-cell-inner-checkcolumn {
+#shepTab .x-grid-cell-inner-checkcolumn {
 	padding: 13px 10px 14px 10px !important;
 }
 
@@ -342,7 +342,7 @@ body {
 }
 
 .service:hover {
-	background-color: var(--redil-base-light-55);
+	background-color: var(--shep-base-light-55);
 }
 
 /* -------------------------------------------------------------- load mask */

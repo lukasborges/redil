@@ -1,4 +1,4 @@
-Ext.define('Redil.view.main.About', {
+Ext.define('Shep.view.main.About', {
 	 extend: 'Ext.window.Window'
 	,xtype: 'about'
 	,title: locale['app.about[0]']
@@ -10,12 +10,12 @@ Ext.define('Redil.view.main.About', {
 	,height: 450
 	,bodyPadding: 10
 	,data: {
-		 version: redil.ipc.sendSync('app:getVersion')
-		,platform: redil.platform
-		,arch: redil.arch
-		,electron: redil.versions.electron
-		,chromium: redil.versions.chrome
-		,node: redil.versions.node
+		 version: shep.ipc.sendSync('app:getVersion')
+		,platform: shep.platform
+		,arch: shep.arch
+		,electron: shep.versions.electron
+		,chromium: shep.versions.chrome
+		,node: shep.versions.node
 	}
 	,tpl: [
 		 '<div style="text-align:center;"><img src="resources/Icon.png" width="100" /></div>'
@@ -26,11 +26,11 @@ Ext.define('Redil.view.main.About', {
 		,'<div><b>Chromium:</b> {chromium}</div>'
 		,'<div><b>Node:</b> {node}</div>'
 		,'<br />'
-		,'<div style="text-align:center;"><a href="https://github.com/lukasborges/redil" target="_blank">GitHub</a></div>'
+		,'<div style="text-align:center;"><a href="https://github.com/lukasborges/shep" target="_blank">GitHub</a></div>'
 		,'<br />'
 		// Both credits, in the right order. The donate button and rambox.pro that
 		// stood here belong to the product Ramiro Saenz sells, not to this fork.
-		,'<div style="text-align:center;"><i>Redil by Lucas Borges</i></div>'
+		,'<div style="text-align:center;"><i>Shep by Lucas Borges</i></div>'
 		,'<div style="text-align:center; font-size:11px; color:#5B7183;"><i>fork of Rambox CE by Ramiro Saenz</i></div>'
 	]
 });

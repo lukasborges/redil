@@ -1,7 +1,7 @@
 /**
 * Singleton class to handle the custom icons for special services.
 */
-Ext.define('Redil.util.IconLoader', {
+Ext.define('Shep.util.IconLoader', {
 
 	singleton: true,
 

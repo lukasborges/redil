@@ -1,12 +1,12 @@
-Ext.define('Redil.view.main.Main', {
+Ext.define('Shep.view.main.Main', {
 	 extend: 'Ext.tab.Panel'
 	,requires: [
-		 'Redil.view.main.MainController'
-		,'Redil.view.main.MainModel'
-		,'Redil.ux.WebView'
-		,'Redil.ux.mixin.Badge'
-		,'Redil.view.add.Add'
-		,'Redil.util.Workspaces'
+		 'Shep.view.main.MainController'
+		,'Shep.view.main.MainModel'
+		,'Shep.ux.WebView'
+		,'Shep.ux.mixin.Badge'
+		,'Shep.view.add.Add'
+		,'Shep.util.Workspaces'
 		,'Ext.ux.TabReorderer'
 	]
 
@@ -46,7 +46,7 @@ Ext.define('Redil.view.main.Main', {
 			,{ itemId: 'reload', glyph: 'xf021@FontAwesome', tooltip: 'Reload page', handler: 'titleBarAction', action: 'reloadPage' }
 			,{ xtype: 'tbfill', hidden: false }
 			// centred on the window by the stylesheet, whatever sits either side
-			,{ xtype: 'component', itemId: 'identity', cls: 'rx-titlebar-identity', hidden: false, html: '<b>Redil</b>' }
+			,{ xtype: 'component', itemId: 'identity', cls: 'rx-titlebar-identity', hidden: false, html: '<b>Shep</b>' }
 			,{ xtype: 'tbfill', hidden: false }
 			,{ itemId: 'find', glyph: 'xf002@FontAwesome', tooltip: 'Find in page', handler: 'titleBarAction', action: 'showSearchBox' }
 		]
@@ -56,7 +56,7 @@ Ext.define('Redil.view.main.Main', {
 	,tabBar: {
 		 id: 'mainTabBar'
 		,listeners: {
-			afterrender: function(tabBar) { Redil.util.Workspaces.mountSwitcher(tabBar); }
+			afterrender: function(tabBar) { Shep.util.Workspaces.mountSwitcher(tabBar); }
 		}
 		,cls: JSON.parse(localStorage.getItem('dontDisturb')) ? 'dontdisturb' : ''
 		/*
@@ -83,7 +83,7 @@ Ext.define('Redil.view.main.Main', {
 				 xtype: 'button'
 				,reorderable: false
 				,glyph: JSON.parse(localStorage.getItem('dontDisturb')) ? 'xf1f7@FontAwesome' : 'xf0f3@FontAwesome'
-				,tooltip: locale['app.main[17]']+'<br/><b>'+locale['app.main[18]']+(redil.platform === 'darwin' ? ': Cmd + Alt + D</b>' : ': Alt + Shift + D</b>')
+				,tooltip: locale['app.main[17]']+'<br/><b>'+locale['app.main[18]']+(shep.platform === 'darwin' ? ': Cmd + Alt + D</b>' : ': Alt + Shift + D</b>')
 				,enableToggle: true
 				,handler: 'dontDisturb'
 				,reference: 'disturbBtn'
@@ -94,9 +94,9 @@ Ext.define('Redil.view.main.Main', {
 				 xtype: 'button'
 				,reorderable: false
 				,glyph: 'xf023@FontAwesome'
-				,tooltip: locale['app.main[20]']+'<br/><b>'+locale['app.main[18]']+(redil.platform === 'darwin' ? ': Cmd + Alt + L</b>' : ': Alt + Shift + L</b>')
-				,handler: 'lockRedil'
-				,id: 'lockRedilBtn'
+				,tooltip: locale['app.main[20]']+'<br/><b>'+locale['app.main[18]']+(shep.platform === 'darwin' ? ': Cmd + Alt + L</b>' : ': Alt + Shift + L</b>')
+				,handler: 'lockShep'
+				,id: 'lockShepBtn'
 			}
 			,{
 				 xtype: 'button'
@@ -109,7 +109,7 @@ Ext.define('Redil.view.main.Main', {
 	}
 	,items: [
 		{
-			 id: 'redilTab'
+			 id: 'shepTab'
 			,border: false
 			,bodyBorder: false
 			,closable: false

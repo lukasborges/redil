@@ -1,7 +1,7 @@
 /**
  * Created by vsxed on 7/11/2016.
  */
-Ext.define('Redil.util.Format', {
+Ext.define('Shep.util.Format', {
 	 singleton: true
 
 	,formatNumber: function(n) {

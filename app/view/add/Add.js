@@ -1,9 +1,9 @@
-Ext.define('Redil.view.add.Add',{
+Ext.define('Shep.view.add.Add',{
 	 extend: 'Ext.window.Window'
 
 	,requires: [
-		 'Redil.view.add.AddController'
-		,'Redil.view.add.AddModel'
+		 'Shep.view.add.AddController'
+		,'Shep.view.add.AddModel'
 	]
 
 	,controller: 'add-add'
@@ -165,16 +165,16 @@ Ext.define('Redil.view.add.Add',{
 						 xtype: 'combobox'
 						,fieldLabel: 'Workspace'
 						,name: 'workspace'
-						,hidden: Ext.isEmpty(Redil.util.Workspaces.list())
+						,hidden: Ext.isEmpty(Shep.util.Workspaces.list())
 						,editable: false
 						,queryMode: 'local'
 						,displayField: 'name'
 						,valueField: 'id'
 						,store: {
 							 fields: ['id', 'name']
-							,data: [{ id: '', name: 'All' }].concat(Redil.util.Workspaces.list())
+							,data: [{ id: '', name: 'All' }].concat(Shep.util.Workspaces.list())
 						}
-						,value: me.edit ? me.record.get('workspace') : Redil.util.Workspaces.getActive()
+						,value: me.edit ? me.record.get('workspace') : Shep.util.Workspaces.getActive()
 						,labelAlign: 'top'
 						,labelSeparator: ''
 						,anchor: '100%'

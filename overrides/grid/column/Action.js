@@ -1,4 +1,4 @@
-Ext.define('Redil.overrides.grid.column.Action', {
+Ext.define('Shep.overrides.grid.column.Action', {
     override: 'Ext.grid.column.Action',
 
     // overridden to implement

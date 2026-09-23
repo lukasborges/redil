@@ -97,7 +97,7 @@ const ipc = {
 	}
 };
 
-contextBridge.exposeInMainWorld('redil', {
+contextBridge.exposeInMainWorld('shep', {
 	 ipc: ipc
 	// What the renderer read off node's own process before it lost it.
 	,platform: process.platform

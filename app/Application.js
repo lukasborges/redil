@@ -1,10 +1,10 @@
-Ext.define('Redil.Application', {
+Ext.define('Shep.Application', {
 	 extend: 'Ext.app.Application'
 
-	,name: 'Redil'
+	,name: 'Shep'
 
 	,requires: [
-		'Redil.util.MD5'
+		'Shep.util.MD5'
 		,'Ext.window.Toast'
 	]
 
@@ -31,7 +31,7 @@ Ext.define('Redil.Application', {
 					Ext.get('background') ? Ext.get('background').destroy() : null;
 					Ext.Msg.show({
 						title: 'No Internet Connection'
-						,msg: 'Please, check your internet connection. If you use a Proxy, please go to Preferences to configure it. Redil will try to re-connect in 10 seconds'
+						,msg: 'Please, check your internet connection. If you use a Proxy, please go to Preferences to configure it. Shep will try to re-connect in 10 seconds'
 						,width: 300
 						,closable: false
 						,buttons: Ext.Msg.YESNO
@@ -55,7 +55,7 @@ Ext.define('Redil.Application', {
 			})
 		})();
 
-		var mediaAccess = redil.platform === 'darwin' ? ipc.sendSync('media:getAccessStatus') : null;
+		var mediaAccess = shep.platform === 'darwin' ? ipc.sendSync('media:getAccessStatus') : null;
 		if ( !localStorage.getItem('hideMacPermissions') && mediaAccess && (mediaAccess.microphone !== 'granted' || mediaAccess.camera !== 'granted') ) {
 			console.info('Checking mac permissions...');
 			Ext.cq1('app-main').addDocked({
@@ -66,7 +66,7 @@ Ext.define('Redil.Application', {
 					'->'
 					,{
 						xtype: 'label'
-						,html: '<b>Redil CE needs permissions to use Microphone and Camera for the apps.</b>'
+						,html: '<b>Shep CE needs permissions to use Microphone and Camera for the apps.</b>'
 					}
 					,{
 						xtype: 'button'
@@ -110,7 +110,7 @@ Ext.define('Redil.Application', {
 						'->'
 						,{
 							 xtype: 'label'
-							,html: '<b>Services couldn\'t be loaded, some Redil features will not be available.</b>'
+							,html: '<b>Services couldn\'t be loaded, some Shep features will not be available.</b>'
 						}
 						,{
 							 xtype: 'button'
@@ -132,7 +132,7 @@ Ext.define('Redil.Application', {
 			Ext.Loader.loadScript({url: Ext.util.Format.format("ext/packages/ext-locale/build/ext-locale-{0}.js", localStorage.getItem('locale-extjs') || 'en')});
 
 			// Set Google URLs
-			Redil.app.config.googleURLs = [
+			Shep.app.config.googleURLs = [
 				"accounts.google.com/ServiceLogin",
 				"accounts.google.com/signin",
 				"accounts.google.com/_/lookup/accountlookup",
@@ -143,7 +143,7 @@ Ext.define('Redil.Application', {
 			];
 
 			// Shortcuts
-			const platform = redil.platform;
+			const platform = shep.platform;
 			// Prevents default behaviour of Mousetrap, that prevents shortcuts in textareas
 			Mousetrap.prototype.stopCallback = function(e, element, combo) {
 				return false;
@@ -152,12 +152,12 @@ Ext.define('Redil.Application', {
 			Mousetrap.bind(platform === 'darwin' ? ["command+1","command+2","command+3","command+4","command+5","command+6","command+7","command+8","command+9"] : ["ctrl+1","ctrl+2","ctrl+3","ctrl+4","ctrl+5","ctrl+6","ctrl+7","ctrl+8","ctrl+9"], function(e, combo) { // GROUPS
 				// counted over the services the rail is showing, which in a workspace
 				// is not every service there is
-				var tab = Redil.util.Workspaces.visibleServiceTabs()[parseInt(e.key, 10) - 1];
+				var tab = Shep.util.Workspaces.visibleServiceTabs()[parseInt(e.key, 10) - 1];
 				if ( tab ) Ext.cq1('app-main').setActiveTab(tab);
 			});
 			// Ctrl+Alt+1..9 switches workspace, beside Ctrl+1..9 for the services in it
 			Mousetrap.bind([1,2,3,4,5,6,7,8,9].map(n => (platform === 'darwin' ? 'command+alt+' : 'ctrl+alt+') + n), function(e) {
-				Redil.util.Workspaces.activateByNumber(parseInt(e.key, 10));
+				Shep.util.Workspaces.activateByNumber(parseInt(e.key, 10));
 			});
 			// Add shortcut to main tab (ctrl+,)
 			Mousetrap.bind(platform === 'darwin' ? 'command+,' : 'ctrl+,', (e, combo) => {
@@ -165,7 +165,7 @@ Ext.define('Redil.Application', {
 			});
 			// Add shortcuts to navigate through services: the ones on show, cycling
 			var cycleServices = function(step) {
-				var tabs = Redil.util.Workspaces.visibleServiceTabs();
+				var tabs = Shep.util.Workspaces.visibleServiceTabs();
 				if ( !tabs.length ) return;
 				var i = tabs.indexOf(Ext.cq1('app-main').getActiveTab());
 				// from the home tab, forward is the first and back is the last
@@ -175,7 +175,7 @@ Ext.define('Redil.Application', {
 			Mousetrap.bind(['ctrl+tab', 'ctrl+pagedown'], () => cycleServices(1));
 			Mousetrap.bind(['ctrl+shift+tab', 'ctrl+pageup'], () => cycleServices(-1));
 			// Add shortcut to search inside a service
-			Mousetrap.bind(redil.platform === 'darwin' ? ['command+alt+f'] : ['shift+alt+f'], (e, combo) => {
+			Mousetrap.bind(shep.platform === 'darwin' ? ['command+alt+f'] : ['shift+alt+f'], (e, combo) => {
 				var currentTab = Ext.cq1('app-main').getActiveTab();
 				if ( currentTab.getWebView ) currentTab.showSearchBox(true);
 			});
@@ -185,10 +185,10 @@ Ext.define('Redil.Application', {
 				btn.toggle();
 				Ext.cq1('app-main').getController().dontDisturb(btn, true);
 			});
-			// Add shortcut to Lock Redil
+			// Add shortcut to Lock Shep
 			Mousetrap.bind(platform === 'darwin' ? ['command+alt+l'] : ['shift+alt+l'], (e, combo) => {
-				var btn = Ext.getCmp('lockRedilBtn');
-				Ext.cq1('app-main').getController().lockRedil(btn);
+				var btn = Ext.getCmp('lockShepBtn');
+				Ext.cq1('app-main').getController().lockShep(btn);
 			});
 
 			/*
@@ -233,7 +233,7 @@ Ext.define('Redil.Application', {
 			ipc.send('setDontDisturb', localStorage.getItem('dontDisturb')); // We store it in config
 
 			if ( localStorage.getItem('locked') ) {
-				console.info('Lock Redil:', 'Enabled');
+				console.info('Lock Shep:', 'Enabled');
 				Ext.cq1('app-main').getController().showLockWindow();
 			}
 			Ext.getStore('Services').load();
@@ -244,15 +244,15 @@ Ext.define('Redil.Application', {
 		newValue = parseInt(newValue);
 		if ( newValue > 0 )	{
 			if ( Ext.cq1('app-main').getActiveTab().record ) {
-				document.title = 'Redil (' + Redil.util.Format.formatNumber(newValue) + ') - '+Ext.cq1('app-main').getActiveTab().record.get('name');
+				document.title = 'Shep (' + Shep.util.Format.formatNumber(newValue) + ') - '+Ext.cq1('app-main').getActiveTab().record.get('name');
 			} else {
-				document.title = 'Redil (' + Redil.util.Format.formatNumber(newValue) + ')';
+				document.title = 'Shep (' + Shep.util.Format.formatNumber(newValue) + ')';
 			}
 		} else {
 			if ( Ext.cq1('app-main') && Ext.cq1('app-main').getActiveTab().record ) {
-				document.title = 'Redil - '+Ext.cq1('app-main').getActiveTab().record.get('name');
+				document.title = 'Shep - '+Ext.cq1('app-main').getActiveTab().record.get('name');
 			} else {
-				document.title = 'Redil';
+				document.title = 'Shep';
 			}
 		}
 	}

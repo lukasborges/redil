@@ -1,6 +1,6 @@
 const { test, expect } = require('@playwright/test');
 const path = require('path');
-const { launchRedil, closeRedil, repoRoot } = require('./helpers/launch');
+const { launchShep, closeShep, repoRoot } = require('./helpers/launch');
 
 // Workspaces filter the rail and nothing else: a service outside the active one
 // keeps its card, so it keeps counting and notifying. What is checked here is
@@ -8,15 +8,15 @@ const { launchRedil, closeRedil, repoRoot } = require('./helpers/launch');
 // becomes of a deleted workspace's services.
 const FIXTURE = 'file://' + path.join(repoRoot, 'test', 'fixtures', 'service.html');
 
-let redil;
+let shep;
 
-const rail = () => redil.window.evaluate(() => Redil.util.Workspaces.serviceTabs()
+const rail = () => shep.window.evaluate(() => Shep.util.Workspaces.serviceTabs()
 	.filter(tab => !tab.tab.isHidden()).map(tab => tab.record.get('name')));
 
 test.beforeAll(async () => {
-	redil = await launchRedil();
-	await redil.window.evaluate(url => {
-		const W = Redil.util.Workspaces;
+	shep = await launchShep();
+	await shep.window.evaluate(url => {
+		const W = Shep.util.Workspaces;
 		const work = W.create('Work'), home = W.create('Personal');
 		const add = (id, name, workspace) => {
 			Ext.getStore('Services').add({ id, type: 'custom', name, url, enabled: true, notifications: false, muted: true, workspace });
@@ -31,7 +31,7 @@ test.beforeAll(async () => {
 });
 
 test.afterAll(async () => {
-	await closeRedil(redil);
+	await closeShep(shep);
 });
 
 test('opens the switcher\'s menu from a real click', async () => {
@@ -40,12 +40,12 @@ test('opens the switcher\'s menu from a real click', async () => {
 	// onTabChange focuses the new tab's page 300ms after the switch in
 	// beforeAll, and a focus change in the middle of the click closes the menu
 	await new Promise(resolve => setTimeout(resolve, 500));
-	const box = await redil.window.evaluate(() => {
+	const box = await shep.window.evaluate(() => {
 		const r = Ext.getCmp('workspaceSwitcher').el.dom.getBoundingClientRect();
 		return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
 	});
-	await redil.window.mouse.click(box.x, box.y);
-	const menu = await redil.window.evaluate(() => {
+	await shep.window.mouse.click(box.x, box.y);
+	const menu = await shep.window.evaluate(() => {
 		const m = Ext.getCmp('workspaceSwitcher').menu;
 		// the avatar chip, the unread dot and the shortcut are markup around the name
 		const texts = m.items.items.map(i => i.text).filter(Boolean).map(t => {
@@ -63,40 +63,40 @@ test('opens the switcher\'s menu from a real click', async () => {
 });
 
 test('gives two workspaces created at once different ids', async () => {
-	const ids = await redil.window.evaluate(() => Redil.util.Workspaces.list().map(w => w.id));
+	const ids = await shep.window.evaluate(() => Shep.util.Workspaces.list().map(w => w.id));
 	expect(new Set(ids).size).toBe(2);
 });
 
 test('shows a workspace\'s services and the ones in no workspace', async () => {
-	await redil.window.evaluate(() => Redil.util.Workspaces.activateByNumber(1));
+	await shep.window.evaluate(() => Shep.util.Workspaces.activateByNumber(1));
 	expect(await rail()).toEqual(['Mail', 'Tracker', 'Chat']);
 });
 
 test('moves off a service that the new workspace hides', async () => {
-	await redil.window.evaluate(() => Redil.util.Workspaces.activateByNumber(2));
+	await shep.window.evaluate(() => Shep.util.Workspaces.activateByNumber(2));
 	expect(await rail()).toEqual(['Family', 'Chat']);
-	expect(await redil.window.evaluate(() => Ext.cq1('app-main').getActiveTab().id)).toBe('tab_9103');
+	expect(await shep.window.evaluate(() => Ext.cq1('app-main').getActiveTab().id)).toBe('tab_9103');
 });
 
 test('shows everything under All services, the number after the last workspace', async () => {
-	await redil.window.evaluate(() => Redil.util.Workspaces.activateByNumber(3));
+	await shep.window.evaluate(() => Shep.util.Workspaces.activateByNumber(3));
 	expect(await rail()).toEqual(['Mail', 'Tracker', 'Family', 'Chat']);
-	expect(await redil.window.evaluate(() => Ext.getCmp('workspaceSwitcher').getText())).toBe('');
+	expect(await shep.window.evaluate(() => Ext.getCmp('workspaceSwitcher').getText())).toBe('');
 });
 
 test('keeps a deleted workspace\'s services, in every workspace', async () => {
-	await redil.window.evaluate(() => {
-		const W = Redil.util.Workspaces;
+	await shep.window.evaluate(() => {
+		const W = Shep.util.Workspaces;
 		W.remove(W.list()[0].id);
 		W.setActive(W.list()[0].id);
 	});
 	expect(await rail()).toEqual(['Mail', 'Tracker', 'Family', 'Chat']);
-	expect(await redil.window.evaluate(() => Redil.util.Workspaces.list().map(w => w.name))).toEqual(['Personal']);
+	expect(await shep.window.evaluate(() => Shep.util.Workspaces.list().map(w => w.name))).toEqual(['Personal']);
 });
 
 test('draws an avatar for a new workspace, keeps it through a rename and lets the initials back', async () => {
-	const steps = await redil.window.evaluate(() => {
-		const W = Redil.util.Workspaces;
+	const steps = await shep.window.evaluate(() => {
+		const W = Shep.util.Workspaces;
 		const id = W.create('Avatars').id;
 		const drawn = W.get(id).avatar;
 		W.setActive(id);
@@ -115,8 +115,8 @@ test('draws an avatar for a new workspace, keeps it through a rename and lets th
 });
 
 test('moves a service to another workspace from its right click', async () => {
-	const result = await redil.window.evaluate(() => {
-		const W = Redil.util.Workspaces;
+	const result = await shep.window.evaluate(() => {
+		const W = Shep.util.Workspaces;
 		const target = W.create('Elsewhere');
 		W.setActive('');
 		const tab = Ext.getCmp('tab_9104');

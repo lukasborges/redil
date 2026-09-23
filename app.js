@@ -1,34 +1,34 @@
 // Sencha App
 Ext.setGlyphFontFamily('FontAwesome');
 Ext.application({
-	 name: 'Redil'
+	 name: 'Shep'
 
-	,extend: 'Redil.Application'
+	,extend: 'Shep.Application'
 
-	,autoCreateViewport: 'Redil.view.main.Main'
+	,autoCreateViewport: 'Shep.view.main.Main'
 });
 
 // auto update logic
 // electron/preload.js exposes this; the renderer has no node of its own.
-const ipc = redil.ipc;
+const ipc = shep.ipc;
 
 ipc.on('showAbout', function(event, message) {
-	!Ext.cq1('about') ? Ext.create('Redil.view.main.About') : '';
+	!Ext.cq1('about') ? Ext.create('Shep.view.main.About') : '';
 });
 ipc.on('showPreferences', function(event, message) {
-	!Ext.cq1('preferences') ? Ext.create('Redil.view.preferences.Preferences').show() : '';
+	!Ext.cq1('preferences') ? Ext.create('Shep.view.preferences.Preferences').show() : '';
 });
 ipc.on('showUnreadReport', function() {
 	var principal = Ext.cq1('app-main');
 	if ( principal ) principal.getController().showUnreadReport();
 });
 ipc.on('autoUpdater:check-update', function() {
-	Redil.app.checkUpdate();
+	Shep.app.checkUpdate();
 });
 ipc.on('autoUpdater:update-not-available', function() {
 	Ext.Msg.show({
 		 title: 'You are up to date!'
-		,message: 'You have the latest version of Redil.'
+		,message: 'You have the latest version of Shep.'
 		,icon: Ext.Msg.INFO
 		,buttons: Ext.Msg.OK
 	});
@@ -36,7 +36,7 @@ ipc.on('autoUpdater:update-not-available', function() {
 ipc.on('autoUpdater:update-available', function() {
 	Ext.Msg.show({
 		 title: 'New Version available!'
-		,message: 'Please wait until Redil download the new version and ask you for install it.'
+		,message: 'Please wait until Shep download the new version and ask you for install it.'
 		,icon: Ext.Msg.INFO
 		,buttons: Ext.Msg.OK
 	});
@@ -62,7 +62,7 @@ ipc.on('autoUpdater:update-downloaded', function(e, info) {
 				 xtype: 'button'
 				,text: 'Changelog'
 				,ui: 'decline'
-				,href: 'https://github.com/lukasborges/redil/releases/latest'
+				,href: 'https://github.com/lukasborges/shep/releases/latest'
 			}
 			,'->'
 			,{
@@ -127,13 +127,13 @@ ipc.on('setBadge', function(event, messageCount) {
 // Reload Current Service
 ipc.on('reloadCurrentService', function(e) {
 	var tab = Ext.cq1('app-main').getActiveTab();
-	if ( tab.id !== 'redilTab' ) tab.reloadService();
+	if ( tab.id !== 'shepTab' ) tab.reloadService();
 });
 // Toggle Status Bar
 ipc.on('toggleStatusBar', function() {
 	var tab = Ext.cq1('app-main').getActiveTab();
 
-	if ( tab.id !== 'redilTab' ) {
+	if ( tab.id !== 'shepTab' ) {
 		tab.down('statusbar').closed ? tab.setStatusBar(tab.record.get('statusbar')) : tab.closeStatusBar();
 	}
 });

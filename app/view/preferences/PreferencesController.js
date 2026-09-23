@@ -1,4 +1,4 @@
-Ext.define('Redil.view.preferences.PreferencesController', {
+Ext.define('Shep.view.preferences.PreferencesController', {
 	 extend: 'Ext.app.ViewController'
 	,alias: 'controller.preferences-preferences'
 
@@ -9,11 +9,11 @@ Ext.define('Redil.view.preferences.PreferencesController', {
 	}
 
 	,showAbout: function() {
-		if ( !Ext.cq1('about') ) Ext.create('Redil.view.main.About');
+		if ( !Ext.cq1('about') ) Ext.create('Shep.view.main.About');
 	}
 
 	,checkForUpdates: function() {
-		Redil.app.checkUpdate();
+		Shep.app.checkUpdate();
 	}
 
 	,showUnreadReport: function() {
@@ -51,7 +51,7 @@ Ext.define('Redil.view.preferences.PreferencesController', {
 			Ext.isEmpty(values.master_password1) === false &&
 			Ext.isEmpty(values.master_password2) === false) {
 
-			values.master_password = Redil.util.MD5.encypt(values.master_password1);
+			values.master_password = Shep.util.MD5.encypt(values.master_password1);
 			delete values.master_password1;
 			delete values.master_password2;
 		}
@@ -72,7 +72,7 @@ Ext.define('Redil.view.preferences.PreferencesController', {
 
 		// User Agent
 		if ( values.user_agent !== ipc.sendSync('getConfig').user_agent ) {
-			Ext.Msg.confirm('Action required', 'To change the user agent of Redil, you need to reload the app. Do you want to do it now?', function(btnId) {
+			Ext.Msg.confirm('Action required', 'To change the user agent of Shep, you need to reload the app. Do you want to do it now?', function(btnId) {
 				if ( btnId === 'yes' ) ipc.send('relaunchApp');
 			});
 		}
@@ -81,7 +81,7 @@ Ext.define('Redil.view.preferences.PreferencesController', {
 		if ( values.locale !== ipc.sendSync('getConfig').locale ) {
 			localStorage.setItem('locale', values.locale);
 			localStorage.setItem('locale-extjs', me.getView().down('form').down('combo[name="locale"]').getSelection().get('extjs'));
-			Ext.Msg.confirm('Action required', 'To change the language of Redil, you need to reload the app. Do you want to do it now?', function(btnId) {
+			Ext.Msg.confirm('Action required', 'To change the language of Shep, you need to reload the app. Do you want to do it now?', function(btnId) {
 				if ( btnId === 'yes' ) ipc.send('relaunchApp');
 			});
 		}

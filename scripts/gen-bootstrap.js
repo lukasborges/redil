@@ -9,7 +9,7 @@
  *
  * The custom theme's Sass is gone with the rest of the Sencha Cmd scaffolding.
  * The app loads the stock ext-theme-crisp CSS that the theme used to extend, and
- * then resources/css/redil-theme.css restates the original look as plain CSS on
+ * then resources/css/shep-theme.css restates the original look as plain CSS on
  * top. All that survives of the theme package is Font Awesome and the two lines
  * of overrides/theme-init.js that name the theme.
  */
@@ -25,9 +25,9 @@ const STYLESHEETS = [
 	'ext/packages/ext-theme-crisp/build/resources/ext-theme-crisp-all-debug.css',
 	'resources/fonts/font-awesome/css/font-awesome.css',
 	// The app's own look, layered over crisp.
-	'resources/css/redil-theme.css',
+	'resources/css/shep-theme.css',
 	// The modernisation pass. Drop this line to get the original look back.
-	'resources/css/redil-modern.css',
+	'resources/css/shep-modern.css',
 ];
 
 const FRAMEWORK = ['ext/build/ext-all-rtl-debug.js'];
@@ -105,7 +105,7 @@ function render(stylesheets, framework, rest) {
 		Ext.Loader.setConfig({
 			enabled: true,
 			disableCaching: false,
-			paths: { Redil: 'app', Ext: 'ext/src' }
+			paths: { Shep: 'app', Ext: 'ext/src' }
 		});
 	}
 

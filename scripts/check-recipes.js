@@ -22,7 +22,7 @@ const RECIPE = name => `https://github.com/ferdium/ferdium-recipes/blob/main/rec
 const normalise = text => String(text).toLowerCase().replace(/[^a-z0-9]/g, '');
 
 async function main() {
-	const answer = await fetch(LIST, { headers: { 'User-Agent': 'redil-check-recipes' } });
+	const answer = await fetch(LIST, { headers: { 'User-Agent': 'shep-check-recipes' } });
 	if (!answer.ok) throw new Error(`GitHub answered ${answer.status} ${answer.statusText}`);
 
 	const recipes = new Map((await answer.json()).map(entry => [normalise(entry.name), entry.name]));

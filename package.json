@@ -1,19 +1,19 @@
 {
-	"name": "Redil",
-	"productName": "Redil",
+	"name": "Shep",
+	"productName": "Shep",
 	"version": "0.9.0",
 	"description": "Free and Open Source messaging and emailing app that combines common web applications into one.",
 	"main": "electron/main.js",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/lukasborges/redil.git"
+		"url": "https://github.com/lukasborges/shep.git"
 	},
 	"bugs": {
-		"url": "https://github.com/lukasborges/redil/issues"
+		"url": "https://github.com/lukasborges/shep/issues"
 	},
-	"homepage": "https://github.com/lukasborges/redil",
+	"homepage": "https://github.com/lukasborges/shep",
 	"keywords": [
-		"Redil",
+		"Shep",
 		"messaging",
 		"app",
 		"slack",
@@ -45,8 +45,8 @@
 		"translations:generate": "node languages.js generate"
 	},
 	"build": {
-		"productName": "Redil",
-		"appId": "io.github.lukasborges.redil",
+		"productName": "Shep",
+		"appId": "io.github.lukasborges.shep",
 		"afterSign": "resources/installer/notarize.js",
 		"asar": true,
 		"electronVersion": "44.4.3",
@@ -55,7 +55,7 @@
 		},
 		"mac": {
 			"category": "public.app-category.productivity",
-			"artifactName": "Redil-${version}-mac-${arch}.${ext}",
+			"artifactName": "Shep-${version}-mac-${arch}.${ext}",
 			"target": [
 				{
 					"target": "default",
@@ -69,12 +69,12 @@
 			"entitlements": "resources/installer/entitlements.mac.plist",
 			"entitlementsInherit": "resources/installer/entitlements.mac.plist",
 			"extendInfo": {
-				"NSMicrophoneUsageDescription": "Apps inside Redil may need access to your microphone. Please, grant access to have a better experience.",
-				"NSCameraUsageDescription": "Apps inside Redil may need access to your camera. Please, grant access to have a better experience."
+				"NSMicrophoneUsageDescription": "Apps inside Shep may need access to your microphone. Please, grant access to have a better experience.",
+				"NSCameraUsageDescription": "Apps inside Shep may need access to your camera. Please, grant access to have a better experience."
 			}
 		},
 		"dmg": {
-			"title": "Redil",
+			"title": "Shep",
 			"iconSize": 128,
 			"sign": false,
 			"contents": [
@@ -92,7 +92,7 @@
 			]
 		},
 		"win": {
-			"artifactName": "Redil-${version}-win-${arch}.${ext}",
+			"artifactName": "Shep-${version}-win-${arch}.${ext}",
 			"target": [
 				"nsis",
 				"zip"
@@ -115,10 +115,10 @@
 					"Terminal": "false",
 					"Type": "Application",
 					"Categories": "GTK;GNOME;Network;Email;Chat;InstantMessaging;",
-					"StartupWMClass": "redil"
+					"StartupWMClass": "shep"
 				}
 			},
-			"artifactName": "Redil-${version}-linux-${arch}.${ext}",
+			"artifactName": "Shep-${version}-linux-${arch}.${ext}",
 			"executableArgs": [
 				"--no-sandbox"
 			],
@@ -151,7 +151,7 @@
 			{
 				"provider": "github",
 				"owner": "lukasborges",
-				"repo": "redil",
+				"repo": "shep",
 				"vPrefixedTagName": false,
 				"releaseType": "draft"
 			}

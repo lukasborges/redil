@@ -1,4 +1,4 @@
-Ext.define('Redil.store.ServicesList', {
+Ext.define('Shep.store.ServicesList', {
 	 extend: 'Ext.data.Store'
 	,alias: 'store.serviceslist'
 
@@ -6,7 +6,7 @@ Ext.define('Redil.store.ServicesList', {
 		'Ext.data.proxy.LocalStorage'
 	]
 
-	,model: 'Redil.model.ServiceList'
+	,model: 'Shep.model.ServiceList'
 
 	,proxy: {
 		type: 'ajax',

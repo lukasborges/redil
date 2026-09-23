@@ -13,11 +13,11 @@
  * an item ahead of the tabs would put every service one place out; it is drawn
  * into the bar's element instead, in room the stylesheet keeps free for it.
  */
-Ext.define('Redil.util.Workspaces', {
+Ext.define('Shep.util.Workspaces', {
 	 singleton: true
 
 	,requires: [
-		'Redil.util.UnreadCounter'
+		'Shep.util.UnreadCounter'
 	]
 
 	/*
@@ -160,7 +160,7 @@ Ext.define('Redil.util.Workspaces', {
 		var current = main.getActiveTab();
 		if ( current && current.record && current.tab.isHidden() ) {
 			var first = me.visibleServiceTabs()[0];
-			main.setActiveTab(first || 'redilTab');
+			main.setActiveTab(first || 'shepTab');
 		}
 
 		me.refreshSwitcher();
@@ -240,7 +240,7 @@ Ext.define('Redil.util.Workspaces', {
 		return me.serviceTabs().some(function(tab) {
 			if ( me.isVisible(tab.record, active) ) return false;
 			var id = tab.record.get('id');
-			return Redil.util.UnreadCounter.getUnreadCountForService(id) > 0 || Redil.util.UnreadCounter.hasSomethingUnread(id);
+			return Shep.util.UnreadCounter.getUnreadCountForService(id) > 0 || Shep.util.UnreadCounter.hasSomethingUnread(id);
 		});
 	}
 
@@ -249,7 +249,7 @@ Ext.define('Redil.util.Workspaces', {
 		return this.serviceTabs().some(function(tab) {
 			if ( tab.record.get('workspace') !== workspaceId ) return false;
 			var id = tab.record.get('id');
-			return Redil.util.UnreadCounter.getUnreadCountForService(id) > 0 || Redil.util.UnreadCounter.hasSomethingUnread(id);
+			return Shep.util.UnreadCounter.getUnreadCountForService(id) > 0 || Shep.util.UnreadCounter.hasSomethingUnread(id);
 		});
 	}
 
@@ -264,14 +264,14 @@ Ext.define('Redil.util.Workspaces', {
 				 text: me.chip(workspace) + Ext.String.htmlEncode(workspace.name)
 					+ (me.unreadIn(workspace.id) && workspace.id !== active ? ' <span class="rx-menu-dot"></span>' : '')
 					// Ext 5's menu items have no shortcut of their own to show
-					+ (index < 9 ? '<span class="rx-menu-shortcut">' + (redil.platform === 'darwin' ? '⌘⌥' : 'Ctrl+Alt+') + (index + 1) + '</span>' : '')
+					+ (index < 9 ? '<span class="rx-menu-shortcut">' + (shep.platform === 'darwin' ? '⌘⌥' : 'Ctrl+Alt+') + (index + 1) + '</span>' : '')
 				,checked: workspace.id === active
 				,group: 'workspace'
 				,handler: function() { me.setActive(workspace.id); }
 			});
 		});
 		items.push({
-			 text: 'All services' + (workspaces.length < 9 ? '<span class="rx-menu-shortcut">' + (redil.platform === 'darwin' ? '⌘⌥' : 'Ctrl+Alt+') + (workspaces.length + 1) + '</span>' : '')
+			 text: 'All services' + (workspaces.length < 9 ? '<span class="rx-menu-shortcut">' + (shep.platform === 'darwin' ? '⌘⌥' : 'Ctrl+Alt+') + (workspaces.length + 1) + '</span>' : '')
 			,checked: active === ''
 			,group: 'workspace'
 			,handler: function() { me.setActive(''); }

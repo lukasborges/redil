@@ -2,7 +2,7 @@
 /**
  * Singleton class for notification dispatching.
  */
-Ext.define('Redil.util.Notifier', {
+Ext.define('Shep.util.Notifier', {
 
 	singleton: true,
 

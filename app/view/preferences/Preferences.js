@@ -1,10 +1,10 @@
-Ext.define('Redil.view.preferences.Preferences',{
+Ext.define('Shep.view.preferences.Preferences',{
 	 extend: 'Ext.window.Window'
 	,xtype: 'preferences'
 
 	,requires: [
-		 'Redil.view.preferences.PreferencesController'
-		,'Redil.view.preferences.PreferencesModel'
+		 'Shep.view.preferences.PreferencesController'
+		,'Shep.view.preferences.PreferencesModel'
 		,'Ext.form.field.ComboBox'
 		,'Ext.form.field.Checkbox'
 	]
@@ -56,7 +56,7 @@ Ext.define('Redil.view.preferences.Preferences',{
 		}).sort(function(a, b) { return a.label.localeCompare(b.label); });
 
 		var defaultServiceOptions = [];
-		defaultServiceOptions.push({ value: 'redilTab', label: locale['app.welcome[3]'] });
+		defaultServiceOptions.push({ value: 'shepTab', label: locale['app.welcome[3]'] });
 		defaultServiceOptions.push({ value: 'last', label: 'Last Active Service' });
 		Ext.getStore('Services').each(function(rec) {
 			defaultServiceOptions.push({
@@ -225,7 +225,7 @@ Ext.define('Redil.view.preferences.Preferences',{
 												,{ 'value': 'taskbar_tray', 'label': locale['preferences[16]'] }
 											]
 										})
-										,hidden: redil.platform === 'darwin'
+										,hidden: shep.platform === 'darwin'
 									}
 									,{
 										 xtype: 'combo'
@@ -244,7 +244,7 @@ Ext.define('Redil.view.preferences.Preferences',{
 												,{ 'value': 'quit', 'label': locale['preferences[20]'] }
 											]
 										})
-										,hidden: redil.platform === 'darwin'
+										,hidden: shep.platform === 'darwin'
 									}
 									,{
 										/*
@@ -268,12 +268,12 @@ Ext.define('Redil.view.preferences.Preferences',{
 												,name: 'systemtray_indicator'
 												,boxLabel: locale['preferences[22]']
 												,value: config.systemtray_indicator
-												,hidden: redil.platform === 'darwin'
+												,hidden: shep.platform === 'darwin'
 											}
 											,{
 												 xtype: 'checkbox'
 												,name: 'flash_frame'
-												,boxLabel: redil.platform === 'darwin' ? locale['preferences[10]'] : locale['preferences[9]']
+												,boxLabel: shep.platform === 'darwin' ? locale['preferences[10]'] : locale['preferences[9]']
 												,value: config.flash_frame
 											}
 											,{
@@ -400,7 +400,7 @@ Ext.define('Redil.view.preferences.Preferences',{
 												,name: 'enable_hidpi_support'
 												,boxLabel: locale['preferences[8]']
 												,value: config.enable_hidpi_support
-												,hidden: redil.platform !== 'win32'
+												,hidden: shep.platform !== 'win32'
 												,margin: 0
 											}
 										]
@@ -429,7 +429,7 @@ Ext.define('Redil.view.preferences.Preferences',{
 												,hideLabel: true
 												,width: 300
 												,margin: 0
-												,hidden: redil.platform === 'darwin'
+												,hidden: shep.platform === 'darwin'
 												,emptyText: 'Chosen from your system'
 												,displayField: 'label'
 												,valueField: 'value'
@@ -498,13 +498,13 @@ Ext.define('Redil.view.preferences.Preferences',{
 									 */
 									,{
 										 xtype: 'fieldcontainer'
-										,fieldLabel: 'Redil'
+										,fieldLabel: 'Shep'
 										,layout: 'hbox'
 										,defaults: { xtype: 'button', margin: '0 8 0 0' }
 										,items: [
 											 { text: locale['menu.help[6]'], handler: 'showAbout' }
-											,{ text: locale['menu.help[5]'], handler: 'checkForUpdates', hidden: redil.platform === 'darwin' }
-											,{ text: locale['menu.help[1]'], href: 'https://github.com/lukasborges/redil/issues', margin: 0 }
+											,{ text: locale['menu.help[5]'], handler: 'checkForUpdates', hidden: shep.platform === 'darwin' }
+											,{ text: locale['menu.help[1]'], href: 'https://github.com/lukasborges/shep/issues', margin: 0 }
 										]
 									}
 									,{

@@ -22,25 +22,25 @@ module.exports = function(config) {
 		{
 			label: `&`+locale['menu.help[0]'],
 			click() {
-				shell.openExternal('https://github.com/lukasborges/redil');
+				shell.openExternal('https://github.com/lukasborges/shep');
 			}
 		},
 		{
 			label: `&Facebook`,
 			click() {
-				shell.openExternal('https://github.com/lukasborges/redil/discussions');
+				shell.openExternal('https://github.com/lukasborges/shep/discussions');
 			}
 		},
 		{
 			label: `&Twitter`,
 			click() {
-				shell.openExternal('https://github.com/lukasborges/redil/issues');
+				shell.openExternal('https://github.com/lukasborges/shep/issues');
 			}
 		},
 		{
 			label: `&GitHub`,
 			click() {
-				shell.openExternal('https://github.com/lukasborges/redil');
+				shell.openExternal('https://github.com/lukasborges/shep');
 			}
 		},
 		{

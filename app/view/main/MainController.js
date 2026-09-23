@@ -1,4 +1,4 @@
-Ext.define('Redil.view.main.MainController', {
+Ext.define('Shep.view.main.MainController', {
 	 extend: 'Ext.app.ViewController'
 
 	,alias: 'controller.main'
@@ -31,11 +31,11 @@ Ext.define('Redil.view.main.MainController', {
 
 		me.syncTitleBar();
 
-		if ( newTab.id === 'redilTab' ) {
-			if ( Redil.app.getTotalNotifications() > 0 ) {
-				document.title = 'Redil ('+ Redil.app.getTotalNotifications() +')';
+		if ( newTab.id === 'shepTab' ) {
+			if ( Shep.app.getTotalNotifications() > 0 ) {
+				document.title = 'Shep ('+ Shep.app.getTotalNotifications() +')';
 			} else {
-				document.title = 'Redil';
+				document.title = 'Shep';
 			}
 			return;
 		}
@@ -57,10 +57,10 @@ Ext.define('Redil.view.main.MainController', {
 		}, 300);
 
 		// Update the main window so it includes the active tab title.
-		if ( Redil.app.getTotalNotifications() > 0 ) {
-			document.title = 'Redil ('+ Redil.app.getTotalNotifications() +') - ' + newTab.record.get('name');
+		if ( Shep.app.getTotalNotifications() > 0 ) {
+			document.title = 'Shep ('+ Shep.app.getTotalNotifications() +') - ' + newTab.record.get('name');
 		} else {
-			document.title = 'Redil - ' + newTab.record.get('name');
+			document.title = 'Shep - ' + newTab.record.get('name');
 		}
 	}
 
@@ -78,7 +78,7 @@ Ext.define('Redil.view.main.MainController', {
 		var identity = bar.down('#identity');
 
 		if ( !page ) {
-			identity.update('<b>Redil</b>');
+			identity.update('<b>Shep</b>');
 		} else {
 			// a service puts its unread count in the title; the rail already says it
 			var title = (tab.pageTitle || '').replace(/^\([^)]*\)\s*/, '');
@@ -115,7 +115,7 @@ Ext.define('Redil.view.main.MainController', {
 	 * Setting the fields and sorting does the same job without the round trip.
 	 */
 	,updatePositions: function(tabPanel, tab) {
-		if ( tab.id === 'redilTab' || tab.id === 'tbfill' ) return true;
+		if ( tab.id === 'shepTab' || tab.id === 'tbfill' ) return true;
 
 		var store = Ext.getStore('Services');
 		var align = 'left';
@@ -128,7 +128,7 @@ Ext.define('Redil.view.main.MainController', {
 				align = 'right';
 				return;
 			}
-			if ( t.id === 'redilTab' || !t.record ) return;
+			if ( t.id === 'shepTab' || !t.record ) return;
 
 			var rec = store.getById(t.record.get('id'));
 			if ( !rec ) return;
@@ -280,7 +280,7 @@ Ext.define('Redil.view.main.MainController', {
 	}
 
 	,onNewServiceSelect: function( view, record, item, index, e ) {
-		Ext.create('Redil.view.add.Add', {
+		Ext.create('Shep.view.add.Add', {
 			record: record
 		});
 	}
@@ -311,7 +311,7 @@ Ext.define('Redil.view.main.MainController', {
 		}
 
 		const config = ipc.sendSync('getConfig');
-		if ( config.default_service === rec.get('id') ) ipc.send('setConfig', Ext.apply(config, { default_service: 'redilTab' }));
+		if ( config.default_service === rec.get('id') ) ipc.send('setConfig', Ext.apply(config, { default_service: 'shepTab' }));
 
 		function clearData(webview, tab) {
 			ipc.invoke('webview:clearData', webview.getWebContentsId()).then(() => {
@@ -346,7 +346,7 @@ Ext.define('Redil.view.main.MainController', {
 			Ext.Msg.confirm(locale['app.window[12]'], locale['app.window[14]'], function(btnId) {
 				if ( btnId === 'yes' ) {
 					// Clear counter for unread messaging
-					document.title = 'Redil';
+					document.title = 'Shep';
 
 					Ext.cq1('app-main').suspendEvent('remove');
 					Ext.getStore('Services').load();
@@ -374,7 +374,7 @@ Ext.define('Redil.view.main.MainController', {
 	}
 
 	,configureService: function( gridView, rowIndex, colIndex, col, e, rec, rowEl ) {
-		Ext.create('Redil.view.add.Add', {
+		Ext.create('Shep.view.add.Add', {
 			 record: rec
 			,service: Ext.getStore('ServicesList').getById(rec.get('type'))
 			,edit: true
@@ -496,7 +496,7 @@ Ext.define('Redil.view.main.MainController', {
 		});
 	}
 
-	,lockRedil: function(btn) {
+	,lockShep: function(btn) {
 		var me = this;
 
 		if ( ipc.sendSync('getConfig').master_password ) {
@@ -522,12 +522,12 @@ Ext.define('Redil.view.main.MainController', {
 									,message: locale['app.window[25]']
 									,icon: Ext.Msg.WARNING
 									,buttons: Ext.Msg.OK
-									,fn: me.lockRedil
+									,fn: me.lockShep
 								});
 								return false;
 							}
 
-							setLock(Redil.util.MD5.encypt(text));
+							setLock(Shep.util.MD5.encypt(text));
 						}
 					});
 					msgbox2.textField.inputEl.dom.type = 'password';
@@ -537,18 +537,18 @@ Ext.define('Redil.view.main.MainController', {
 		}
 
 		function setLock(text) {
-			var redilTab = Ext.cq1('#redilTab');
+			var shepTab = Ext.cq1('#shepTab');
 
 			// Related to issue #2065. Focusing in an sub frame is a workaround
-			if (redilTab.getWebView) {
-				redilTab.down('component').el.dom.executeJavaScript(`
+			if (shepTab.getWebView) {
+				shepTab.down('component').el.dom.executeJavaScript(`
 				var iframeFix = document.createElement('iframe');
 				document.body.appendChild(iframeFix);
 				iframeFix.focus();
 				document.body.removeChild(iframeFix);
 				`);
 			}
-			console.info('Lock Redil:', 'Enabled');
+			console.info('Lock Shep:', 'Enabled');
 
 			// Save encrypted password in localStorage to show locked when app is reopen
 			localStorage.setItem('locked', text);
@@ -564,8 +564,8 @@ Ext.define('Redil.view.main.MainController', {
 		var me = this;
 
 		var validateFn = function() {
-			if ( localStorage.getItem('locked') === Redil.util.MD5.encypt(winLock.down('textfield').getValue()) ) {
-				console.info('Lock Redil:', 'Disabled');
+			if ( localStorage.getItem('locked') === Shep.util.MD5.encypt(winLock.down('textfield').getValue()) ) {
+				console.info('Lock Shep:', 'Disabled');
 				localStorage.removeItem('locked');
 				winLock.close();
 				me.lookupReference('disturbBtn').setPressed(false);
@@ -640,6 +640,6 @@ Ext.define('Redil.view.main.MainController', {
 	}
 
 	,openPreferences: function( btn ) {
-		Ext.create('Redil.view.preferences.Preferences').show();
+		Ext.create('Shep.view.preferences.Preferences').show();
 	}
 });

@@ -1,4 +1,4 @@
-Ext.define('Redil.store.Services', {
+Ext.define('Shep.store.Services', {
 	 extend: 'Ext.data.Store'
 	,alias: 'store.services'
 
@@ -6,7 +6,7 @@ Ext.define('Redil.store.Services', {
 		'Ext.data.proxy.LocalStorage'
 	]
 
-	,model: 'Redil.model.Service'
+	,model: 'Shep.model.Service'
 
 	,autoLoad: false
 	,autoSync: true
@@ -54,7 +54,7 @@ Ext.define('Redil.store.Services', {
 			if ( !Ext.isEmpty(servicesRight) ) Ext.cq1('app-main').add(servicesRight);
 
 			// before the default service is chosen, which must be one on show
-			Redil.util.Workspaces.apply();
+			Shep.util.Workspaces.apply();
 
 			// Set default active service
 			const config = ipc.sendSync('getConfig');
@@ -63,7 +63,7 @@ Ext.define('Redil.store.Services', {
 					var last = Ext.getCmp(localStorage.getItem('last_active_service'));
 					if ( last && !(last.tab && last.tab.isHidden()) ) Ext.cq1('app-main').setActiveTab(last);
 					break;
-				case 'redilTab':
+				case 'shepTab':
 					break;
 				default:
 					if ( Ext.getCmp('tab_'+config.default_service) ) Ext.cq1('app-main').setActiveTab('tab_'+config.default_service);

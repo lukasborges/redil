@@ -1,14 +1,14 @@
 # Contributing
 
-Redil is a fork of Rambox Community Edition, revived after upstream archived it. It is small and the process is light. What follows is what you actually need.
+Shep is a fork of Rambox Community Edition, revived after upstream archived it. It is small and the process is light. What follows is what you actually need.
 
 ## Getting it running
 
 Node 22 or newer, and npm. Nothing else. The prerequisites the old guide listed, Sencha Cmd and Ruby, are gone: the renderer now boots from a generated file instead of a Sencha build.
 
 ```bash
-git clone https://github.com/lukasborges/redil.git
-cd redil
+git clone https://github.com/lukasborges/shep.git
+cd shep
 npm install
 npm run bootstrap
 npm start

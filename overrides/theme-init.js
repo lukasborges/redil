@@ -1,2 +1,2 @@
-Ext.namespace('Ext.theme.is')['redil-default-theme'] = true;
-Ext.theme.name = 'redil-default-theme';
+Ext.namespace('Ext.theme.is')['shep-default-theme'] = true;
+Ext.theme.name = 'shep-default-theme';

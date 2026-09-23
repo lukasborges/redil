@@ -17,6 +17,7 @@ const updater = require('./updater');
 // Connectivity, probed for the renderer's no-connection dialog
 const isOnline = require('is-online');
 const path = require('path');
+const fs = require('fs');
 
 // Disk usage:
 // const disk = require('diskusage');
@@ -32,6 +33,20 @@ const path = require('path');
 });
 
 if ( isDev ) app.getVersion = function() { return require('../package.json').version; }; // FOR DEV ONLY, BECAUSE IN DEV RETURNS ELECTRON'S VERSION
+
+const REDIL_PRODUCT_NAME = 'Redil';
+const REDIL_WELCOME_TAB_ID = 'redilTab';
+
+function moveRedilUserDataToShep() {
+	const userData = app.getPath('userData');
+	const redilUserData = path.join(app.getPath('appData'), REDIL_PRODUCT_NAME);
+	const wasUserDataDirRequested = app.commandLine.hasSwitch('user-data-dir');
+	const isFirstLaunch = !fs.existsSync(userData) || fs.readdirSync(userData).length === 0; // not just !existsSync: Electron makes the folder, empty, before main.js runs
+	if ( wasUserDataDirRequested || !isFirstLaunch || !fs.existsSync(redilUserData) ) return;
+	if ( fs.existsSync(userData) ) fs.rmdirSync(userData); // Windows refuses to rename onto an existing folder, and rmdirSync refuses one that is not empty
+	fs.renameSync(redilUserData, userData);
+}
+moveRedilUserDataToShep();
 
 // Initial Config
 const config = new Config({
@@ -65,7 +80,7 @@ const config = new Config({
 		,spellcheck: true
 		,spellcheck_languages: []
 		,user_agent: ''
-		,default_service: 'redilTab'
+		,default_service: 'shepTab'
 
 		,x: undefined
 		,y: undefined
@@ -74,6 +89,8 @@ const config = new Config({
 		,maximized: false
 	}
 });
+
+if ( config.get('default_service') === REDIL_WELCOME_TAB_ID ) config.set('default_service', 'shepTab');
 
 // Fix issues with HiDPI scaling on Windows platform
 if (config.get('enable_hidpi_support') && (process.platform === 'win32')) {
@@ -93,12 +110,12 @@ if ( process.platform === 'linux' ) {
 	/*
 	 * Wayland carries no window icon: the compositor matches the surface's
 	 * app_id to a .desktop file and takes the icon from there. Chromium's
-	 * --class sets that app_id (and WM_CLASS on X11), and `redil` is the name
+	 * --class sets that app_id (and WM_CLASS on X11), and `shep` is the name
 	 * of the desktop entry electron-builder writes, so the running window is
 	 * the same application the launcher knows rather than a second, iconless
 	 * one beside it. The BrowserWindow `icon` below still answers on X11.
 	 */
-	app.commandLine.appendSwitch('class', 'redil');
+	app.commandLine.appendSwitch('class', 'shep');
 }
 
 app.commandLine.appendSwitch('lang', config.get('locale') === 'en' ? 'en-US' :  config.get('locale'));
@@ -109,7 +126,7 @@ app.commandLine.appendSwitch('disable-features', 'CrossOriginOpenerPolicy');
 
 // Because we build it using Squirrel, it will assign UserModelId automatically, so we match it here to display notifications correctly.
 // https://github.com/electron-userland/electron-builder/issues/362
-app.setAppUserModelId('io.github.lukasborges.redil');
+app.setAppUserModelId('io.github.lukasborges.shep');
 
 // Only macOS gets a menu bar. It shows one whether or not the app asks, and
 // copy and paste reach the page through its Edit roles. Elsewhere every item
@@ -121,10 +138,16 @@ const appMenu = process.platform === 'darwin' ? require('./menu')(config) : null
 let appLauncher;
 if ( !isDev ) {
 	appLauncher = new AutoLaunch({
-		 name: 'Redil'
+		 name: 'Shep'
 		,isHidden: config.get('start_minimized')
 	});
 	config.get('auto_launch') ? appLauncher.enable() : appLauncher.disable();
+	const redilExecutable = {
+		 linux: path.join(path.dirname(process.execPath), 'redil')
+		,win32: path.join(path.dirname(process.execPath), 'Redil.exe')
+		,darwin: '/Applications/Redil.app'
+	}[process.platform];
+	if ( redilExecutable ) new AutoLaunch({ name: REDIL_PRODUCT_NAME, path: redilExecutable }).disable().catch(function() {}); // by path, not by name: the package names the login item after the executable
 }
 
 // Keep a global reference of the window object, if you don't, the window will
@@ -139,7 +162,7 @@ let isQuitting = false;
  * where Gmail, Chat and Claude keep the account menu. Which buttons show and on
  * which side is the desktop's: GNOME's button-layout, Windows' three on the
  * right, macOS's traffic lights on the left. Only Linux has been run.
- * The colours are --rx-chrome and --rx-on-chrome in redil-modern.css; macOS
+ * The colours are --rx-chrome and --rx-on-chrome in shep-modern.css; macOS
  * draws its own buttons and ignores them.
  */
 const TITLE_BAR_HEIGHT = 32;
@@ -164,7 +187,7 @@ function createWindow () {
 
 	// Create the browser window using the state information
 	mainWindow = new BrowserWindow({
-		 title: 'Redil'
+		 title: 'Shep'
 		,icon: __dirname + '/../resources/Icon.' + (process.platform === 'linux' ? 'png' : 'ico')
 		,backgroundColor: '#FFF'
 		,x: config.get('x')
@@ -340,7 +363,7 @@ function updateBadge(title) {
 
 
 /* async function availableSpaceWatchDog() {
-	// optionally render this information also in Redil window
+	// optionally render this information also in Shep window
 	try {
 		const { available } = await disk.check(appPath);
 		if (available < 1073741824) { // 1 GB
@@ -348,9 +371,9 @@ function updateBadge(title) {
 				type: 'warning',
 				buttons: ['OK, quit'],
 				defaultId: 0,
-				title: `Running out of disk space! - Redil shutting down`,
-				detail: `You've got just ${formatBytes(available)} space left.\n\nRedil has been frozen to prevent settings corruption.\n\nOnce you quit this dialog, Redil will shutdown.\n\n1 GB of avalable disk space is required.\nFree up space on partition where Redil is installed then start the app again.\n\nRedil path: \n${appPath}`,
-				message: `Running out of disk space! - Redil shutting down`,
+				title: `Running out of disk space! - Shep shutting down`,
+				detail: `You've got just ${formatBytes(available)} space left.\n\nShep has been frozen to prevent settings corruption.\n\nOnce you quit this dialog, Shep will shutdown.\n\n1 GB of avalable disk space is required.\nFree up space on partition where Shep is installed then start the app again.\n\nShep path: \n${appPath}`,
+				message: `Running out of disk space! - Shep shutting down`,
 			};
 		
 			dialog.showMessageBoxSync(null, options);
@@ -474,7 +497,7 @@ ipcMain.on('spellcheck:getLanguages', function(event) {
 // Service permissions
 //
 // A webview runs somebody else's web app, so a permission it asks for is that
-// site's request and not Redil's. This used to answer callback(true) to
+// site's request and not Shep's. This used to answer callback(true) to
 // everything that was not a notification, which silently handed every service
 // the camera, the microphone and the user's location. Anything not named below
 // is now refused.
@@ -540,7 +563,7 @@ function askAboutPermission(partition, permission, callback) {
 		,cancelId: 1
 		,title: 'Permission request'
 		,message: serviceNameFor(partition) + ' wants to ' + PROMPTED_PERMISSIONS[permission] + '.'
-		,detail: 'Redil remembers this answer for this service. Remove and add the service again to be asked once more.'
+		,detail: 'Shep remembers this answer for this service. Remove and add the service again to be asked once more.'
 	}).then(function(result) {
 		const allowed = result.response === 0;
 		const decisions = config.get('permissions') || {};
@@ -611,7 +634,7 @@ ipcMain.on('reloadApp', function(event) {
 	mainWindow.reload();
 });
 
-// resources/css/redil-modern.css reads nothing but prefers-color-scheme, which
+// resources/css/shep-modern.css reads nothing but prefers-color-scheme, which
 // Electron keeps in step with this. An unknown value falls back to the desktop's
 // own answer rather than forcing a theme nobody asked for.
 function applyTheme(theme) {
@@ -734,7 +757,7 @@ let allowPopUp = [
 
 /*
  * What Google's sign-in is told: Chrome on the system this runs on, with no
- * version and nothing of Electron or Redil in it. A plain, current Chrome was
+ * version and nothing of Electron or Shep in it. A plain, current Chrome was
  * not enough -- it was still met with "This browser or app may not be secure"
  * -- while a Chrome with no version number signs in. It is what Station does,
  * and it has to be the same in the header and in the page's own navigator.
@@ -1025,7 +1048,7 @@ function pickScreenShareSource(sources) {
 		}));
 
 		let picker = new BrowserWindow({
-			title: 'Redil - Select screen',
+			title: 'Shep - Select screen',
 			width: 600,
 			height: 500,
 			icon: __dirname + '/../resources/Icon.ico',

@@ -1,28 +1,28 @@
 const { test, expect } = require('@playwright/test');
 const path = require('path');
-const { launchRedil, closeRedil, repoRoot } = require('./helpers/launch');
+const { launchShep, closeShep, repoRoot } = require('./helpers/launch');
 
 // One launch for the whole file. Starting Electron costs a few seconds and none
 // of these assertions change the application's state.
-let redil;
+let shep;
 
-test.beforeAll(async () => { redil = await launchRedil(); });
-test.afterAll(async () => { await closeRedil(redil); });
+test.beforeAll(async () => { shep = await launchShep(); });
+test.afterAll(async () => { await closeShep(shep); });
 
 test('opens a window named after the product', async () => {
-	expect(await redil.window.title()).toContain('Redil');
+	expect(await shep.window.title()).toContain('Shep');
 });
 
 test('reports the version from package.json, not Electron\'s', async () => {
-	const version = await redil.window.evaluate(
-		() => redil.ipc.sendSync('app:getVersion'));
+	const version = await shep.window.evaluate(
+		() => shep.ipc.sendSync('app:getVersion'));
 
 	expect(version).toBe(require(path.join(repoRoot, 'package.json')).version);
 });
 
 test('serves the preference defaults over getConfig', async () => {
-	const config = await redil.window.evaluate(
-		() => redil.ipc.sendSync('getConfig'));
+	const config = await shep.window.evaluate(
+		() => shep.ipc.sendSync('getConfig'));
 
 	// main.js calls this block the authoritative list of every preference key,
 	// so a rename there should fail here rather than at runtime.
@@ -35,19 +35,19 @@ test('serves the preference defaults over getConfig', async () => {
 });
 
 test('mounts the Ext viewport with only the home tab configured', async () => {
-	const tabs = await redil.window.evaluate(() => {
+	const tabs = await shep.window.evaluate(() => {
 		const panel = Ext.cq1('app-main');
 		return panel.items.items.map(item => item.id);
 	});
 
 	// A fresh userData directory means no configured services, so the tab panel
 	// holds the home tab and the filler that splits the left and right groups.
-	expect(tabs).toContain('redilTab');
+	expect(tabs).toContain('shepTab');
 	expect(tabs.filter(id => id.startsWith('tab_'))).toHaveLength(0);
 });
 
 test('loads the service catalogue and appends the synthetic custom entry', async () => {
-	const catalogue = await redil.window.evaluate(() => {
+	const catalogue = await shep.window.evaluate(() => {
 		const store = Ext.getStore('ServicesList');
 		return { total: store.getCount(), hasCustom: !!store.getById('custom') };
 	});
@@ -57,12 +57,12 @@ test('loads the service catalogue and appends the synthetic custom entry', async
 });
 
 test('rewrites a pinned user agent to the running Chromium', async () => {
-	const agent = await redil.window.evaluate(() => ({
+	const agent = await shep.window.evaluate(() => ({
 		 pinned: Ext.getStore('ServicesList').getById('whatsapp').get('userAgent')
 		// Calls the real method with only the piece of a panel it reads, so the
 		// assertion covers getUserAgent rather than a copy of it.
-		,served: Redil.ux.WebView.prototype.getUserAgent.call({ record: { get: () => 'whatsapp' } })
-		,chrome: redil.versions.chrome
+		,served: Shep.ux.WebView.prototype.getUserAgent.call({ record: { get: () => 'whatsapp' } })
+		,chrome: shep.versions.chrome
 	}));
 
 	// The catalogue still names Chrome 70, from 2018, and WhatsApp turns away
@@ -77,7 +77,7 @@ test('rewrites a pinned user agent to the running Chromium', async () => {
 test('wires the two files the theme package still provides', async () => {
 	// Removing the Sencha Cmd scaffolding left only these behind: the Font
 	// Awesome the generator loads, and the one override that marks the theme.
-	const theme = await redil.window.evaluate(async () => {
+	const theme = await shep.window.evaluate(async () => {
 		await document.fonts.ready;
 		return {
 			 marker: typeof Ext.theme !== 'undefined' ? Ext.theme.name : null
@@ -86,17 +86,17 @@ test('wires the two files the theme package still provides', async () => {
 		};
 	});
 
-	expect(theme.marker).toBe('redil-default-theme');
+	expect(theme.marker).toBe('shep-default-theme');
 	expect(theme.stylesheet).toBe(true);
 	expect(theme.glyphs).toBe(true);
 });
 
 test('runs the renderer without node', async () => {
-	const reach = await redil.window.evaluate(() => ({
+	const reach = await shep.window.evaluate(() => ({
 		 require: typeof require
 		,process: typeof process
 		,module: typeof module
-		,bridge: typeof window.redil
+		,bridge: typeof window.shep
 	}));
 
 	// nodeIntegration is off and contextIsolation is on, so the page cannot pull
@@ -105,8 +105,8 @@ test('runs the renderer without node', async () => {
 });
 
 test('refuses a channel the preload does not expose', async () => {
-	const refused = await redil.window.evaluate(() => {
-		try { redil.ipc.send('image:download', 'https://example.com/a.png'); return null; }
+	const refused = await shep.window.evaluate(() => {
+		try { shep.ipc.send('image:download', 'https://example.com/a.png'); return null; }
 		catch (error) { return error.message; }
 	});
 
@@ -118,12 +118,12 @@ test('refuses a channel the preload does not expose', async () => {
 test('keeps the shortcuts working without requiring mousetrap', async () => {
 	// The renderer required it as a node module; it is a plain browser library
 	// and the generator now loads it as a script.
-	const bound = await redil.window.evaluate(() => typeof window.Mousetrap === 'object' || typeof window.Mousetrap === 'function');
+	const bound = await shep.window.evaluate(() => typeof window.Mousetrap === 'object' || typeof window.Mousetrap === 'function');
 	expect(bound).toBe(true);
 });
 
 test('puts the service bar on the left, as a rail of icons', async () => {
-	const rail = await redil.window.evaluate(() => {
+	const rail = await shep.window.evaluate(() => {
 		const bar = Ext.getCmp('mainTabBar');
 		return {
 			 posicao: Ext.cq1('app-main').getTabPosition()
@@ -132,7 +132,7 @@ test('puts the service bar on the left, as a rail of icons', async () => {
 			,botoes: bar.items.items
 				.filter(item => item.isXType && item.isXType('button') && !item.isXType('tab'))
 				.map(item => item.handler)
-			,abaInicialOculta: Ext.getCmp('redilTab').tab.isHidden()
+			,abaInicialOculta: Ext.getCmp('shepTab').tab.isHidden()
 			,rotulos: bar.el.dom.querySelectorAll('.x-tab-inner').length
 			,rotulosVisiveis: [...bar.el.dom.querySelectorAll('.x-tab-inner')]
 				.filter(el => el.offsetParent !== null).length
@@ -144,7 +144,7 @@ test('puts the service bar on the left, as a rail of icons', async () => {
 	// Add a service above the fill; below it the three that were the home tab's
 	// own toolbar until they moved here, which meant they vanished whenever a
 	// service was open. The home tab has no button: it is what the app opens on.
-	expect(rail.botoes).toEqual(['openCatalogue', 'dontDisturb', 'lockRedil', 'openPreferences']);
+	expect(rail.botoes).toEqual(['openCatalogue', 'dontDisturb', 'lockShep', 'openPreferences']);
 	expect(rail.abaInicialOculta).toBe(true);
 	// Icons only: the label elements exist, and none of them is shown.
 	expect(rail.rotulos).toBeGreaterThan(0);
@@ -152,8 +152,8 @@ test('puts the service bar on the left, as a rail of icons', async () => {
 });
 
 test('splits the preferences into sections without unbinding a field', async () => {
-	const prefs = await redil.window.evaluate(() => {
-		const win = Ext.create('Redil.view.preferences.Preferences');
+	const prefs = await shep.window.evaluate(() => {
+		const win = Ext.create('Shep.view.preferences.Preferences');
 		win.show();
 		const nomes = win.down('form').getForm().getFields().items.map(f => f.getName());
 		const resultado = {
@@ -184,24 +184,24 @@ test('splits the preferences into sections without unbinding a field', async () 
 });
 
 test('opens on a welcome page, with the catalogue behind a button', async () => {
-	const inicio = await redil.window.evaluate(() => {
+	const inicio = await shep.window.evaluate(() => {
 		const catalogo = Ext.cq1('app-main').getController().getCatalogue();
 		return {
 			 ativo: Ext.cq1('app-main').getActiveTab().id
 			,flutuante: !!catalogo.floating
 			,oculto: catalogo.isHidden()
-			,boasVindas: Ext.getCmp('redilTab').down('#welcome').el.dom.innerText.trim()
+			,boasVindas: Ext.getCmp('shepTab').down('#welcome').el.dom.innerText.trim()
 		};
 	});
 
-	expect(inicio.ativo).toBe('redilTab');
+	expect(inicio.ativo).toBe('shepTab');
 	// The catalogue used to be two thirds of this screen, which made a list of
 	// 104 services the app's front door.
 	expect(inicio.flutuante).toBe(true);
 	expect(inicio.oculto).toBe(true);
-	expect(inicio.boasVindas).toContain('Welcome to Redil');
+	expect(inicio.boasVindas).toContain('Welcome to Shep');
 
-	const aberto = await redil.window.evaluate(() => {
+	const aberto = await shep.window.evaluate(() => {
 		Ext.cq1('app-main').getController().openCatalogue();
 		const catalogo = Ext.cq1('app-main').getController().getCatalogue();
 		const visivel = catalogo.isVisible();
@@ -216,7 +216,7 @@ test('edits, disables and enables a service from its icon\'s right click', async
 	// disabled service lost its tab: with the list gone the tab has to stay,
 	// greyed, or there would be no way back.
 	const fixture = 'file://' + path.join(repoRoot, 'test', 'fixtures', 'service.html');
-	const passos = await redil.window.evaluate(url => {
+	const passos = await shep.window.evaluate(url => {
 		const painel = Ext.cq1('app-main');
 		const store = Ext.getStore('Services');
 		const rec = store.add({ id: 7301, type: 'custom', name: 'Right click', url: url,
@@ -248,7 +248,7 @@ test('edits, disables and enables a service from its icon\'s right click', async
 
 		aba.destroy();
 		store.remove(rec);
-		painel.setActiveTab('redilTab');
+		painel.setActiveTab('shepTab');
 		return { ligado: ligado, desligado: desligado, religado: religado };
 	}, fixture);
 
@@ -261,7 +261,7 @@ test('edits, disables and enables a service from its icon\'s right click', async
 test('installs no menu bar outside macOS', async () => {
 	// Every item it held has a home now: the rail, a service's right click, or
 	// Preferences, and its shortcuts are bound in the renderer.
-	const menu = await redil.app.evaluate(({ Menu }) => Menu.getApplicationMenu());
+	const menu = await shep.app.evaluate(({ Menu }) => Menu.getApplicationMenu());
 	expect(menu).toBeNull();
 });
 
@@ -269,7 +269,7 @@ test('filters the catalogue by type and by name at the same time', async () => {
 	// The two controls used to filter the store independently, so typing a name
 	// replaced the type filter and vice versa. They are one filter now, and the
 	// tally under them counts what is left, minus the synthetic custom entry.
-	const filtro = await redil.window.evaluate(() => {
+	const filtro = await shep.window.evaluate(() => {
 		const controlador = Ext.cq1('app-main').getController();
 		const catalogo = Ext.cq1('app-main').getController().getCatalogue();
 		controlador.openCatalogue();
@@ -312,7 +312,7 @@ test('filters the catalogue by type and by name at the same time', async () => {
 });
 
 test('keeps the custom entry last under a name the add window can print', async () => {
-	const custom = await redil.window.evaluate(() => {
+	const custom = await shep.window.evaluate(() => {
 		const store = Ext.getStore('ServicesList');
 		return {
 			 nome: store.getById('custom').get('name')
@@ -332,10 +332,10 @@ test('reorders the rail and writes the order back to the store', async () => {
 	// inside the home tab's old list, so any page error here is the regression.
 	const erros = [];
 	const anotar = e => erros.push(String(e));
-	redil.window.on('pageerror', anotar);
+	shep.window.on('pageerror', anotar);
 
 	const fixture = 'file://' + path.join(repoRoot, 'test', 'fixtures', 'service.html');
-	const ordem = await redil.window.evaluate(url => {
+	const ordem = await shep.window.evaluate(url => {
 		const painel = Ext.cq1('app-main');
 		const store = Ext.getStore('Services');
 
@@ -366,10 +366,10 @@ test('reorders the rail and writes the order back to the store', async () => {
 		return resultado;
 	}, fixture);
 
-	redil.window.off('pageerror', anotar);
+	shep.window.off('pageerror', anotar);
 
 	expect(erros).toEqual([]);
-	expect(ordem.abas.slice(0, 4)).toEqual(['redilTab', 'tab_7002', 'tab_7003', 'tab_7001']);
+	expect(ordem.abas.slice(0, 4)).toEqual(['shepTab', 'tab_7002', 'tab_7003', 'tab_7001']);
 	// the store follows the rail, and nothing crossed into the right group
 	expect(ordem.loja).toEqual(['Reorder 2:left', 'Reorder 3:left', 'Reorder 1:left']);
 });
@@ -379,9 +379,9 @@ test('exposes the online check the renderer runs at boot', async () => {
 	// of the preload's allowlist when is-online moved to the main process, so the
 	// call threw on every launch. The promise is not awaited: what is under test
 	// is the allowlist, not the network.
-	const exposto = await redil.window.evaluate(() => {
+	const exposto = await shep.window.evaluate(() => {
 		try {
-			redil.ipc.invoke('net:isOnline');
+			shep.ipc.invoke('net:isOnline');
 			return true;
 		} catch (e) {
 			return e.message;
@@ -398,7 +398,7 @@ test('opens the catalogue over a service and leaves the service on screen', asyn
 	// rather than over the service. It is a panel of its own now, so the service
 	// stays active behind it, dimmed by the mask like Preferences.
 	const fixture = 'file://' + path.join(repoRoot, 'test', 'fixtures', 'service.html');
-	const passo = await redil.window.evaluate(url => {
+	const passo = await shep.window.evaluate(url => {
 		const painel = Ext.cq1('app-main');
 		const store = Ext.getStore('Services');
 		const rec = store.add({ id: 7101, type: 'custom', name: 'From service', url: url,
@@ -439,9 +439,9 @@ test('seeds the media permission from the catalogue and exposes the channel', as
 	// A person who adds Google Meet is asking for a camera and a microphone, so
 	// the checkbox arrives ticked and main grants the permission without a
 	// dialog. Anything the catalogue does not mark still has to be answered.
-	const caixas = await redil.window.evaluate(() => {
+	const caixas = await shep.window.evaluate(() => {
 		const ler = id => {
-			const janela = Ext.create('Redil.view.add.Add', { record: Ext.getStore('ServicesList').getById(id) });
+			const janela = Ext.create('Shep.view.add.Add', { record: Ext.getStore('ServicesList').getById(id) });
 			const valor = janela.down('checkbox[name=media]').getValue();
 			janela.destroy();
 			return valor;
@@ -452,9 +452,9 @@ test('seeds the media permission from the catalogue and exposes the channel', as
 
 	expect(caixas).toEqual({ chamada: true, correio: false });
 
-	const exposto = await redil.window.evaluate(() => {
+	const exposto = await shep.window.evaluate(() => {
 		try {
-			redil.ipc.send('service:setMediaAccess', 'persist:probe', true);
+			shep.ipc.send('service:setMediaAccess', 'persist:probe', true);
 			return true;
 		} catch (e) {
 			return e.message;

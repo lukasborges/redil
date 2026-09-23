@@ -72,7 +72,7 @@ function main() {
 	for (const icon of APP) render(icon.from, path.join(root, icon.to), icon.size);
 
 	// convert builds the multi-size ico out of one png per size
-	const scratch = fs.mkdtempSync(path.join(require('os').tmpdir(), 'redil-icons-'));
+	const scratch = fs.mkdtempSync(path.join(require('os').tmpdir(), 'shep-icons-'));
 	try {
 		for (const ico of ICOS) {
 			const frames = ICO_SIZES.map(size => {

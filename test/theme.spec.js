@@ -1,15 +1,15 @@
 const { test, expect } = require('@playwright/test');
-const { launchRedil, closeRedil } = require('./helpers/launch');
+const { launchShep, closeShep } = require('./helpers/launch');
 
 // The dark theme is nothing but different values for the tokens in
-// resources/css/redil-modern.css, switched by one media query. What drives that
+// resources/css/shep-modern.css, switched by one media query. What drives that
 // query is nativeTheme.themeSource, which electron/main.js sets from the `theme`
 // preference -- so this checks the whole chain, preference to painted colour.
 
 async function paleta(theme) {
-	const redil = await launchRedil({ config: { theme: theme } });
+	const shep = await launchShep({ config: { theme: theme } });
 	try {
-		return await redil.window.evaluate(() => {
+		return await shep.window.evaluate(() => {
 			const raiz = getComputedStyle(document.documentElement);
 			return {
 				 escuro: matchMedia('(prefers-color-scheme: dark)').matches
@@ -18,7 +18,7 @@ async function paleta(theme) {
 			};
 		});
 	} finally {
-		await closeRedil(redil);
+		await closeShep(shep);
 	}
 }
 

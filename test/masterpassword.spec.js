@@ -1,6 +1,6 @@
 const { test, expect } = require('@playwright/test');
 const crypto = require('crypto');
-const { launchRedil, closeRedil } = require('./helpers/launch');
+const { launchShep, closeShep } = require('./helpers/launch');
 
 // The lock window only opens when a master password is set, so it needs its own
 // launch. main.js stores the password as an md5 hash of what was typed, and does
@@ -20,30 +20,30 @@ async function windowMatching(app, fragment, timeout = 20000) {
 	return null;
 }
 
-let redil;
+let shep;
 let lockWindow;
 
 test.beforeAll(async () => {
-	redil = await launchRedil({ config: { master_password: hashed }, waitForApp: false });
-	lockWindow = await windowMatching(redil.app, 'masterpassword.html');
+	shep = await launchShep({ config: { master_password: hashed }, waitForApp: false });
+	lockWindow = await windowMatching(shep.app, 'masterpassword.html');
 	expect(lockWindow, 'the lock window never opened').not.toBeNull();
 });
 
-test.afterAll(async () => { await closeRedil(redil); });
+test.afterAll(async () => { await closeShep(shep); });
 
 test('opens the lock window with no node of its own', async () => {
-	const reach = await lockWindow.evaluate(() => ({ require: typeof require, bridge: typeof window.redil }));
+	const reach = await lockWindow.evaluate(() => ({ require: typeof require, bridge: typeof window.shep }));
 	expect(reach).toEqual({ require: 'undefined', bridge: 'object' });
 });
 
 test('starts with no application window behind the lock', async () => {
-	expect(redil.app.windows().some(window => window.url().includes('index.html'))).toBe(false);
+	expect(shep.app.windows().some(window => window.url().includes('index.html'))).toBe(false);
 });
 
 test('refuses the wrong password and stays locked', async () => {
 	// The handler assigns event.returnValue twice and reads as though it always
 	// answers false. Electron replies on the first assignment, so it does not.
-	expect(await lockWindow.evaluate(() => redil.ipc.sendSync('validateMasterPassword', 'not-it'))).toBe(false);
+	expect(await lockWindow.evaluate(() => shep.ipc.sendSync('validateMasterPassword', 'not-it'))).toBe(false);
 	expect(lockWindow.isClosed()).toBe(false);
 });
 
@@ -53,9 +53,9 @@ test('clears the lock for the right password and opens the app', async () => {
 	// The reply races with the window being destroyed, so the effect is what is
 	// asserted rather than the return value.
 	await lockWindow
-		.evaluate(password => redil.ipc.sendSync('validateMasterPassword', password), PASSWORD)
+		.evaluate(password => shep.ipc.sendSync('validateMasterPassword', password), PASSWORD)
 		.catch(() => {});
 
-	const appWindow = await windowMatching(redil.app, 'index.html');
+	const appWindow = await windowMatching(shep.app, 'index.html');
 	expect(appWindow, 'the application window never opened after unlocking').not.toBeNull();
 });

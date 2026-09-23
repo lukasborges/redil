@@ -1,4 +1,4 @@
-Ext.define('Redil.view.preferences.PreferencesModel', {
+Ext.define('Shep.view.preferences.PreferencesModel', {
 	 extend: 'Ext.app.ViewModel'
 	,alias: 'viewmodel.preferences-preferences'
 

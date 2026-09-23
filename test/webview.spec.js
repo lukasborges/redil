@@ -1,22 +1,22 @@
 const { test, expect } = require('@playwright/test');
 const path = require('path');
-const { launchRedil, closeRedil, repoRoot } = require('./helpers/launch');
+const { launchShep, closeShep, repoRoot } = require('./helpers/launch');
 
 // A service tab is the one place the app runs somebody else's page, so this is
 // where the isolation matters most. The fixture is local: the suite never waits
 // on a real service.
 const FIXTURE = 'file://' + path.join(repoRoot, 'test', 'fixtures', 'service.html');
 
-let redil;
+let shep;
 
 test.beforeAll(async () => {
-	redil = await launchRedil();
+	shep = await launchShep();
 
 	// The tab panel is built when the store loads, from records the localStorage
 	// proxy persisted. Rather than drive that persistence, the record and the tab
 	// are made here in the shape app/store/Services.js gives them: what this file
 	// is testing is the webview, not how a service comes to exist.
-	await redil.window.evaluate(url => {
+	await shep.window.evaluate(url => {
 		const record = Ext.getStore('Services').add({
 			 id: 4242
 			,type: 'custom'
@@ -47,7 +47,7 @@ test.beforeAll(async () => {
 
 	await test.step('wait for the service webview', async () => {
 		for (let attempt = 0; attempt < 150; attempt++) {
-			const ready = await redil.window.evaluate(() => {
+			const ready = await shep.window.evaluate(() => {
 				const tab = Ext.cq1('app-main').items.items.find(item => item.id === 'tab_4242');
 				try { return !!(tab && tab.getWebView() && tab.getWebView().getWebContentsId()); } catch { return false; }
 			});
@@ -58,9 +58,9 @@ test.beforeAll(async () => {
 	});
 });
 
-test.afterAll(async () => { await closeRedil(redil); });
+test.afterAll(async () => { await closeShep(shep); });
 
-const inGuest = expression => redil.window.evaluate(source => {
+const inGuest = expression => shep.window.evaluate(source => {
 	const tab = Ext.cq1('app-main').items.items.find(item => item.id === 'tab_4242');
 	return tab.getWebView().executeJavaScript(source);
 }, expression);
@@ -82,13 +82,13 @@ test('bridges window.rambox into the page world for the injected snippets', asyn
 });
 
 test('carries an unread count from the page to the global counter', async () => {
-	expect(await redil.window.evaluate(() => Redil.util.UnreadCounter.getTotalUnreadCount())).toBe(0);
+	expect(await shep.window.evaluate(() => Shep.util.UnreadCounter.getTotalUnreadCount())).toBe(0);
 
 	await inGuest('window.rambox.setUnreadCount(7)');
-	await redil.window.waitForFunction(() => Redil.util.UnreadCounter.getTotalUnreadCount() === 7, null, { timeout: 10000 });
+	await shep.window.waitForFunction(() => Shep.util.UnreadCounter.getTotalUnreadCount() === 7, null, { timeout: 10000 });
 
 	await inGuest('window.rambox.clearUnreadCount()');
-	await redil.window.waitForFunction(() => Redil.util.UnreadCounter.getTotalUnreadCount() === 0, null, { timeout: 10000 });
+	await shep.window.waitForFunction(() => Shep.util.UnreadCounter.getTotalUnreadCount() === 0, null, { timeout: 10000 });
 });
 
 test('wraps Notification so a click can reach the tab', async () => {
@@ -109,14 +109,14 @@ test('grants the camera and the microphone only to a service marked for calls', 
 	// The fixture is not marked, so it is asked about rather than granted.
 	expect(await inGuest(consulta)).toBe('camera=denied microphone=denied');
 
-	await redil.window.evaluate(() => {
+	await shep.window.evaluate(() => {
 		const tab = Ext.cq1('app-main').items.items.find(item => item.id === 'tab_4242');
 		tab.setMediaAccess(true);
 	});
 
 	expect(await inGuest(consulta)).toBe('camera=granted microphone=granted');
 
-	await redil.window.evaluate(() => {
+	await shep.window.evaluate(() => {
 		const tab = Ext.cq1('app-main').items.items.find(item => item.id === 'tab_4242');
 		tab.setMediaAccess(false);
 	});
@@ -130,33 +130,33 @@ test('counts unread from the title until the snippet proves it can count', async
 	// service went quiet. The title, which every messenger writes as "(3) Name",
 	// answers for a snippet that has never said anything -- and an earlier test
 	// in this file made this one say 7, so the reset is what "never" means here.
-	await redil.window.evaluate(() => {
+	await shep.window.evaluate(() => {
 		const tab = Ext.cq1('app-main').items.items.find(item => item.id === 'tab_4242');
 		tab.snippetWorks = false;
 		tab.snippetUnread = 0;
 	});
 
 	await inGuest('document.title = "(3) Fixture service"');
-	await redil.window.waitForFunction(() => Redil.util.UnreadCounter.getTotalUnreadCount() === 3, null, { timeout: 10000 });
+	await shep.window.waitForFunction(() => Shep.util.UnreadCounter.getTotalUnreadCount() === 3, null, { timeout: 10000 });
 
 	// A snippet that answers takes the service over: it is the one that knows
 	// which chats are muted, and the title does not.
 	await inGuest('window.rambox.setUnreadCount(1)');
-	await redil.window.waitForFunction(() => Redil.util.UnreadCounter.getTotalUnreadCount() === 1, null, { timeout: 10000 });
+	await shep.window.waitForFunction(() => Shep.util.UnreadCounter.getTotalUnreadCount() === 1, null, { timeout: 10000 });
 
 	await inGuest('document.title = "(9) Fixture service"');
 	await new Promise(resolve => setTimeout(resolve, 500));
-	expect(await redil.window.evaluate(() => Redil.util.UnreadCounter.getTotalUnreadCount())).toBe(1);
+	expect(await shep.window.evaluate(() => Shep.util.UnreadCounter.getTotalUnreadCount())).toBe(1);
 
 	await inGuest('window.rambox.clearUnreadCount(); document.title = "Fixture service"');
-	await redil.window.waitForFunction(() => Redil.util.UnreadCounter.getTotalUnreadCount() === 0, null, { timeout: 10000 });
+	await shep.window.waitForFunction(() => Shep.util.UnreadCounter.getTotalUnreadCount() === 0, null, { timeout: 10000 });
 });
 
 test('says where each service is getting its count from', async () => {
 	// The report under View is this, once per open service. Testing unread
 	// detection means logging into the service, so what the app can do instead
 	// is say what it sees: a snippet that never answers reads "neither yet".
-	const quiet = await redil.window.evaluate(() => {
+	const quiet = await shep.window.evaluate(() => {
 		const tab = Ext.cq1('app-main').items.items.find(item => item.id === 'tab_4242');
 		tab.snippetWorks = false;
 		tab.snippetUnread = 0;
@@ -166,7 +166,7 @@ test('says where each service is getting its count from', async () => {
 
 	expect(quiet).toMatchObject({ name: 'Fixture', snippet: 'none', counting: 'neither yet', total: '0' });
 
-	const counted = await redil.window.evaluate(() => {
+	const counted = await shep.window.evaluate(() => {
 		const tab = Ext.cq1('app-main').items.items.find(item => item.id === 'tab_4242');
 		tab.reportTitleUnread('2');
 		const fromTitle = tab.unreadDiagnosis();
@@ -177,7 +177,7 @@ test('says where each service is getting its count from', async () => {
 	expect(counted.fromTitle).toMatchObject({ counting: 'title', total: '2' });
 	expect(counted.fromSnippet).toMatchObject({ counting: 'snippet', total: '5' });
 
-	await redil.window.evaluate(() => {
+	await shep.window.evaluate(() => {
 		const tab = Ext.cq1('app-main').items.items.find(item => item.id === 'tab_4242');
 		tab.reportSnippetUnread(0);
 	});
@@ -188,14 +188,14 @@ test('marks a service that can only say there is something, without a number', a
 	// but it swaps its favicon when messages arrive. '•' is how a service says
 	// "something is waiting": it cannot be added to a total, so it is a dot on
 	// the rail and the total is left alone.
-	const marcado = await redil.window.evaluate(() => {
+	const marcado = await shep.window.evaluate(() => {
 		const tab = Ext.cq1('app-main').items.items.find(item => item.id === 'tab_4242');
 		tab.reportSnippetUnread('•');
 
 		return {
 			 selo: tab.tab.el.dom.getAttribute('data-badge-text')
-			,algo: Redil.util.UnreadCounter.hasSomethingUnread(tab.record.get('id'))
-			,total: Redil.util.UnreadCounter.getTotalUnreadCount()
+			,algo: Shep.util.UnreadCounter.hasSomethingUnread(tab.record.get('id'))
+			,total: Shep.util.UnreadCounter.getTotalUnreadCount()
 		};
 	});
 
@@ -203,10 +203,10 @@ test('marks a service that can only say there is something, without a number', a
 	expect(marcado.algo).toBe(true);
 	expect(marcado.total).toBe(0);
 
-	const limpo = await redil.window.evaluate(() => {
+	const limpo = await shep.window.evaluate(() => {
 		const tab = Ext.cq1('app-main').items.items.find(item => item.id === 'tab_4242');
 		tab.reportSnippetUnread(0);
-		return Redil.util.UnreadCounter.hasSomethingUnread(tab.record.get('id'));
+		return Shep.util.UnreadCounter.hasSomethingUnread(tab.record.get('id'));
 	});
 
 	expect(limpo).toBe(false);

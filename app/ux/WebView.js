@@ -2,16 +2,16 @@
  * Default config for all webviews created
  */
 
-Ext.define('Redil.ux.WebView',{
+Ext.define('Shep.ux.WebView',{
 	 extend: 'Ext.panel.Panel'
 	,xtype: 'webview'
 
 	,requires: [
-		 'Redil.util.Format'
-		,'Redil.util.Notifier'
-		,'Redil.util.UnreadCounter'
-		,'Redil.util.IconLoader'
-		,'Redil.util.Workspaces'
+		 'Shep.util.Format'
+		,'Shep.util.Notifier'
+		,'Shep.util.UnreadCounter'
+		,'Shep.util.IconLoader'
+		,'Shep.util.Workspaces'
 	]
 
 	// private
@@ -299,7 +299,7 @@ Ext.define('Redil.ux.WebView',{
 		var pinned = catalogEntry ? catalogEntry.get('userAgent') : '';
 
 		if ( !pinned ) {
-			return window.clientInformation.userAgent.replace(/Redil\/([0-9]\.?)+\s/ig,'').replace(/Electron\/([0-9]\.?)+\s/ig,'');
+			return window.clientInformation.userAgent.replace(/Shep\/([0-9]\.?)+\s/ig,'').replace(/Electron\/([0-9]\.?)+\s/ig,'');
 		}
 
 		// The agents pinned in resources/services.json name whatever Chrome was
@@ -307,7 +307,7 @@ Ext.define('Redil.ux.WebView',{
 		// and the site now turns away anything below 100. The platform half of each
 		// string is still doing a job, so only the version is moved up to the
 		// Chromium this build actually runs on.
-		return pinned.replace(/Chrome\/[0-9.]+/i, 'Chrome/' + redil.versions.chrome);
+		return pinned.replace(/Chrome\/[0-9.]+/i, 'Chrome/' + shep.versions.chrome);
 	}
 
 	,statusBarConstructor: function() {
@@ -373,7 +373,7 @@ Ext.define('Redil.ux.WebView',{
 		});
 
 		webview.addEventListener("did-finish-load", function(e) {
-			Redil.app.setTotalServicesLoaded( Redil.app.getTotalServicesLoaded() + 1 );
+			Shep.app.setTotalServicesLoaded( Shep.app.getTotalServicesLoaded() + 1 );
 
 			// Apply saved zoom level
 			webview.setZoomLevel(me.record.get('zoomLevel'));
@@ -385,7 +385,7 @@ Ext.define('Redil.ux.WebView',{
 				webview.focus();
 			}
 			// Set special icon for some service (like Slack)
-			Redil.util.IconLoader.loadServiceIconUrl(me, webview);
+			Shep.util.IconLoader.loadServiceIconUrl(me, webview);
 		});
 
 		// On search text
@@ -536,7 +536,7 @@ Ext.define('Redil.ux.WebView',{
 			if (firstDomReady) {
 				firstDomReady = false;
 
-				Redil.app.config.googleURLs.forEach((loginURL) => {	if ( webview.getURL().indexOf(loginURL) > -1 ) webview.reload() })
+				Shep.app.config.googleURLs.forEach((loginURL) => {	if ( webview.getURL().indexOf(loginURL) > -1 ) webview.reload() })
 			}
 			// The error is kept, not only logged: a snippet that throws is the first
 			// thing the unread report has to be able to say.
@@ -701,18 +701,18 @@ Ext.define('Redil.ux.WebView',{
 		var me = this;
 
 		if ( !isNaN(newUnreadCount) && (function(x) { return (x | 0) === x; })(parseFloat(newUnreadCount)) && me.record.get('includeInGlobalUnreadCounter') === true) {
-			Redil.util.UnreadCounter.setUnreadCountForService(me.record.get('id'), newUnreadCount);
+			Shep.util.UnreadCounter.setUnreadCountForService(me.record.get('id'), newUnreadCount);
 		} else {
-			Redil.util.UnreadCounter.clearUnreadCountForService(me.record.get('id'));
+			Shep.util.UnreadCounter.clearUnreadCountForService(me.record.get('id'));
 		}
 
 		// '•' is a service saying there is something without saying how much. It
 		// is not a number, so it stays out of the total and is remembered apart.
-		Redil.util.UnreadCounter.setSomethingUnreadForService(me.record.get('id'), newUnreadCount === '•');
+		Shep.util.UnreadCounter.setSomethingUnreadForService(me.record.get('id'), newUnreadCount === '•');
 		// the switcher's dot, for a count in a workspace that is not on screen
-		Redil.util.Workspaces.refreshSwitcher();
+		Shep.util.Workspaces.refreshSwitcher();
 
-		me.setTabBadgeText(Redil.util.Format.formatNumber(newUnreadCount));
+		me.setTabBadgeText(Shep.util.Format.formatNumber(newUnreadCount));
 
 		me.doManualNotification(parseInt(newUnreadCount));
 	}
@@ -723,7 +723,7 @@ Ext.define('Redil.ux.WebView',{
 
 	/**
 	 * Dispatch manual notification if
-	 * • service doesn't have notifications, so Redil does them
+	 * • service doesn't have notifications, so Shep does them
 	 * • count increased
 	 * • not in dnd mode
 	 * • notifications enabled
@@ -734,7 +734,7 @@ Ext.define('Redil.ux.WebView',{
 		var me = this;
 		var manualNotifications = Ext.getStore('ServicesList').getById(me.type) ? Ext.getStore('ServicesList').getById(me.type).get('manual_notifications') : false;
 		if ( manualNotifications && me.currentUnreadCount < count && me.record.get('notifications') && !JSON.parse(localStorage.getItem('dontDisturb'))) {
-			Redil.util.Notifier.dispatchNotification(me, count);
+			Shep.util.Notifier.dispatchNotification(me, count);
 		}
 
 		me.currentUnreadCount = count;
@@ -762,7 +762,7 @@ Ext.define('Redil.ux.WebView',{
 	,clearUnreadCounter: function() {
 		var me = this;
 		me.tab.setBadgeText('');
-		Redil.util.UnreadCounter.clearUnreadCountForService(me.record.get('id'));
+		Shep.util.UnreadCounter.clearUnreadCountForService(me.record.get('id'));
 	}
 
 	,reloadService: function(btn) {
@@ -940,7 +940,7 @@ Ext.define('Redil.ux.WebView',{
 	 */
 	,syncWorkspaceMenu: function( item ) {
 		var me = this;
-		var workspaces = Redil.util.Workspaces;
+		var workspaces = Shep.util.Workspaces;
 		var list = workspaces.list();
 		var current = me.record.get('workspace');
 

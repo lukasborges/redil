@@ -18,7 +18,7 @@
 
 <!-- Complete your environment -->
 
-> Redil: v0.X.X
+> Shep: v0.X.X
 
 > OS: XXXX
 

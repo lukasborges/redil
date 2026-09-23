@@ -1,7 +1,7 @@
 /**
  * Singleton class to handle the global unread counter.
  */
-Ext.define('Redil.util.UnreadCounter', {
+Ext.define('Shep.util.UnreadCounter', {
 
 	singleton: true,
 
@@ -38,7 +38,7 @@ Ext.define('Redil.util.UnreadCounter', {
 		 * Sets the application's unread count to tracked unread count.
 		 */
 		function updateAppUnreadCounter() {
-			Redil.app.setTotalNotifications(totalUnreadCount);
+			Shep.app.setTotalNotifications(totalUnreadCount);
 		}
 
 		/**

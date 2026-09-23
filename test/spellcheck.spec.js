@@ -1,6 +1,6 @@
 const { test, expect } = require('@playwright/test');
 const path = require('path');
-const { launchRedil, closeRedil, repoRoot } = require('./helpers/launch');
+const { launchShep, closeShep, repoRoot } = require('./helpers/launch');
 
 // Chromium does the checking; what this fork decides is whether it is on and in
 // which languages. Both are preferences read in the main process, so the
@@ -12,13 +12,13 @@ const { launchRedil, closeRedil, repoRoot } = require('./helpers/launch');
 const FIXTURE = 'file://' + path.join(repoRoot, 'test', 'fixtures', 'service.html');
 
 async function languagesOf(config) {
-	const redil = await launchRedil({ config: config });
+	const shep = await launchShep({ config: config });
 	try {
-		return await redil.app.evaluate(({ webContents }) => webContents.getAllWebContents()
+		return await shep.app.evaluate(({ webContents }) => webContents.getAllWebContents()
 			.filter(contents => contents.getType() === 'window')
 			.map(contents => contents.session.getSpellCheckerLanguages())[0]);
 	} finally {
-		await closeRedil(redil);
+		await closeShep(shep);
 	}
 }
 
@@ -37,9 +37,9 @@ test('works the languages out when the preference names none', async () => {
 });
 
 test('turns the checker off in a service when the preference says so', async () => {
-	const redil = await launchRedil({ config: { spellcheck: false } });
+	const shep = await launchShep({ config: { spellcheck: false } });
 	try {
-		const attribute = await redil.window.evaluate(url => {
+		const attribute = await shep.window.evaluate(url => {
 			const record = Ext.getStore('Services').add({ id: 9301, type: 'custom', name: 'Spelling',
 				url: url, align: 'left', enabled: true, notifications: false, muted: true })[0];
 
@@ -51,6 +51,6 @@ test('turns the checker off in a service when the preference says so', async () 
 
 		expect(attribute).toContain('spellcheck=no');
 	} finally {
-		await closeRedil(redil);
+		await closeShep(shep);
 	}
 });

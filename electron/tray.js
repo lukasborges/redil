@@ -34,7 +34,7 @@ exports.create = function(win, config, toggleWindow) {
 	]);
 
 	appIcon = new Tray(iconPath);
-	appIcon.setToolTip('Redil');
+	appIcon.setToolTip('Shep');
 	appIcon.setContextMenu(contextMenu);
 
 	switch (process.platform) {

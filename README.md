@@ -1,13 +1,13 @@
 <div align="center">
-  <img src="./resources/Icon.png" width="160" alt="Redil" />
-  <h1>Redil</h1>
+  <img src="./resources/Icon.png" width="160" alt="Shep" />
+  <h1>Shep</h1>
   <p>One window for the messaging and email apps you already use in the browser.</p>
   <p><a href="https://www.gnu.org/licenses/gpl-3.0.en.html">GNU GPL v3</a></p>
 </div>
 
 <p align="center">
-  <img src="./resources/screenshots/linux.png" width="49%" alt="Redil on Linux, light theme" />
-  <img src="./resources/screenshots/linux-dark.png" width="49%" alt="Redil on Linux, dark theme" />
+  <img src="./resources/screenshots/linux.png" width="49%" alt="Shep on Linux, light theme" />
+  <img src="./resources/screenshots/linux-dark.png" width="49%" alt="Shep on Linux, dark theme" />
 </p>
 
 ---
@@ -31,7 +31,7 @@ That is fixed. The app builds and runs from this repository with nothing but npm
 
 ## Install
 
-Builds are produced for Linux as an AppImage, a deb and a tarball. See [Releases](https://github.com/lukasborges/redil/releases).
+Builds are produced for Linux as an AppImage, a deb and a tarball. See [Releases](https://github.com/lukasborges/shep/releases).
 
 The AppImage needs FUSE 2, which some distributions no longer install by default. On Fedora that is `fuse-libs`; on Debian and Ubuntu, `libfuse2`. Without it, run the AppImage with `--appimage-extract-and-run`.
 
@@ -59,17 +59,17 @@ npm run check:services  # report catalogue entries whose URLs have rotted
 
 No account is needed and none is offered. The app stores nothing remotely: your list of services lives in the renderer's local storage, and each service keeps its own session in a persistent Electron partition, so you stay signed in between launches until you remove the service.
 
-Sessions belong to the services themselves. Redil is a frame around their web apps and does not see inside them.
+Sessions belong to the services themselves. Shep is a frame around their web apps and does not see inside them.
 
 ## Contributing
 
 This fork has one maintainer, who commits to `main`. Contributions are welcome as pull requests from a branch; [CONTRIBUTING.md](./CONTRIBUTING.md) is upstream's and still describes how to write one, except for its prerequisites: Sencha Cmd and Ruby are no longer needed.
 
-Translations live generated in `resources/languages`. The download half of that pipeline is gone — it called a Crowdin API version that now answers 301, through a client that no longer loads on a modern Node, against a project this fork does not own. Until there is a Crowdin project for Redil, those generated files are the only source there is, and strings added since ship in English.
+Translations live generated in `resources/languages`. The download half of that pipeline is gone — it called a Crowdin API version that now answers 301, through a client that no longer loads on a modern Node, against a project this fork does not own. Until there is a Crowdin project for Shep, those generated files are the only source there is, and strings added since ship in English.
 
 ## Disclosure
 
-Redil is not affiliated with any of the messaging services it opens, nor with Rambox LLC or its product.
+Shep is not affiliated with any of the messaging services it opens, nor with Rambox LLC or its product.
 
 ## Licence
 

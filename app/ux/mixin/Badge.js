@@ -1,7 +1,7 @@
 /**
 * Created by whiskeredwonder on 7/30/2015.
 */
-Ext.define('Redil.ux.mixin.Badge', {
+Ext.define('Shep.ux.mixin.Badge', {
 	extend: 'Ext.Mixin',
 
 	requires: [

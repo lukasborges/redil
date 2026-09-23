@@ -1,4 +1,4 @@
-Ext.define('Redil.view.add.AddModel', {
+Ext.define('Shep.view.add.AddModel', {
 	 extend: 'Ext.app.ViewModel'
 	,alias: 'viewmodel.add-add'
 });

@@ -1,11 +1,11 @@
 
-Ext.define('Redil.view.main.MainModel', {
+Ext.define('Shep.view.main.MainModel', {
 	 extend: 'Ext.app.ViewModel'
 
 	,alias: 'viewmodel.main'
 
 	,data: {
-		 name: 'Redil'
+		 name: 'Shep'
 		,emptyServices: true
 	}
 });
