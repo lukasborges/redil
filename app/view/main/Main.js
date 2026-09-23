@@ -49,23 +49,6 @@ Ext.define('Redil.view.main.Main', {
 			}
 			,{ xtype: 'tbfill', reorderable: false }
 			,{
-				/*
-				 * The home tab used to be the first icon in the rail, wearing the
-				 * app's own mark among other people's. The mark says nothing about
-				 * where the button goes, and the top of the rail now belongs to
-				 * services alone: this is that tab, as a glyph, among the other
-				 * things that are the app rather than a service. The tab itself is
-				 * hidden; see tabConfig on the card.
-				 */
-				 xtype: 'button'
-				,reorderable: false
-				,glyph: 'xf015@FontAwesome'
-				,tooltip: 'Home'
-				,itemId: 'homeButton'
-				,handler: 'showHome'
-				,listeners: { afterrender: 'syncHomeButton' }
-			}
-			,{
 				 xtype: 'button'
 				,reorderable: false
 				,glyph: JSON.parse(localStorage.getItem('dontDisturb')) ? 'xf1f7@FontAwesome' : 'xf0f3@FontAwesome'
@@ -99,32 +82,46 @@ Ext.define('Redil.view.main.Main', {
 			,closable: false
 			,reorderable: false
 			,autoScroll: true
-			,layout: 'hbox'
-			// Hidden, not absent: the card is still a tab, so the shortcuts and
-			// setActiveTab keep working, but the rail shows services only and the
-			// button at its foot is what brings this one forward.
-			,tabConfig: { hidden: true }
+			,layout: { type: 'vbox', align: 'center', pack: 'center' }
 			/*
-			 * The one thing only this app can tell you, said in words at the top
-			 * of its own tab. Application.updateTotalNotifications writes it: the
-			 * Ext config of the same name already fires on every change.
+			 * Hidden, not absent: the card is still a tab, so the shortcuts and
+			 * setActiveTab keep working, and the catalogue below floats inside it.
+			 * It is what the app opens on, and all it has to say is where to go:
+			 * everything a service can have done to it is on its own icon's right
+			 * click, which is where the list that used to be here sent you anyway.
 			 */
-			,dockedItems: [
-				{
-					 xtype: 'component'
-					,dock: 'top'
-					,itemId: 'unreadSummary'
-					,cls: 'rx-summary'
-					,html: '<h1>No unread messages</h1><p>Nothing is waiting in your services.</p>'
-				}
-			]
+			,tabConfig: { hidden: true }
 			,items: [
 				{
+					 xtype: 'component'
+					,itemId: 'welcome'
+					,cls: 'rx-welcome'
+					,html: [
+						 '<img src="resources/logo/Logo.svg" alt="">'
+						,'<h1>' + locale['app.welcome[0]'] + '</h1>'
+						,'<p>' + locale['app.welcome[1]'] + '</p>'
+					].join('')
+				}
+				,{
+					 xtype: 'button'
+					,cls: 'rx-primary'
+					,text: locale['app.window[10]']
+					,glyph: 'xf067@FontAwesome'
+					,handler: 'openCatalogue'
+					,margin: '22 0 0 0'
+				}
+				,{
+					 xtype: 'component'
+					,cls: 'rx-welcome-hint'
+					,html: locale['app.welcome[2]']
+					,margin: '18 0 0 0'
+				}
+				,{
 					/*
 					 * The catalogue used to take two thirds of the home tab, which
 					 * made a list of 104 services the app's front door. It is an
 					 * overlay now, opened by the + in the rail. Floating keeps it
-					 * out of the hbox while leaving it a child of this view, so the
+					 * out of the vbox while leaving it a child of this view, so the
 					 * string handlers below still resolve against MainController.
 					 */
 					 xtype: 'panel'
@@ -225,90 +222,6 @@ Ext.define('Redil.view.main.Main', {
 							,emptyText: '<p class="rx-empty">' + locale['app.main[3]'] + '</p>'
 							,listeners: {
 								itemclick: 'onNewServiceSelect'
-							}
-						}
-					]
-				}
-				,{
-					/*
-					 * A dataview, not a grid. The grid drew each row as a <table>,
-					 * which fought every attempt to give the rows the shape the
-					 * design asks for -- margins and corners do not apply to a
-					 * layout Ext sizes in pixels. Here the row's markup is ours and
-					 * Ext still binds the store and dispatches the clicks.
-					 *
-					 * Two things the grid did are gone with it. Rows no longer group
-					 * by align: the rail already shows that split, above and below
-					 * its fill. And a name is renamed in the Edit window rather than
-					 * in place, which is where every other field of a service lives.
-					 */
-					 xtype: 'panel'
-					,title: locale['app.main[4]']
-					,cls: 'rx-services'
-					,flex: 1
-					,scrollable: 'vertical'
-					,bodyPadding: '0 34 14 34'
-					,tools: [
-						{
-							 xtype: 'button'
-							,glyph: 'xf1f8@FontAwesome'
-							,tooltip: locale['app.main[6]']
-							,handler: 'removeAllServices'
-						}
-					]
-					,items: [
-						{
-							 xtype: 'dataview'
-							,itemId: 'serviceList'
-							,store: 'Services'
-							,itemSelector: '.rx-service'
-							,tpl: new Ext.XTemplate(
-								'<tpl for=".">'
-									, '<div class="rx-service<tpl if="!enabled"> rx-service-off</tpl>">'
-										, '<img class="rx-service-icon" src="{[ this.icone(values) ]}" alt="">'
-										, '<span class="rx-service-name">{name:htmlEncode}</span>'
-										, '<tpl if="this.naoLidas(values.id) &gt; 0">'
-											, '<em class="rx-unread">{[ this.naoLidas(values.id) ]} unread</em>'
-										, '<tpl elseif="this.temAlgo(values.id)">'
-											, '<em class="rx-unread">unread</em>'
-										, '</tpl>'
-										, '<i class="rx-dot rx-dot-{[ this.estado(values) ]}"></i>'
-										, '<span class="rx-state">{[ this.rotulo(values) ]}</span>'
-										, '<span class="rx-service-actions">'
-											, '<a href="#" class="rx-act" data-act="edit" title="' + locale['app.main[13]'] + '"><i class="fa fa-cog"></i></a>'
-											, '<a href="#" class="rx-act" data-act="remove" title="' + locale['app.main[14]'] + '"><i class="fa fa-trash"></i></a>'
-											, '<a href="#" class="rx-act rx-act-toggle" data-act="toggle" title="{[ values.enabled ? \'Disable\' : \'Enable\' ]}">'
-												, '<i class="fa fa-{[ values.enabled ? \'toggle-on\' : \'toggle-off\' ]}"></i>'
-											, '</a>'
-										, '</span>'
-									, '</div>'
-								, '</tpl>'
-								, {
-									 icone: function(v) {
-										if ( v.type !== 'custom' ) return 'resources/icons/' + v.logo;
-										return v.logo === '' ? 'resources/icons/custom.png' : v.logo;
-									}
-									,naoLidas: function(id) {
-										return Redil.util.UnreadCounter.getUnreadCountForService(id);
-									}
-									// a service that says there is something but not how much
-									,temAlgo: function(id) {
-										return Redil.util.UnreadCounter.hasSomethingUnread(id);
-									}
-									,estado: function(v) {
-										if ( !v.enabled ) return 'disabled';
-										return v.muted || !v.notifications ? 'muted' : 'active';
-									}
-									,rotulo: function(v) {
-										if ( !v.enabled ) return 'Disabled';
-										if ( v.muted ) return 'Muted';
-										return v.notifications ? 'Active' : 'Silent';
-									}
-								}
-							)
-							,listeners: {
-								 itemclick: 'onServiceListClick'
-								,itemdblclick: 'showServiceTab'
 							}
 						}
 					]

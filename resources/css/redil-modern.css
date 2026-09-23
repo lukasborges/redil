@@ -193,17 +193,6 @@ body {
 	color: #FFFFFF;
 }
 
-/* The home button when its card is the one showing: the same mark an active
-   tab carries, because that is what it is. */
-#mainTabBar .x-btn-default-small.rx-rail-on {
-	background-color: rgba(255, 255, 255, 0.14);
-	box-shadow: inset 3px 0 0 0 #FFFFFF;
-}
-
-#mainTabBar .x-btn-default-small.rx-rail-on .x-btn-glyph {
-	color: #FFFFFF;
-}
-
 /* ----------------------------------------------------- the decline ui */
 
 /*
@@ -260,187 +249,104 @@ body {
 	padding: 8px 12px;
 }
 
-/* ------------------------------------------------------ home summary */
+/* ------------------------------------------------------------ welcome */
 
 /*
- * The home tab opens on what the app alone knows: how much is waiting. The
- * catalogue that used to fill two thirds of this screen is an overlay now.
+ * What the app opens on. It used to be a summary of the unread count over a
+ * list of every service with its actions, both of which the rail already says:
+ * the badges are the count, and a service's right click is its actions. All
+ * that is left to say is where to go.
  */
 
-.rx-summary {
-	padding: 28px 30px 20px;
-	background-color: var(--rx-surface);
+.rx-welcome {
+	max-width: 440px;
+	text-align: center;
 }
 
-.rx-summary h1 {
-	margin: 0;
+.rx-welcome img {
+	width: 88px;
+	height: 88px;
+}
+
+.rx-welcome h1 {
+	margin: 18px 0 8px;
 	font-size: 24px;
 	font-weight: 700;
 	color: var(--rx-ink);
 }
 
-.rx-summary p {
-	margin: 4px 0 0;
+.rx-welcome p {
+	margin: 0;
 	font-size: 14px;
+	line-height: 21px;
 	color: var(--rx-muted);
 }
 
-/* -------------------------------------------------- the service list */
+.rx-welcome-hint {
+	font-size: 12px;
+	color: var(--rx-muted);
+}
+
+/* The one button that moves you on, filled like a window's commit button. */
+.x-btn.x-btn-default-small.rx-primary,
+.rx-enable {
+	background-color: var(--rx-brand);
+	border: 1px solid var(--rx-brand);
+	border-radius: var(--rx-radius);
+	padding: 7px 18px;
+}
+
+.x-btn.x-btn-default-small.rx-primary.x-btn-over,
+.rx-enable:hover {
+	background-color: var(--rx-brand-over);
+	border-color: var(--rx-brand-over);
+}
+
+.x-btn.x-btn-default-small.rx-primary .x-btn-inner,
+.x-btn.x-btn-default-small.rx-primary .x-btn-glyph,
+.rx-enable {
+	color: var(--rx-on-brand);
+	font-size: 13px;
+	font-weight: 600;
+	line-height: 18px;
+}
+
+.rx-enable {
+	font-family: inherit;
+	cursor: pointer;
+}
 
 /*
- * The home tab's services, drawn by the dataview's own template rather than by
- * a grid. Everything here is ours, which is why it can be the shape the design
- * asks for: a card per service, its state said in words, and the actions kept
- * quiet until the pointer is on the row.
+ * A disabled service keeps its tab, greyed, and its card says so in the same
+ * voice as the welcome, with the way back on it.
  */
-
-.rx-services.x-panel,
-.rx-services .x-panel-body {
-	border: 0;
-	background-color: var(--rx-surface);
-}
-
-.rx-services > .x-panel-header-default {
-	background-color: transparent;
-	border: 0;
-	padding: 4px 36px 2px;
-}
-
-.rx-services .x-panel-header-title-default .x-title-text {
-	font-size: 11px;
-	font-weight: 700;
-	letter-spacing: 0.07em;
-	text-transform: uppercase;
-	color: var(--rx-muted);
-}
-
-/*
- * Remove every service. It sits in the panel header as a button rather than a
- * tool, so crisp paints it as a filled blue control -- loud, for something that
- * empties the list behind a confirmation.
- */
-.rx-services > .x-panel-header .x-btn {
-	background: none;
-	background-color: transparent;
-	border: 0;
-	box-shadow: none;
-}
-
-.rx-services > .x-panel-header .x-btn-glyph,
-.rx-services > .x-panel-header .x-btn-icon-el {
-	color: var(--rx-muted);
-	font-size: 14px;
-	opacity: 0.7;
-}
-
-.rx-services > .x-panel-header .x-btn.x-btn-over .x-btn-glyph {
-	color: var(--rx-alert);
-	opacity: 1;
-}
-
-.rx-service {
+.rx-disabled {
 	display: flex;
+	flex-direction: column;
 	align-items: center;
-	gap: 16px;
-	padding: 14px 18px;
-	margin-bottom: 8px;
-	background-color: var(--rx-surface);
-	border: 1px solid var(--rx-line);
-	border-radius: var(--rx-radius-lg);
-	cursor: default;
-	transition: border-color 0.12s ease;
+	justify-content: center;
+	height: 100%;
+	text-align: center;
+	color: var(--rx-ink);
 }
 
-.rx-service:hover {
-	border-color: var(--rx-line-strong);
-}
-
-.rx-service-off {
+.rx-disabled img {
+	width: 64px;
+	height: 64px;
+	filter: grayscale(1);
 	opacity: 0.6;
 }
 
-.rx-service-icon {
-	width: 30px;
-	height: 30px;
-	border-radius: 7px;
-	flex-shrink: 0;
-}
-
-.rx-service-off .rx-service-icon {
-	filter: grayscale(1);
-}
-
-.rx-service-name {
-	flex-grow: 1;
-	min-width: 0;
-	font-size: 14px;
-	font-weight: 600;
-	color: var(--rx-ink);
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-
-.rx-unread {
-	font-style: normal;
-	font-size: 12px;
+.rx-disabled h2 {
+	margin: 16px 0 4px;
+	font-size: 20px;
 	font-weight: 700;
-	color: var(--rx-ink);
 }
 
-.rx-dot {
-	width: 7px;
-	height: 7px;
-	border-radius: 50%;
-	flex-shrink: 0;
-}
-
-.rx-dot-active { background-color: var(--rx-ok); }
-.rx-dot-muted,
-.rx-dot-disabled { background-color: var(--rx-muted); }
-
-.rx-state {
-	font-size: 13px;
-	color: var(--rx-muted);
-	width: 72px;
-}
-
-/*
- * Always there, just quiet. The grid hid these until the row was hovered, which
- * is how a row ends up with three controls nobody knows about.
- */
-.rx-service-actions {
-	display: flex;
-	gap: 4px;
-	opacity: 0.55;
-	transition: opacity 0.12s ease;
-}
-
-.rx-service:hover .rx-service-actions,
-.rx-service:focus-within .rx-service-actions {
-	opacity: 1;
-}
-
-.rx-act {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	width: 30px;
-	height: 30px;
-	border-radius: var(--rx-radius);
-	color: var(--rx-muted);
+.rx-disabled p {
+	margin: 0 0 20px;
 	font-size: 14px;
-	text-decoration: none;
-	transition: background-color 0.12s ease, color 0.12s ease;
-}
-
-.rx-act:hover {
-	background-color: var(--rx-hover);
-	color: var(--rx-ink);
-}
-
-.rx-act-toggle {
-	font-size: 17px;
+	color: var(--rx-muted);
 }
 
 .rx-empty {

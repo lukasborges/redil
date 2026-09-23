@@ -205,117 +205,79 @@ module.exports = function(config) {
 		}
 	];
 
-	if ( process.platform === 'darwin' ) {
-		tpl.unshift({
-			label: appName,
-			submenu: [
-				{
-					label: locale['preferences[0]'],
-					click() {
-						sendAction('showPreferences')
-					}
-				},
-				{
-					label: locale['menu.help[5]'],
-					visible: process.argv.indexOf('--without-update') === -1,
-					click(item, win) {
-						const webContents = win.webContents;
-						const send = webContents.send.bind(win.webContents);
-						send('autoUpdater:check-update');
-					}
-				},
-				{
-					label: locale['menu.help[6]'],
-					click() {
-						sendAction('showAbout')
-					}
-				},
-				{
-					type: 'separator'
-				},
-				{
-					label: locale['menu.osx[0]'],
-					role: 'services',
-					submenu: []
-				},
-				{
-					type: 'separator'
-				},
-				{
-					label: locale['menu.osx[1]'],
-					accelerator: 'Command+H',
-					role: 'hide'
-				},
-				{
-					label: locale['menu.osx[2]'],
-					accelerator: 'Command+Alt+H',
-					role: 'hideothers'
-				},
-				{
-					label: locale['menu.osx[3]'],
-					role: 'unhide'
-				},
-				{
-					type: 'separator'
-				},
-				{
-					role: 'quit',
-					label: locale['tray[1]']
+	// Built for macOS only; main.js installs no menu anywhere else.
+	tpl.unshift({
+		label: appName,
+		submenu: [
+			{
+				label: locale['preferences[0]'],
+				click() {
+					sendAction('showPreferences')
 				}
-			]
-		});
-		helpSubmenu.push({
-			type: 'separator'
-		});
-		helpSubmenu.push({
-			label: 'Grant Microphone and Camera permissions',
-			visible: systemPreferences.getMediaAccessStatus('microphone') !== 'granted' || systemPreferences.getMediaAccessStatus('camera') !== 'granted',
-			// Asked for here rather than sent to the renderer, which could only
-			// ask the main process back over the remote bridge. One at a time,
-			// so macOS does not stack the two prompts.
-			async click() {
-				await systemPreferences.askForMediaAccess('microphone');
-				await systemPreferences.askForMediaAccess('camera');
-			}
-		});
-	} else {
-		tpl.unshift({
-			label: '&'+locale['menu.file[0]'],
-			submenu: [
-				{
-					label: locale['preferences[0]'],
-					click() {
-						sendAction('showPreferences')
-					}
-				},
-				{
-					type: 'separator'
-				},
-				{
-					role: 'quit',
-					label: locale['menu.file[1]']
+			},
+			{
+				label: locale['menu.help[5]'],
+				visible: process.argv.indexOf('--without-update') === -1,
+				click(item, win) {
+					const webContents = win.webContents;
+					const send = webContents.send.bind(win.webContents);
+					send('autoUpdater:check-update');
 				}
-			]
-		});
-		helpSubmenu.push({
-			type: 'separator'
-		});
-		helpSubmenu.push({
-			label: `&`+locale['menu.help[5]'],
-			visible: process.argv.indexOf('--without-update') === -1,
-			click(item, win) {
-				const webContents = win.webContents;
-				const send = webContents.send.bind(win.webContents);
-				send('autoUpdater:check-update');
+			},
+			{
+				label: locale['menu.help[6]'],
+				click() {
+					sendAction('showAbout')
+				}
+			},
+			{
+				type: 'separator'
+			},
+			{
+				label: locale['menu.osx[0]'],
+				role: 'services',
+				submenu: []
+			},
+			{
+				type: 'separator'
+			},
+			{
+				label: locale['menu.osx[1]'],
+				accelerator: 'Command+H',
+				role: 'hide'
+			},
+			{
+				label: locale['menu.osx[2]'],
+				accelerator: 'Command+Alt+H',
+				role: 'hideothers'
+			},
+			{
+				label: locale['menu.osx[3]'],
+				role: 'unhide'
+			},
+			{
+				type: 'separator'
+			},
+			{
+				role: 'quit',
+				label: locale['tray[1]']
 			}
-		});
-		helpSubmenu.push({
-			label: `&`+locale['menu.help[6]'],
-			click() {
-				sendAction('showAbout')
-			}
-		});
-	}
+		]
+	});
+	helpSubmenu.push({
+		type: 'separator'
+	});
+	helpSubmenu.push({
+		label: 'Grant Microphone and Camera permissions',
+		visible: systemPreferences.getMediaAccessStatus('microphone') !== 'granted' || systemPreferences.getMediaAccessStatus('camera') !== 'granted',
+		// Asked for here rather than sent to the renderer, which could only
+		// ask the main process back over the remote bridge. One at a time,
+		// so macOS does not stack the two prompts.
+		async click() {
+			await systemPreferences.askForMediaAccess('microphone');
+			await systemPreferences.askForMediaAccess('camera');
+		}
+	});
 
 	tpl[tpl.length - 1].submenu = helpSubmenu;
 

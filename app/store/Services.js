@@ -27,9 +27,8 @@ Ext.define('Redil.store.Services', {
 			var servicesLeft = [];
 			var servicesRight = [];
 			store.each(function(service) {
-				// If the service is disabled, we dont add it to tab bar
-				if ( !service.get('enabled') ) return;
-
+				// A disabled service keeps its place in the rail, greyed: its icon's
+				// right click is where it is turned back on.
 				var cfg = {
 					 xtype: 'webview'
 					,id: 'tab_'+service.get('id')

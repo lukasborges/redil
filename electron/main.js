@@ -36,7 +36,6 @@ if ( isDev ) app.getVersion = function() { return require('../package.json').ver
 const config = new Config({
 	 defaults: {
 		 always_on_top: false
-		,hide_menu_bar: false
 		,window_display_behavior: 'taskbar_tray'
 		,auto_launch: !isDev
 		,flash_frame: true
@@ -111,8 +110,11 @@ app.commandLine.appendSwitch('disable-features', 'CrossOriginOpenerPolicy');
 // https://github.com/electron-userland/electron-builder/issues/362
 app.setAppUserModelId('io.github.lukasborges.redil');
 
-// Menu
-const appMenu = require('./menu')(config);
+// Only macOS gets a menu bar. It shows one whether or not the app asks, and
+// copy and paste reach the page through its Edit roles. Elsewhere every item
+// had a home already -- the rail, a service's right click, Preferences -- and
+// the shortcuts the menu carried are Mousetrap's, in app/Application.js.
+const appMenu = process.platform === 'darwin' ? require('./menu')(config) : null;
 
 // Configure AutoLaunch
 let appLauncher;
@@ -143,7 +145,6 @@ function createWindow () {
 		,width: config.get('width')
 		,height: config.get('height')
 		,alwaysOnTop: config.get('always_on_top')
-		,autoHideMenuBar: config.get('hide_menu_bar')
 		,skipTaskbar: config.get('window_display_behavior') === 'show_trayIcon'
 		,show: !config.get('start_minimized')
 		,acceptFirstMouse: true
@@ -341,9 +342,6 @@ ipcMain.on('sConfig', function(event, values) {
 ipcMain.on('setConfig', function(event, values) {
 	config.set(values);
 
-	// hide_menu_bar
-	mainWindow.setAutoHideMenuBar(values.hide_menu_bar);
-	if ( !values.hide_menu_bar ) mainWindow.setMenuBarVisibility(true);
 	// always_on_top
 	mainWindow.setAlwaysOnTop(values.always_on_top);
 	// auto_launch
@@ -595,6 +593,19 @@ ipcMain.on('app:quit', function() {
 	app.quit();
 });
 
+// What the File, View and Window menus did, for the shortcuts and the buttons
+// in Preferences that replaced them on Linux and Windows.
+ipcMain.on('window:toggleFullScreen', function() {
+	mainWindow.setFullScreen(!mainWindow.isFullScreen());
+});
+ipcMain.on('window:toggleDevTools', function() {
+	mainWindow.webContents.toggleDevTools();
+});
+ipcMain.handle('app:clearCache', async function() {
+	await mainWindow.webContents.session.clearCache();
+	mainWindow.reload();
+});
+
 ipcMain.on('window:show', function() {
 	if ( mainWindow ) mainWindow.show();
 });
@@ -777,11 +788,12 @@ app.on('web-contents-created', (webContentsCreatedEvent, contents) => {
 		}
 
 		if (
-			key === 'F11' ||
+			// macOS still has menu accelerators for these, and replaying them
+			// would fire each twice; elsewhere Mousetrap is the only listener
+			(process.platform === 'darwin' && (key === 'F11' || key === 'q')) ||
 			key === 'a' ||
 			key === 'A' ||
 			key === 'F12' ||
-			key === 'q' ||
 			(key === 'F1' && modifiers.includes('control'))
 		)
 			return;

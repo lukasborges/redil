@@ -51,16 +51,6 @@ Ext.define('Redil.util.UnreadCounter', {
 		};
 
 		/**
-		 * What a single service is holding. The home tab's list says it per row.
-		 *
-		 * @param {*} id	Id of the service.
-		 * @return {number}
-		 */
-		this.getUnreadCountForService = function(id) {
-			return unreadCountByService.get(id) || 0;
-		};
-
-		/**
 		 * Whether a service is saying "there is something" without a number.
 		 *
 		 * @param {*} id	Id of the service.
@@ -79,40 +69,6 @@ Ext.define('Redil.util.UnreadCounter', {
 		 */
 		this.setSomethingUnreadForService = function(id, on) {
 			on ? servicesWithSomething.add(id) : servicesWithSomething.delete(id);
-			if ( Redil.app && Redil.app.updateUnreadSummary ) Redil.app.updateUnreadSummary(totalUnreadCount);
-		};
-
-		/**
-		 * The ids of the services saying "something", for the home tab's line.
-		 *
-		 * @return {Array}
-		 */
-		this.getServiceIdsWithSomething = function() {
-			return Array.from(servicesWithSomething);
-		};
-
-		/**
-		 * How many services are holding something unread. The home tab says this
-		 * beside the total, and only the map knows it.
-		 *
-		 * @return {number}
-		 */
-		this.getServicesWithUnread = function() {
-			var quantos = 0;
-			unreadCountByService.forEach(function(contagem) { if (contagem > 0) quantos++; });
-			return quantos;
-		};
-
-		/**
-		 * Which services are waiting, by id. The home tab names them when there
-		 * are few: "in 1 of your 6 services" says nothing you can act on.
-		 *
-		 * @returns {Array} the ids of the services with something unread
-		 */
-		this.getUnreadServiceIds = function() {
-			var ids = [];
-			unreadCountByService.forEach(function(contagem, id) { if (contagem > 0) ids.push(id); });
-			return ids;
 		};
 
 		/**

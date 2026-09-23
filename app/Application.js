@@ -195,6 +195,27 @@ Ext.define('Redil.Application', {
 				Ext.cq1('app-main').getController().lockRedil(btn);
 			});
 
+			/*
+			 * The accelerators the menu bar used to carry. macOS keeps its menu and
+			 * its accelerators; elsewhere there is no menu, and main.js replays a
+			 * key typed inside a service into this window, so these answer there
+			 * as well.
+			 */
+			if ( platform !== 'darwin' ) {
+				const activeService = () => {
+					var tab = Ext.cq1('app-main').getActiveTab();
+					return tab.getWebView && tab.record.get('enabled') ? tab : null;
+				};
+				Mousetrap.bind('ctrl+q', () => { ipc.send('app:quit'); });
+				Mousetrap.bind('ctrl+r', () => { ipc.send('reloadApp'); });
+				Mousetrap.bind('ctrl+shift+r', () => { var tab = activeService(); if ( tab ) tab.reloadService(); });
+				Mousetrap.bind(['ctrl+=', 'ctrl+plus'], () => { var tab = activeService(); if ( tab ) tab.zoomIn(); });
+				Mousetrap.bind('ctrl+-', () => { var tab = activeService(); if ( tab ) tab.zoomOut(); });
+				Mousetrap.bind('ctrl+0', () => { var tab = activeService(); if ( tab ) tab.resetZoom(); });
+				Mousetrap.bind('f11', () => { ipc.send('window:toggleFullScreen'); });
+				Mousetrap.bind('ctrl+shift+i', () => { ipc.send('window:toggleDevTools'); });
+			}
+
 			// Mouse Wheel zooming
 			document.addEventListener('mousewheel', function(e) {
 				if( e.ctrlKey ) {
@@ -238,54 +259,6 @@ Ext.define('Redil.Application', {
 				document.title = 'Redil';
 			}
 		}
-
-		this.updateUnreadSummary(newValue);
-	}
-
-	/*
-	 * The home tab opens on how much is waiting, in words. Called from the
-	 * updater above rather than from its own hook: totalNotifications already
-	 * had one, and a second entry of the same name in this object literal would
-	 * simply have been overwritten by the first.
-	 */
-	,updateUnreadSummary: function( total ) {
-		var aba = Ext.getCmp('redilTab');
-		// The list is a dataview now; its rows carry the per-service count.
-		var lista = aba && aba.down('#serviceList');
-		if ( lista && lista.rendered ) lista.refresh();
-
-		var resumo = aba && aba.down('#unreadSummary');
-		if ( !resumo ) return;
-
-		// Naming them is the only thing this line can say that the rail and the
-		// list below do not; counting them again is not. Services that can only
-		// say "something is waiting" -- Google Chat, from its favicon -- are
-		// named here too, or the line would read "no unread messages" beside a
-		// rail with a red dot on it.
-		var aguardando = Redil.util.UnreadCounter.getUnreadServiceIds()
-			.concat(Redil.util.UnreadCounter.getServiceIdsWithSomething());
-
-		var nomes = Ext.Array.unique(aguardando).map(function(id) {
-			var registro = Ext.getStore('Services').getById(id);
-			return registro ? Ext.String.htmlEncode(registro.get('name')) : null;
-		}).filter(function(nome) { return !!nome; });
-
-		if ( total < 1 && !nomes.length ) {
-			resumo.update('<h1>No unread messages</h1><p>Nothing is waiting in your services.</p>');
-			return;
-		}
-
-		var servicos = Ext.getStore('Services').getCount();
-		var onde = nomes.length === 1 ? 'in ' + nomes[0]
-			: nomes.length === 2 ? 'in ' + nomes[0] + ' and ' + nomes[1]
-			: 'in ' + nomes.length + ' of your ' + servicos + (servicos === 1 ? ' service' : ' services');
-
-		// A service that gives no number leaves the headline without one too.
-		var titulo = total < 1
-			? 'Unread messages'
-			: total + (total === 1 ? ' unread message' : ' unread messages');
-
-		resumo.update('<h1>' + titulo + '</h1><p>' + onde + '</p>');
 	}
 
 	,checkUpdate: function(silence) {

@@ -62,9 +62,14 @@ Ext.define('Redil.ux.WebView',{
 				,style: !me.record.get('enabled') ? '-webkit-filter: grayscale(1)' : ''
 				,menu:  {
 					 plain: true
+					,listeners: {
+						 beforeshow: me.syncServiceMenu
+						,scope: me
+					}
 					,items: [
 						{
 							 xtype: 'toolbar'
+							,needsPage: true
 							,items: [
 								{
 									 xtype: 'segmentedbutton'
@@ -93,18 +98,21 @@ Ext.define('Redil.ux.WebView',{
 						,'-'
 						,{
 							 text: 'Zoom In'
+							,needsPage: true
 							,glyph: 'xf00e@FontAwesome'
 							,scope: me
 							,handler: me.zoomIn
 						}
 						,{
 							 text: 'Zoom Out'
+							,needsPage: true
 							,glyph: 'xf010@FontAwesome'
 							,scope: me
 							,handler: me.zoomOut
 						}
 						,{
 							 text: 'Reset Zoom'
+							,needsPage: true
 							,glyph: 'xf002@FontAwesome'
 							,scope: me
 							,handler: me.resetZoom
@@ -112,6 +120,7 @@ Ext.define('Redil.ux.WebView',{
 						,'-'
 						,{
 							 text: locale['app.webview[0]']
+							,needsPage: true
 							,glyph: 'xf021@FontAwesome'
 							,scope: me
 							,handler: me.reloadService
@@ -119,9 +128,41 @@ Ext.define('Redil.ux.WebView',{
 						,'-'
 						,{
 							 text: locale['app.webview[3]']
+							,needsPage: true
 							,glyph: 'xf121@FontAwesome'
 							,scope: me
 							,handler: me.toggleDevTools
+						}
+						/*
+						 * What the list on the home tab used to offer, per row. The
+						 * icon is the service, so it is the thing to ask.
+						 */
+						,'-'
+						,{
+							 text: locale['app.window[1]']
+							,glyph: 'xf013@FontAwesome'
+							,scope: me
+							,handler: me.editService
+						}
+						,{
+							 text: locale['app.service[0]']
+							,itemId: 'disableService'
+							,glyph: 'xf204@FontAwesome'
+							,scope: me
+							,handler: me.toggleService
+						}
+						,{
+							 text: locale['app.service[1]']
+							,itemId: 'enableService'
+							,glyph: 'xf205@FontAwesome'
+							,scope: me
+							,handler: me.toggleService
+						}
+						,{
+							 text: locale['app.main[14]']
+							,glyph: 'xf1f8@FontAwesome'
+							,scope: me
+							,handler: me.removeService
 						}
 					]
 				}
@@ -196,10 +237,17 @@ Ext.define('Redil.ux.WebView',{
 
 		if ( !enabled ) {
 			cfg = {
-				 xtype: 'container'
-				,html: '<h3>Service Disabled</h3>'
-				,style: 'text-align:center;'
-				,padding: 100
+				 xtype: 'component'
+				,cls: 'rx-disabled'
+				,html: [
+					 '<img src="' + Ext.String.htmlEncode(me.icon) + '" alt="">'
+					,'<h2>' + Ext.String.htmlEncode(me.record.get('name')) + '</h2>'
+					,'<p>' + locale['app.service[2]'] + '</p>'
+					,'<button type="button" class="rx-enable">' + locale['app.service[1]'] + '</button>'
+				].join('')
+				,listeners: {
+					 click: { element: 'el', delegate: '.rx-enable', fn: function() { me.toggleService(); } }
+				}
 			};
 		} else {
 			cfg = [{
@@ -830,6 +878,39 @@ Ext.define('Redil.ux.WebView',{
 		var webview = me.getWebView();
 
 		if ( me.record.get('enabled') && webview ) ipc.send('service:setMediaAccess', webview.partition, allowed);
+	}
+
+	/*
+	 * A disabled service has no page, so going back, zooming or reloading have
+	 * nothing to act on, and the menu keeps only what can be done to the
+	 * service itself.
+	 */
+	,syncServiceMenu: function( menu ) {
+		var ligado = this.record.get('enabled');
+
+		// the separators go with the page's items, or a disabled service's menu
+		// would open on a rule
+		Ext.each(menu.items.items, function(item) {
+			if ( item.needsPage || item.isXType('menuseparator') ) item.setHidden(!ligado);
+		});
+		menu.down('#disableService').setHidden(!ligado);
+		menu.down('#enableService').setHidden(ligado);
+	}
+
+	,mainController: function() {
+		return Ext.cq1('app-main').getController();
+	}
+
+	,editService: function() {
+		this.mainController().configureService(null, null, null, null, null, this.record);
+	}
+
+	,toggleService: function() {
+		this.mainController().toggleService(this.record);
+	}
+
+	,removeService: function() {
+		this.mainController().removeService(null, null, null, null, null, this.record);
 	}
 
 	,setEnabled: function(enabled) {

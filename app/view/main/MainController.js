@@ -25,8 +25,6 @@ Ext.define('Redil.view.main.MainController', {
 
 		localStorage.setItem('last_active_service', newTab.id);
 
-		me.syncHomeButton();
-
 		if ( newTab.id === 'redilTab' ) {
 			if ( Redil.app.getTotalNotifications() > 0 ) {
 				document.title = 'Redil ('+ Redil.app.getTotalNotifications() +')';
@@ -91,73 +89,20 @@ Ext.define('Redil.view.main.MainController', {
 		});
 		store.resumeEvent('remove', 'add');
 
-		// position is the store's sort field and the home tab's list reads the
-		// store, so the list follows the rail rather than the other way round.
+		// position is the store's sort field, so the store follows the rail
+		// rather than the other way round.
 		store.sort();
 	}
 
-	,showServiceTab: function( view, record ) {
-		// The grid only obeyed a double click on the logo cell, because it tested
-		// e.position.colIdx. A row has no columns now, so the whole row opens it.
-		var aba = Ext.getCmp('tab_' + record.get('id'));
-		if ( aba ) aba.show();
-	}
-
-	/*
-	 * One click handler for the row, dispatched by the data-act of whatever was
-	 * hit. The grid spent three columns on this: two action columns and a check
-	 * column, each with its own signature.
+	/**
+	 * Disabling keeps the service in the rail, greyed, rather than taking its
+	 * tab away: with the list on the home tab gone, the icon's own right click
+	 * is the only way back, so the icon has to stay.
 	 */
-	,onServiceListClick: function( view, record, item, index, e ) {
-		var alvo = e.getTarget('.rx-act', 3);
-		if ( !alvo ) return;
-
-		e.stopEvent();
-
-		switch ( alvo.getAttribute('data-act') ) {
-			case 'edit':
-				this.configureService(null, index, null, null, e, record, item);
-				break;
-			case 'remove':
-				this.removeService(null, index, null, null, e, record, item);
-				break;
-			case 'toggle':
-				// The check column wrote the field before firing; nothing does now.
-				var ligado = !record.get('enabled');
-				record.set('enabled', ligado);
-				this.onEnableDisableService(null, index, ligado);
-				view.refreshNode(index);
-				break;
-		}
-	}
-
-
-
-	,onEnableDisableService: function(cc, rowIndex, checked, obj, hideTab) {
-		var rec = Ext.getStore('Services').getAt(rowIndex);
-
-		if ( !checked ) {
-			Ext.getCmp('tab_'+rec.get('id')).destroy();
-		} else {
-			Ext.cq1('app-main').insert(rec.get('align') === 'left' ? rec.get('position') : rec.get('position')+1, {
-				 xtype: 'webview'
-				,id: 'tab_'+rec.get('id')
-				,title: rec.get('name')
-				,icon: rec.get('type') !== 'custom' ? 'resources/icons/'+rec.get('logo') : ( rec.get('logo') === '' ? 'resources/icons/custom.png' : rec.get('logo'))
-				,src: rec.get('url')
-				,type: rec.get('type')
-				,muted: rec.get('muted')
-				,includeInGlobalUnreadCounter: rec.get('includeInGlobalUnreadCounter')
-				,displayTabUnreadCounter: rec.get('displayTabUnreadCounter')
-				,enabled: rec.get('enabled')
-				,record: rec
-				,useragent: ipc.sendSync('getConfig').user_agent
-				,hidden: hideTab
-				,tabConfig: {
-					 service: rec
-				}
-			});
-		}
+	,toggleService: function( rec ) {
+		var ligado = !rec.get('enabled');
+		rec.set('enabled', ligado);
+		Ext.getCmp('tab_' + rec.get('id')).setEnabled(ligado);
 	}
 
 	/*
@@ -172,27 +117,6 @@ Ext.define('Redil.view.main.MainController', {
 	 * it brings the home tab forward, and closing it puts the service back,
 	 * unless one was picked, in which case the add window decides where you end.
 	 */
-	/**
-	 * The home tab, from the button at the foot of the rail. Its own tab is
-	 * hidden, so this is the only way in besides the shortcut.
-	 */
-	,showHome: function() {
-		Ext.cq1('app-main').setActiveTab('redilTab');
-	}
-
-	/**
-	 * The home tab has no tab in the rail to light up, so its button wears the
-	 * mark. Called on every tab change and once when the button renders, because
-	 * the home tab is the one already active when that happens.
-	 */
-	,syncHomeButton: function() {
-		var botao = Ext.getCmp('mainTabBar').down('#homeButton');
-		if ( !botao || !botao.el ) return;
-
-		var inicial = Ext.cq1('app-main').getActiveTab();
-		botao.el[inicial && inicial.id === 'redilTab' ? 'addCls' : 'removeCls']('rx-rail-on');
-	}
-
 	,openCatalogue: function() {
 		var painel = Ext.cq1('app-main');
 		var catalogo = Ext.getCmp('redilTab').down('#catalogue');
@@ -310,11 +234,10 @@ Ext.define('Redil.view.main.MainController', {
 		var rec = Ext.getStore('Services').getById(serviceId);
 
 		if ( !rec.get('enabled') ) {
-			rec.set('enabled', true);
-			me.onEnableDisableService(null, Ext.getStore('Services').indexOf(rec), true, null, true);
-
-			// Get Tab
+			// A disabled service has no webview, and clearing its data needs one.
 			var tab = Ext.getCmp('tab_'+serviceId);
+			rec.set('enabled', true);
+			tab.setEnabled(true);
 			// Clear all trash data
 			const webview = tab.getWebView();
 			webview.addEventListener("did-start-loading", function() {

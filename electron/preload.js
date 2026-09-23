@@ -12,7 +12,8 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 // Sent by the renderer, answered or acted on by the main process.
 const TO_MAIN = [
-	 'app:getVersion'
+	 'app:clearCache'
+	,'app:getVersion'
 	,'app:quit'
 	,'clipboard:writeText'
 	,'autoUpdater:check-for-updates'
@@ -35,6 +36,8 @@ const TO_MAIN = [
 	,'webview:clearData'
 	,'webview:setTrust'
 	,'window:show'
+	,'window:toggleDevTools'
+	,'window:toggleFullScreen'
 	// screenselector.html, which shares this preload.
 	,'screenShare:cancelSelection'
 	,'screenShare:getSources'

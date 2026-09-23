@@ -28,7 +28,6 @@ test('serves the preference defaults over getConfig', async () => {
 	// so a rename there should fail here rather than at runtime.
 	expect(config).toMatchObject({
 		 always_on_top: false
-		,hide_menu_bar: false
 		,theme: 'system'
 		,window_display_behavior: 'taskbar_tray'
 		,locale: expect.any(String)
@@ -142,11 +141,10 @@ test('puts the service bar on the left, as a rail of icons', async () => {
 
 	expect(rail.posicao).toBe('left');
 	expect(rail.largura).toBe(68);
-	// Add a service above the fill; below it the home tab and the three that were
-	// the home tab's own toolbar until they moved here, which meant they vanished
-	// whenever a service was open. The top of the rail is services only, so the
-	// home tab is a glyph down here rather than the app's mark up there.
-	expect(rail.botoes).toEqual(['openCatalogue', 'showHome', 'dontDisturb', 'lockRedil', 'openPreferences']);
+	// Add a service above the fill; below it the three that were the home tab's
+	// own toolbar until they moved here, which meant they vanished whenever a
+	// service was open. The home tab has no button: it is what the app opens on.
+	expect(rail.botoes).toEqual(['openCatalogue', 'dontDisturb', 'lockRedil', 'openPreferences']);
 	expect(rail.abaInicialOculta).toBe(true);
 	// Icons only: the label elements exist, and none of them is shown.
 	expect(rail.rotulos).toBeGreaterThan(0);
@@ -185,31 +183,25 @@ test('splits the preferences into sections without unbinding a field', async () 
 	expect(prefs.alturaDoCancelar).toBeGreaterThan(0);
 });
 
-test('opens on the unread summary, with the catalogue behind a button', async () => {
+test('opens on a welcome page, with the catalogue behind a button', async () => {
 	const inicio = await redil.window.evaluate(() => {
 		const catalogo = Ext.getCmp('redilTab').down('#catalogue');
 		return {
-			 flutuante: !!catalogo.floating
+			 ativo: Ext.cq1('app-main').getActiveTab().id
+			,flutuante: !!catalogo.floating
 			,oculto: catalogo.isHidden()
-			,resumo: Ext.getCmp('redilTab').down('#unreadSummary').el.dom.innerText.trim()
+			,boasVindas: Ext.getCmp('redilTab').down('#welcome').el.dom.innerText.trim()
+			,botao: Ext.getCmp('redilTab').down('button[cls=rx-primary]').handler
 		};
 	});
 
+	expect(inicio.ativo).toBe('redilTab');
 	// The catalogue used to be two thirds of this screen, which made a list of
 	// 104 services the app's front door.
 	expect(inicio.flutuante).toBe(true);
 	expect(inicio.oculto).toBe(true);
-	expect(inicio.resumo).toContain('No unread messages');
-
-	// The summary is written from the totalNotifications config, which
-	// UnreadCounter drives, so a count set anywhere reaches it.
-	const comNaoLidas = await redil.window.evaluate(() => {
-		Redil.util.UnreadCounter.setUnreadCountForService(99, 4);
-		const texto = Ext.getCmp('redilTab').down('#unreadSummary').el.dom.innerText.trim();
-		Redil.util.UnreadCounter.clearUnreadCountForService(99);
-		return texto;
-	});
-	expect(comNaoLidas).toContain('4 unread messages');
+	expect(inicio.boasVindas).toContain('Welcome to Redil');
+	expect(inicio.botao).toBe('openCatalogue');
 
 	const aberto = await redil.window.evaluate(() => {
 		Ext.cq1('app-main').getController().openCatalogue();
@@ -221,40 +213,58 @@ test('opens on the unread summary, with the catalogue behind a button', async ()
 	expect(aberto).toBe(true);
 });
 
-test('draws the service list from a template, one node per service', async () => {
-	const lista = await redil.window.evaluate(() => {
-		const view = Ext.getCmp('redilTab').down('#serviceList');
-		const store = view.getStore();
+test('edits, disables and enables a service from its icon\'s right click', async () => {
+	// The list on the home tab used to be the only place for these, and a
+	// disabled service lost its tab: with the list gone the tab has to stay,
+	// greyed, or there would be no way back.
+	const fixture = 'file://' + path.join(repoRoot, 'test', 'fixtures', 'service.html');
+	const passos = await redil.window.evaluate(url => {
+		const painel = Ext.cq1('app-main');
+		const store = Ext.getStore('Services');
+		const rec = store.add({ id: 7301, type: 'custom', name: 'Right click', url: url,
+			align: 'left', position: 0, enabled: true, notifications: false, muted: false })[0];
 
-		store.add({ id: 4141, type: 'custom', name: 'Probe', url: 'file:///probe.html',
-			align: 'left', enabled: true, notifications: true, muted: false });
-		Redil.util.UnreadCounter.setUnreadCountForService(4141, 3);
-		view.refresh();
+		painel.suspendEvent('add');
+		painel.insert(1, { xtype: 'webview', id: 'tab_7301', title: '', tooltip: rec.get('name'),
+			src: url, type: 'custom', enabled: true, record: rec, tabConfig: { service: rec } });
+		painel.resumeEvent('add');
 
-		const linha = view.el.dom.querySelector('.rx-service');
-		const resultado = {
-			 nos: view.getNodes().length
-			,registros: store.getCount()
-			,nome: linha.querySelector('.rx-service-name').textContent
-			,naoLidas: linha.querySelector('.rx-unread').textContent
-			,estado: linha.querySelector('.rx-state').textContent
-			,ponto: linha.querySelector('.rx-dot').className
-			// Edit, remove and the enable toggle: what the grid spent three
-			// columns on, dispatched from one click handler by data-act.
-			,acoes: [...linha.querySelectorAll('.rx-act')].map(a => a.getAttribute('data-act'))
+		// Ext lays out a card only while it is showing, so the disabled page
+		// exists once the tab is the active one.
+		painel.setActiveTab('tab_7301');
+		const aba = Ext.getCmp('tab_7301');
+		const menu = aba.tab.menu;
+		const ler = () => {
+			menu.show();
+			const visiveis = menu.items.items.filter(i => !i.isHidden() && !i.isXType('menuseparator') && i.text).map(i => i.text);
+			menu.hide();
+			return visiveis;
 		};
 
-		Redil.util.UnreadCounter.clearUnreadCountForService(4141);
-		store.remove(store.getById(4141));
-		return resultado;
-	});
+		const ligado = ler();
+		menu.down('#disableService').handler.call(aba);
+		const desligado = { menu: ler(), existe: !!Ext.getCmp('tab_7301'), enabled: rec.get('enabled'),
+			pagina: !!aba.el.dom.querySelector('.rx-disabled .rx-enable') };
+		aba.el.dom.querySelector('.rx-enable').click();
+		const religado = { enabled: rec.get('enabled'), webview: !!aba.getWebView() };
 
-	expect(lista.nos).toBe(lista.registros);
-	expect(lista.nome).toBe('Probe');
-	expect(lista.naoLidas).toBe('3 unread');
-	expect(lista.estado).toBe('Active');
-	expect(lista.ponto).toContain('rx-dot-active');
-	expect(lista.acoes).toEqual(['edit', 'remove', 'toggle']);
+		aba.destroy();
+		store.remove(rec);
+		painel.setActiveTab('redilTab');
+		return { ligado: ligado, desligado: desligado, religado: religado };
+	}, fixture);
+
+	expect(passos.ligado).toEqual(['Zoom In', 'Zoom Out', 'Reset Zoom', 'Reload', 'Toggle Developer Tools', 'Edit', 'Disable', 'Remove']);
+	// a disabled service has no page, so only what can be done to the service is left
+	expect(passos.desligado).toEqual({ menu: ['Edit', 'Enable', 'Remove'], existe: true, enabled: false, pagina: true });
+	expect(passos.religado).toEqual({ enabled: true, webview: true });
+});
+
+test('installs no menu bar outside macOS', async () => {
+	// Every item it held has a home now: the rail, a service's right click, or
+	// Preferences, and its shortcuts are bound in the renderer.
+	const menu = await redil.app.evaluate(({ Menu }) => Menu.getApplicationMenu());
+	expect(menu).toBeNull();
 });
 
 test('filters the catalogue by type and by name at the same time', async () => {
@@ -321,7 +331,7 @@ test('keeps the custom entry last under a name the add window can print', async 
 test('reorders the rail and writes the order back to the store', async () => {
 	// The reorderer moves the card and the panel fires childmove; updatePositions
 	// walks the rail from there. It used to finish with store.load(), which threw
-	// inside the home tab's list, so any page error here is the regression.
+	// inside the home tab's old list, so any page error here is the regression.
 	const erros = [];
 	const anotar = e => erros.push(String(e));
 	redil.window.on('pageerror', anotar);
@@ -349,8 +359,6 @@ test('reorders the rail and writes the order back to the store', async () => {
 		const resultado = {
 			 abas: painel.items.items.map(t => t.id)
 			,loja: store.getRange().map(r => r.get('name') + ':' + r.get('align'))
-			,nos: Ext.getCmp('redilTab').down('#serviceList').getNodes().length
-			,itens: Ext.getStore('Services').getCount()
 		};
 
 		[7001, 7002, 7003].forEach(id => {
@@ -366,7 +374,6 @@ test('reorders the rail and writes the order back to the store', async () => {
 	expect(ordem.abas.slice(0, 4)).toEqual(['redilTab', 'tab_7002', 'tab_7003', 'tab_7001']);
 	// the store follows the rail, and nothing crossed into the right group
 	expect(ordem.loja).toEqual(['Reorder 2:left', 'Reorder 3:left', 'Reorder 1:left']);
-	expect(ordem.nos).toBe(ordem.itens);
 });
 
 test('exposes the online check the renderer runs at boot', async () => {
@@ -455,34 +462,4 @@ test('seeds the media permission from the catalogue and exposes the channel', as
 	});
 
 	expect(exposto).toBe(true);
-});
-
-test('names the services that are waiting instead of counting them again', async () => {
-	// "in 1 of your 6 services" is the one thing on that line the rail and the
-	// list below do not already say -- and it says nothing you can act on.
-	const linhas = await redil.window.evaluate(() => {
-		const store = Ext.getStore('Services');
-		const registros = ['Fixture one', 'Fixture two', 'Fixture three'].map((name, i) => store.add({
-			 id: 7201 + i, type: 'custom', name: name, url: 'file:///probe.html'
-			,align: 'left', enabled: true, notifications: false, muted: false
-		})[0]);
-
-		const ler = () => Ext.getCmp('redilTab').down('#unreadSummary').el.dom.innerText.trim().split('\n').pop();
-
-		Redil.util.UnreadCounter.setUnreadCountForService(7201, 2);
-		const um = ler();
-		Redil.util.UnreadCounter.setUnreadCountForService(7202, 1);
-		const dois = ler();
-		Redil.util.UnreadCounter.setUnreadCountForService(7203, 4);
-		const tres = ler();
-
-		[7201, 7202, 7203].forEach(id => Redil.util.UnreadCounter.clearUnreadCountForService(id));
-		registros.forEach(record => store.remove(record));
-		return { um: um, dois: dois, tres: tres };
-	});
-
-	expect(linhas.um).toBe('in Fixture one');
-	expect(linhas.dois).toBe('in Fixture one and Fixture two');
-	// past two names the line would be a list, so it counts again
-	expect(linhas.tres).toMatch(/^in 3 of your \d+ services$/);
 });

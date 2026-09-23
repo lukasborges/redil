@@ -8,6 +8,31 @@ Ext.define('Redil.view.preferences.PreferencesController', {
 		me.getView().close();
 	}
 
+	,showAbout: function() {
+		if ( !Ext.cq1('about') ) Ext.create('Redil.view.main.About');
+	}
+
+	,checkForUpdates: function() {
+		Redil.app.checkUpdate();
+	}
+
+	,showUnreadReport: function() {
+		this.getView().close();
+		Ext.cq1('app-main').getController().showUnreadReport();
+	}
+
+	// the window reloads once the cache is gone, so there is nothing to answer
+	,clearCache: function() {
+		ipc.invoke('app:clearCache');
+	}
+
+	,removeAllServices: function( btn ) {
+		var me = this;
+		Ext.cq1('app-main').getController().removeAllServices(btn, function() {
+			me.getView().close();
+		});
+	}
+
 	,save: function( btn ) {
 		var me = this;
 

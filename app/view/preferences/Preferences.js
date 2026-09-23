@@ -56,7 +56,7 @@ Ext.define('Redil.view.preferences.Preferences',{
 		}).sort(function(a, b) { return a.label.localeCompare(b.label); });
 
 		var defaultServiceOptions = [];
-		defaultServiceOptions.push({ value: 'redilTab', label: 'Redil Tab' });
+		defaultServiceOptions.push({ value: 'redilTab', label: locale['app.welcome[3]'] });
 		defaultServiceOptions.push({ value: 'last', label: 'Last Active Service' });
 		Ext.getStore('Services').each(function(rec) {
 			defaultServiceOptions.push({
@@ -278,13 +278,6 @@ Ext.define('Redil.view.preferences.Preferences',{
 											}
 											,{
 												 xtype: 'checkbox'
-												,name: 'hide_menu_bar'
-												,boxLabel: locale['preferences[1]']+' (<code>Alt</code> key to display)'
-												,value: config.hide_menu_bar
-												,hidden: redil.platform === 'darwin'
-											}
-											,{
-												 xtype: 'checkbox'
 												,name: 'start_minimized'
 												,boxLabel: locale['preferences[4]']
 												,value: config.start_minimized
@@ -490,6 +483,42 @@ Ext.define('Redil.view.preferences.Preferences',{
 												,inputType: 'password'
 												,margin: 0
 											}
+										]
+									}
+									/*
+									 * What the Help, View and Tools menus held, on Linux and
+									 * Windows, where there is no menu bar any more. They act at
+									 * once rather than on Save, so they are buttons.
+									 */
+									,{
+										 xtype: 'fieldcontainer'
+										,fieldLabel: 'Redil'
+										,layout: 'hbox'
+										,defaults: { xtype: 'button', margin: '0 8 0 0' }
+										,items: [
+											 { text: locale['menu.help[6]'], handler: 'showAbout' }
+											,{ text: locale['menu.help[5]'], handler: 'checkForUpdates', hidden: redil.platform === 'darwin' }
+											,{ text: locale['menu.help[1]'], href: 'https://github.com/lukasborges/redil/issues', margin: 0 }
+										]
+									}
+									,{
+										 xtype: 'fieldcontainer'
+										,fieldLabel: 'Troubleshooting'
+										,layout: 'hbox'
+										,defaults: { xtype: 'button', margin: '0 8 0 0' }
+										,items: [
+											 { text: 'Unread detection', handler: 'showUnreadReport' }
+											,{ text: 'Clear cache', handler: 'clearCache', margin: 0 }
+										]
+									}
+									,{
+										 xtype: 'fieldcontainer'
+										// a second row of Troubleshooting, kept apart because it
+										// cannot be undone
+										,fieldLabel: ''
+										,hideEmptyLabel: false
+										,items: [
+											{ xtype: 'button', text: locale['app.main[10]'], handler: 'removeAllServices' }
 										]
 									}
 								]
