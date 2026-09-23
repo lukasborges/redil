@@ -25,13 +25,15 @@ That is fixed. The app builds and runs from this repository with nothing but npm
 - **Service permissions are refused by default.** The old handler granted camera, microphone and location to every service that asked. Camera, microphone and screen capture are now answered once per service and the answer is kept — except for the apps whose purpose is calls, which the catalogue marks and the service's own settings can change.
 - **A third-party tracker and a hardcoded API key** were removed from the renderer, along with the dead Auth0 sign-in and profile sync, which pointed at infrastructure this fork cannot use.
 - **The catalogue is maintained here.** Seven entries pointed at services that no longer answer and were dropped; ten were added, among them Google Meet, Zoom, ChatGPT, Claude and Bluesky. `npm run check:services` reports what has rotted.
-- **A new interface.** Services sit in a rail of icons down the left; the home tab opens on what is waiting for you rather than on a catalogue; adding a service is an overlay behind one button; preferences are five sections instead of one scroll of fourteen controls; and a dark theme follows the desktop.
-- **A mark of its own**, drawn to the GNOME app icon guidelines: a sheepdog on the template's square, in Adwaita blue. `npm run icons` renders every PNG and ICO in the tree from the three SVGs in `resources/logo`.
+- **A new interface.** Services sit in a rail of icons down the left, and everything done to one is on its right click; a title bar of the app's own carries the page's back, forward and reload; workspaces group services and switch from the top of the rail; adding a service is an overlay behind the `+`; preferences are five sections instead of one scroll of fourteen controls; and a dark theme follows the desktop.
+- **A mark of its own**, drawn to the GNOME app icon guidelines: a border collie puppy on the template's square, in Adwaita blue, with a monochrome tray icon on Linux. `npm run icons` renders every PNG and ICO in the tree from the SVGs in `resources/logo`.
 - **Tests and a linter.** A Playwright suite launches the real app and drives it; `npm test` runs ESLint first.
 
 ## Install
 
-Builds are produced for Linux as an AppImage, a deb and a tarball. See [Releases](https://github.com/lukasborges/shep/releases).
+[Releases](https://github.com/lukasborges/shep/releases) carry a Linux AppImage. `npm run build:linux` also makes a deb and a tarball.
+
+Shep was briefly called Redil. Quit Redil before the first launch of Shep: that launch moves `~/.config/Redil` to `~/.config/Shep`, with your services, sign-ins and preferences.
 
 The AppImage needs FUSE 2, which some distributions no longer install by default. On Fedora that is `fuse-libs`; on Debian and Ubuntu, `libfuse2`. Without it, run the AppImage with `--appimage-extract-and-run`.
 
