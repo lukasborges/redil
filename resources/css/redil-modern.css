@@ -130,6 +130,8 @@ body {
 	background-color: rgba(255, 255, 255, 0.12);
 	box-shadow: none;
 	transition: background-color 0.12s ease;
+	/* an Ext button clips what overhangs it, and the unread dot overhangs the corner */
+	overflow: visible;
 }
 
 #mainTabBar .rx-workspace-switcher.x-btn.x-btn-over,
@@ -1487,7 +1489,7 @@ body {
 .x-menu-default {
 	border: 1px solid var(--rx-line);
 	border-radius: var(--rx-radius-lg);
-	box-shadow: 0 10px 28px var(--rx-shadow);
+	box-shadow: 0 2px 22px var(--rx-shadow);
 	padding: 6px;
 }
 
@@ -1785,8 +1787,18 @@ webview {
 	color: var(--rx-ink);
 }
 
+/*
+ * One shadow, even on all four sides. It used to be two, and neither reached
+ * the top: this one was dropped 16px, and Ext drew its own under it, a grey
+ * element in "sides" mode that starts 4px below the window, so a window looked
+ * lit from above with a dark smudge down its flanks.
+ */
 .x-window-default {
-	box-shadow: 0 16px 44px var(--rx-shadow);
+	box-shadow: 0 0 0 1px var(--rx-line), 0 2px 28px var(--rx-shadow);
+}
+
+.x-css-shadow {
+	display: none !important;
 }
 
 /* Window footers and any toolbar that is not the command bar. */

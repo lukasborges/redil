@@ -228,7 +228,7 @@ Ext.define('Redil.util.Workspaces', {
 
 	,promptCreate: function() {
 		var me = this;
-		Ext.Msg.prompt('New workspace', 'A name for it, like Work or Personal. Services are added to it from their Edit window.', function(btn, name) {
+		Ext.Msg.prompt('New workspace', 'Name', function(btn, name) {
 			name = Ext.String.trim(name || '');
 			if ( btn !== 'ok' || !name ) return;
 			me.setActive(me.create(name).id);
@@ -237,7 +237,7 @@ Ext.define('Redil.util.Workspaces', {
 
 	,promptRename: function(id) {
 		var me = this;
-		Ext.Msg.prompt('Rename workspace', 'New name', function(btn, name) {
+		Ext.Msg.prompt('Rename workspace', 'Name', function(btn, name) {
 			name = Ext.String.trim(name || '');
 			if ( btn === 'ok' && name ) me.rename(id, name);
 		}, null, false, me.get(id).name);
