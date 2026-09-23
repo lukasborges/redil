@@ -9,6 +9,10 @@ Ext.define('Redil.view.main.MainController', {
 		tabPanel.setTabPosition('left');
 		tabPanel.setTabRotation(0);
 
+		// the card's own resize event does not reach here while the catalogue is
+		// floating over it, so the viewport's is used, once layout has settled
+		Ext.on('resize', this.placeCatalogue, this, { buffer: 60 });
+
 		var reorderer = tabPanel.plugins.find(function(plugin) { return plugin.ptype == "tabreorderer"});
 
 		if ( reorderer !== undefined ) {
@@ -127,7 +131,7 @@ Ext.define('Redil.view.main.MainController', {
 		}
 
 		catalogo.show();
-		catalogo.center();
+		this.placeCatalogue();
 		// Nothing has filtered the store the first time the overlay opens, and
 		// the tally is written by the filter, so it would sit empty.
 		this.updateCatalogueCount();
@@ -206,6 +210,28 @@ Ext.define('Redil.view.main.MainController', {
 				,{ text: locale['button[0]'], handler: function(b) { b.up('window').close(); } }
 			]
 		}).show();
+	}
+
+	/*
+	 * center() lost the horizontal offset inside the home card and pinned the
+	 * catalogue to the rail's edge, so it is placed by hand: in the middle of
+	 * the card, never larger than it with a margin all round, and again whenever
+	 * the window changes size while it is open, which initialize wires up.
+	 */
+	,placeCatalogue: function() {
+		var cartao = Ext.getCmp('redilTab');
+		var catalogo = cartao.down('#catalogue');
+		if ( !catalogo.isVisible() ) return;
+
+		var area = cartao.body.getBox();
+		var largura = Math.min(900, area.width - 48);
+		var altura = Math.min(660, area.height - 48);
+
+		catalogo.setSize(largura, altura);
+		catalogo.setXY([
+			 Math.round(area.x + (area.width - largura) / 2)
+			,Math.round(area.y + (area.height - altura) / 2)
+		]);
 	}
 
 	,onCatalogueHide: function( catalogo ) {

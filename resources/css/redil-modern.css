@@ -491,7 +491,9 @@ body {
 /* The items are children of the view's own element, not of a wrapper. */
 .rx-catalogue-list {
 	display: grid;
-	grid-template-columns: repeat(4, minmax(0, 1fr));
+	/* as many columns as fit, so a small window gets fewer rather than
+	   names running into the next icon */
+	grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
 	align-content: start;
 	gap: 2px;
 	padding: 12px 16px 16px;
@@ -521,6 +523,9 @@ body {
 }
 
 .rx-catalogue-list .service span {
+	/* a flex item will not shrink below its text without this, so the
+	   ellipsis never happened */
+	min-width: 0;
 	font-size: 13px;
 	color: var(--rx-ink);
 	overflow: hidden;
