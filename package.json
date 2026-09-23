@@ -2,7 +2,7 @@
 	"name": "Shep",
 	"productName": "Shep",
 	"version": "0.10.0",
-	"description": "Free and Open Source messaging and emailing app that combines common web applications into one.",
+	"description": "One window for the messaging and email apps you already use in the browser.",
 	"main": "electron/main.js",
 	"repository": {
 		"type": "git",
