@@ -22,6 +22,7 @@
  */
 :root {
 	--rx-ink: #12222E;        /* text, in place of a hard black */
+	--rx-web-canvas: #FFFFFF; /* behind a service; the dark theme leaves it alone */
 	--rx-brand: #2E658E;      /* unchanged Rambox blue */
 	--rx-on-brand: #FFFFFF;   /* text on a filled brand button */
 	--rx-brand-over: #27587C;
@@ -1240,6 +1241,19 @@ body {
 .x-menu-default .x-segmented-button .x-btn-default-toolbar-small .x-btn-glyph {
 	color: var(--rx-muted);
 	font-size: 11px;
+}
+
+/* ----------------------------------------------------------- services */
+
+/*
+ * A webview is transparent, so a page that sets no background of its own showed
+ * the panel behind it: in the dark theme that put dark grey under a page written
+ * for white, as Google's marketing pages are. A browser paints the canvas white
+ * for such a page, and so does this. A page that asks for a dark scheme paints
+ * its own background over it.
+ */
+webview {
+	background-color: var(--rx-web-canvas);
 }
 
 /* --------------------------------------------------------- status bar */
