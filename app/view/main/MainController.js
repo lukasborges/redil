@@ -487,31 +487,41 @@ Ext.define('Shep.view.main.MainController', {
 
 		// If this method is called from Lock method, prevent showing toast
 		if ( !e ) return;
-		Ext.toast({
-			 html: btn.pressed ? 'ENABLED' : 'DISABLED'
-			,title: 'Don\'t Disturb'
-			,width: 200
+		// One line, one at a time, and quick: Ext's own toast slides in over a
+		// second and a half and stacks a new one under the last
+		if ( this.disturbToast && !this.disturbToast.destroyed ) this.disturbToast.destroy();
+		this.disturbToast = Ext.toast({
+			 html: '<span class="rx-toast-glyph">' + (btn.pressed ? '&#xf1f7;' : '&#xf0f3;') + '</span>' + locale['app.main[16]'] + ': ' + (btn.pressed ? locale['app.window[20]'] : locale['app.window[21]'])
+			,cls: 'rx-toast'
+			,header: false
+			// a toast is 50px at least, which left one line of text sitting high
+			,minHeight: 0
+			,bodyPadding: '8 16'
 			,align: 't'
+			// clear of the 32px title bar
+			,paddingY: 44
 			,closable: false
+			,shadow: false
+			,slideInDuration: 150
+			,hideDuration: 150
+			,autoCloseDelay: 1500
 		});
 	}
 
 	,lockShep: function(btn) {
 		var me = this;
 
-		if ( ipc.sendSync('getConfig').master_password ) {
-			Ext.Msg.confirm(locale['app.main[19]'], 'Do you want to use the Master Password as your temporal password?', function(btnId) {
-				if ( btnId === 'yes' ) {
-					setLock(ipc.sendSync('getConfig').master_password);
-				} else {
-					showTempPass();
-				}
-			});
+		// The master password locks without asking; without one, the password
+		// chosen the first time is kept and every later lock reuses it
+		var masterPassword = ipc.sendSync('getConfig').master_password;
+		var lockPassword = masterPassword || localStorage.getItem('lock_password');
+		if ( lockPassword ) {
+			setLock(lockPassword);
 		} else {
-			showTempPass();
+			askLockPassword();
 		}
 
-		function showTempPass() {
+		function askLockPassword() {
 			var msgbox = Ext.Msg.prompt(locale['app.main[19]'], locale['app.window[22]'], function(btnId, text) {
 				if ( btnId === 'ok' ) {
 					var msgbox2 = Ext.Msg.prompt(locale['app.main[19]'], locale['app.window[23]'], function(btnId, text2) {
@@ -523,11 +533,13 @@ Ext.define('Shep.view.main.MainController', {
 									,icon: Ext.Msg.WARNING
 									,buttons: Ext.Msg.OK
 									,fn: me.lockShep
+									,scope: me
 								});
 								return false;
 							}
 
-							setLock(Shep.util.MD5.encypt(text));
+							localStorage.setItem('lock_password', Shep.util.MD5.encypt(text));
+							setLock(localStorage.getItem('lock_password'));
 						}
 					});
 					msgbox2.textField.inputEl.dom.type = 'password';
@@ -560,85 +572,73 @@ Ext.define('Shep.view.main.MainController', {
 		}
 	}
 
+	// The same screen masterpassword.html draws before the app opens, from the
+	// same .rx-lock rules, so the two locks cannot drift apart again
 	,showLockWindow: function() {
 		var me = this;
-
-		var validateFn = function() {
-			if ( localStorage.getItem('locked') === Shep.util.MD5.encypt(winLock.down('textfield').getValue()) ) {
-				console.info('Lock Shep:', 'Disabled');
-				localStorage.removeItem('locked');
-				winLock.close();
-				me.lookupReference('disturbBtn').setPressed(false);
-				me.dontDisturb(me.lookupReference('disturbBtn'), false);
-			} else {
-				winLock.down('textfield').reset();
-				winLock.down('textfield').markInvalid('Unlock password is invalid');
-			}
-		};
+		var withMaster = localStorage.getItem('locked') === ipc.sendSync('getConfig').master_password;
 
 		var winLock = Ext.create('Ext.window.Window', {
 			 maximized: true
+			,header: false
+			,border: false
+			,shadow: false
 			,closable: false
 			,resizable: false
-			,minimizable: false
-			,maximizable: false
 			,draggable: false
 			,onEsc: Ext.emptyFn
-			,layout: 'center'
-			,bodyStyle: 'background-color:#2e658e;'
-			,items: [
-				{
-					 xtype: 'container'
-					,layout: 'vbox'
-					,items: [
-						{
-							 xtype: 'image'
-							,src: 'resources/Icon.png'
-							,width: 256
-							,height: 256
-						}
-						,{
-							 xtype: 'component'
-							,autoEl: {
-								 tag: 'h1'
-								,html: locale['app.window[26]']
-								,style: 'text-align:center;width:256px;'
-						   }
-						}
-						,{
-							 xtype: 'textfield'
-							,inputType: 'password'
-							,width: 256
-							,listeners: {
-								specialkey: function(field, e){
-									if ( e.getKey() == e.ENTER ) {
-										validateFn();
-									}
-								}
-							}
-						}
-						,{
-							 xtype: 'button'
-							,text: locale['app.window[27]']
-							,glyph: 'xf13e@FontAwesome'
-							,width: 256
-							,scale: 'large'
-							,handler: validateFn
-						}
-					]
-				}
-			]
+			,cls: 'rx-lock-window'
+			,bodyStyle: 'background: transparent;'
+			,html: [
+				 '<div class="rx-lock">'
+				,	'<img class="rx-lock-mark" src="resources/Mark.png" alt="">'
+				,	'<h1 class="rx-lock-title">' + locale['app.window[26]'] + '</h1>'
+				,	'<p class="rx-lock-hint">Enter your ' + (withMaster ? 'master' : 'lock') + ' password to carry on.</p>'
+				,	'<form class="rx-lock-form">'
+				,		'<input class="rx-lock-field" type="password" placeholder="' + (withMaster ? 'Master' : 'Lock') + ' password">'
+				,		'<button class="rx-lock-unlock" type="submit">Unlock</button>'
+				,	'</form>'
+				,	'<p class="rx-lock-wrong" hidden>That password is not right. Try again.</p>'
+				,	'<a class="rx-lock-exit" href="#">Exit Shep</a>'
+				,'</div>'
+			].join('')
 			,listeners: {
-				render: function(win) {
-					win.getEl().on('click', function() {
-						win.down('textfield').focus(100);
+				afterrender: function(win) {
+					var root = win.body.dom;
+					var field = root.querySelector('.rx-lock-field');
+					var wrong = root.querySelector('.rx-lock-wrong');
+
+					root.querySelector('.rx-lock-form').addEventListener('submit', function(e) {
+						e.preventDefault();
+						if ( localStorage.getItem('locked') === Shep.util.MD5.encypt(field.value) ) {
+							console.info('Lock Shep:', 'Disabled');
+							localStorage.removeItem('locked');
+							win.close();
+							// Ext hands focus back to the lock button, which then wears a
+							// focus ring across the rail as if it had been reached by Tab
+							Ext.getCmp('lockShepBtn').blur();
+							me.lookupReference('disturbBtn').setPressed(false);
+							me.dontDisturb(me.lookupReference('disturbBtn'), false);
+						} else {
+							field.value = '';
+							wrong.hidden = false;
+							field.focus();
+						}
 					});
+					field.addEventListener('input', function() { wrong.hidden = true; });
+					root.querySelector('.rx-lock-exit').addEventListener('click', function(e) {
+						e.preventDefault();
+						ipc.send('app:quit');
+					});
+					// a click anywhere puts the caret back, as the page's autofocus does
+					root.addEventListener('click', function(e) {
+						if ( e.target.classList.contains('rx-lock') ) field.focus();
+					});
+					Ext.defer(function() { field.focus(); }, 100);
 				}
 			}
 		}).show();
-		winLock.down('textfield').focus(1000);
 	}
-
 	,openPreferences: function( btn ) {
 		Ext.create('Shep.view.preferences.Preferences').show();
 	}

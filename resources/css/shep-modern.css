@@ -37,6 +37,7 @@
 	--rx-line-strong: #B9C6D0;
 	--rx-muted: #5B7183;
 	--rx-alert: #E03131;      /* the unread badge, the one loud colour */
+	--rx-alert-on-chrome: #FF9B9B; /* a warning on the rail's colour, which red itself fails on */
 	--rx-quiet: #F8E45C;      /* don't disturb, on the rail: Adwaita yellow 2 */
 	--rx-badge-quiet: #8A9BA8; /* a count nobody will be told about */
 	--rx-ok: #2F9E44;
@@ -2024,6 +2025,139 @@ webview {
 
 .x-mask {
 	background-color: var(--rx-shadow);
+}
+
+/*
+ * The Don't Disturb toast: a single line on a raised pill rather than crisp's
+ * titled panel, whose body text stayed dark on the dark theme.
+ */
+.x-toast.rx-toast,
+.rx-toast .x-window-body {
+	background-color: var(--rx-raised) !important;
+	border-color: var(--rx-line) !important;
+	border-radius: var(--rx-radius-lg);
+	color: var(--rx-ink);
+}
+.x-toast.rx-toast {
+	box-shadow: 0 4px 16px var(--rx-shadow);
+}
+.rx-toast .x-window-body {
+	font-size: 13px;
+	white-space: nowrap;
+}
+.rx-toast-glyph {
+	font-family: FontAwesome;
+	margin-right: 8px;
+	color: var(--rx-muted);
+}
+
+/*
+ * The lock screen, drawn the same whichever lock it is: masterpassword.html,
+ * which opens before the app with the master password, and the window the
+ * rail's lock button raises over it. Neither has Ext styling to lean on for
+ * this, so it is plain elements under .rx-lock.
+ */
+.rx-lock {
+	position: relative;
+	box-sizing: border-box;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 22px;
+	background-color: var(--rx-chrome);
+	color: var(--rx-on-chrome);
+	font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+	/* the window has no frame to hold, so the screen drags it */
+	-webkit-app-region: drag;
+	-webkit-user-select: none;
+	user-select: none;
+}
+/* In the app it is an Ext window, whose frame and body it covers edge to edge */
+.x-window.rx-lock-window,
+.rx-lock-window .x-window-body {
+	padding: 0;
+	border: 0;
+	border-radius: 0;
+	background-color: var(--rx-chrome);
+}
+.rx-lock-window .rx-lock {
+	position: absolute;
+	inset: 0;
+}
+.rx-lock-mark {
+	width: 96px;
+	height: 96px;
+}
+.rx-lock .rx-lock-title {
+	margin: 0;
+	font-size: 20px;
+	font-weight: 600;
+	color: var(--rx-on-chrome);
+}
+.rx-lock-hint {
+	margin: -14px 0 0;
+	font-size: 13px;
+	color: color-mix(in srgb, var(--rx-on-chrome) 68%, transparent);
+}
+.rx-lock-form {
+	display: flex;
+	gap: 8px;
+	margin: 0;
+	-webkit-app-region: no-drag;
+}
+.rx-lock .rx-lock-field {
+	width: 260px;
+	box-sizing: border-box;
+	padding: 10px 12px;
+	font: inherit;
+	font-size: 14px;
+	color: var(--rx-ink);
+	background-color: var(--rx-field);
+	border: 1px solid transparent;
+	border-radius: var(--rx-radius-lg);
+	outline: none;
+	-webkit-user-select: text;
+	user-select: text;
+}
+.rx-lock .rx-lock-field:focus {
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--rx-on-chrome) 22%, transparent);
+}
+.rx-lock .rx-lock-unlock {
+	padding: 0 18px;
+	font: inherit;
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--rx-on-chrome);
+	background-color: color-mix(in srgb, var(--rx-on-chrome) 14%, transparent);
+	border: 1px solid color-mix(in srgb, var(--rx-on-chrome) 22%, transparent);
+	border-radius: var(--rx-radius-lg);
+	cursor: pointer;
+	transition: background-color 0.12s ease;
+}
+.rx-lock .rx-lock-unlock:hover {
+	background-color: color-mix(in srgb, var(--rx-on-chrome) 24%, transparent);
+}
+.rx-lock-wrong {
+	margin: -12px 0 0;
+	font-size: 13px;
+	color: var(--rx-alert-on-chrome);
+}
+.rx-lock-wrong[hidden] {
+	display: none;
+}
+.rx-lock .rx-lock-exit {
+	position: absolute;
+	bottom: 28px;
+	font-size: 13px;
+	color: color-mix(in srgb, var(--rx-on-chrome) 60%, transparent);
+	text-decoration: none;
+	-webkit-app-region: no-drag;
+}
+.rx-lock .rx-lock-exit:hover {
+	color: var(--rx-on-chrome);
+	text-decoration: underline;
 }
 
 /* --------------------------------------------------------- dark theme */
