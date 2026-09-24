@@ -61,8 +61,8 @@
 		<label>
 			<span>{messages['dialog.workspace']}</span>
 			<select bind:value={workspace} name="workspace">
-				<option value="">{messages['dialog.workspace.none']}</option>
 				{#each appNow.workspaces as option (option.id)}<option value={option.id}>{option.name}</option>{/each}
+				<option value="">{messages['dialog.workspace.every']}</option>
 			</select>
 		</label>
 	{/if}

@@ -66,12 +66,12 @@ export function serviceMenu(state: ServiceMenuState, actions: ServiceMenuActions
 	const moveToWorkspace: ServiceMenuItem[] = state.workspaces.length ? [{
 		label: messages['menu.moveToWorkspace'],
 		type: 'submenu',
+		// One radio group: a separator would split it, and Electron ticks the lone item of a group of its own.
 		submenu: [
-			{ label: messages['menu.noWorkspace'], type: 'radio', checked: state.workspace === '', click: () => actions.moveToWorkspace('') },
-			SEPARATOR,
 			...state.workspaces.map(workspace => ({
 				label: workspace.name, type: 'radio' as const, checked: state.workspace === workspace.id, click: () => actions.moveToWorkspace(workspace.id)
-			}))
+			})),
+			{ label: messages['menu.everyWorkspace'], type: 'radio', checked: state.workspace === '', click: () => actions.moveToWorkspace('') }
 		]
 	}] : [];
 	const service: ServiceMenuItem[] = [

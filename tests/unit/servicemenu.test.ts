@@ -29,11 +29,12 @@ test('shows the zoom as the percentage Chromium draws it at', () => {
 	assert.deepEqual([0, 1, 1.25, -1].map(zoomPercent), [100, 120, 126, 83]);
 });
 
-test('moves a service to a workspace, or to none, once there are workspaces', () => {
+test('moves a service to a workspace, or to all of them, in one radio group with the current one ticked', () => {
 	const withWorkspaces = { ...running, workspaces: [{ id: 'w1', name: 'Work' }], workspace: 'w1' };
 	const submenu = serviceMenu(withWorkspaces, actions, en).find(item => item.label === 'Move to Workspace')?.submenu ?? [];
-	assert.deepEqual(submenu.map(item => item.type === 'separator' ? '---' : `${item.label}${item.checked ? ' ✓' : ''}`), ['None', '---', 'Work ✓']);
-	submenu[0]?.click?.();
+	assert.deepEqual(submenu.map(item => `${item.label}${item.checked ? ' ✓' : ''}`), ['Work ✓', 'All Workspaces']);
+	assert.equal(submenu.some(item => item.type === 'separator'), false);
+	submenu[1]?.click?.();
 	assert.deepEqual(moved, ['']);
 	assert.equal(labels(running).includes('Move to Workspace'), false);
 });
