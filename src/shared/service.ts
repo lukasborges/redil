@@ -25,4 +25,7 @@ export interface ServiceState {
 	unread: UnreadCount;
 	pageTitle: string;
 	active: boolean;
+	canGoBack: boolean;
+	canGoForward: boolean;
+	loading: boolean;
 }

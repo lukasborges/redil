@@ -31,3 +31,30 @@ body {
 	color: var(--rx-ink);
 	overflow: hidden;
 }
+
+:root {
+	--rx-raised: #FFFFFF;
+	--rx-line: #E3E9EE;
+	--rx-field: #FFFFFF;
+	--rx-accent: #1A5FB4;
+	--rx-on-accent: #FFFFFF;
+	--rx-alert: #E01B24;
+	--rx-backdrop: rgba(0, 0, 0, 0.32);
+	--rx-shadow: rgba(18, 34, 46, 0.24);
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--rx-raised: #2E2E32;
+		--rx-line: #3D3D42;
+		--rx-field: #242428;
+		--rx-accent: #78AEED;
+		--rx-on-accent: #0B1622;
+		--rx-backdrop: rgba(0, 0, 0, 0.5);
+		--rx-shadow: rgba(0, 0, 0, 0.55);
+	}
+}
+
+html.overlay, html.overlay body {
+	background: transparent;
+}

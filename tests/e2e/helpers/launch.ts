@@ -40,11 +40,12 @@ export function serviceRecord(id: string, url: string, overrides: Record<string,
 	};
 }
 
-// Runs in the page of the service whose address starts with urlPrefix.
-export function inService<T>(shep: Shep, urlPrefix: string, expression: string): Promise<T> {
-	return shep.app.evaluate(async ({ webContents }, { urlPrefix, expression }) => {
+// Runs in the page of the service whose address starts with urlPrefix. A navigation without
+// userGesture is one Chromium's back button skips, as it does in Chrome.
+export function inService<T>(shep: Shep, urlPrefix: string, expression: string, { userGesture = false } = {}): Promise<T> {
+	return shep.app.evaluate(async ({ webContents }, { urlPrefix, expression, userGesture }) => {
 		const contents = webContents.getAllWebContents().find(candidate => candidate.getURL().startsWith(urlPrefix));
 		if ( !contents ) throw new Error('No page at ' + urlPrefix);
-		return contents.executeJavaScript(expression);
-	}, { urlPrefix, expression }) as Promise<T>;
+		return contents.executeJavaScript(expression, userGesture);
+	}, { urlPrefix, expression, userGesture }) as Promise<T>;
 }

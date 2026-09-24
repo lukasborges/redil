@@ -10,7 +10,7 @@
 </script>
 
 <div class="shell">
-	<TitleBar name={activeService()?.name ?? 'Shep'} />
+	<TitleBar {messages} />
 	<div class="body">
 		<Rail {messages} />
 		<main class="content">
