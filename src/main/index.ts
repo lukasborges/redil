@@ -218,7 +218,7 @@ if ( !app.requestSingleInstanceLock() ) {
 		const { startMinimized, trayIcon } = preferences();
 		// with no icon in the top bar, a hidden window would have no way back
 		const window = createMainWindow(startMinimized && trayIcon, store.get('windowBounds'), bounds => store.set('windowBounds', bounds));
-		if ( startMinimized && !trayIcon ) window.once('ready-to-show', () => window.minimize());
+		if ( startMinimized && !trayIcon ) window.minimize();
 		mainWindow = window;
 		listenForShortcuts(window.webContents);
 		overlay = new Overlay(window, () => services?.focusActive(), listenForShortcuts);

@@ -24,12 +24,12 @@ function showOnceWrittenIntoOrNavigated(window: BrowserWindow): void {
 	});
 }
 
-function handBackSignIns(window: BrowserWindow, serviceContents: WebContents, openedWith: string): void {
+function handBackSignIns(window: BrowserWindow, serviceContents: WebContents, serviceAddress: () => string, openedWith: string): void {
 	let currentUrl = openedWith;
 	window.webContents.on('did-navigate', (event, url) => { currentUrl = url; });
 	const returnToService = (event: Electron.Event, url: string) => {
 		if ( serviceContents.isDestroyed() ) return;
-		if ( !isReturnToService(serviceContents.getURL(), currentUrl, url) ) return;
+		if ( !isReturnToService([serviceContents.getURL(), serviceAddress()], currentUrl, url) ) return;
 		event.preventDefault();
 		serviceContents.loadURL(url);
 		window.close();
@@ -38,7 +38,7 @@ function handBackSignIns(window: BrowserWindow, serviceContents: WebContents, op
 	window.webContents.on('will-redirect', (event) => returnToService(event, event.url));
 }
 
-export function keepLinksInTheApp(contents: WebContents, serviceContents: WebContents): void {
+export function keepLinksInTheApp(contents: WebContents, serviceContents: WebContents, serviceAddress: () => string): void {
 	const popupFlagsInOpenOrder: boolean[] = [];
 
 	contents.setWindowOpenHandler(({ url, features }) => {
@@ -66,8 +66,8 @@ export function keepLinksInTheApp(contents: WebContents, serviceContents: WebCon
 		const openedAsPopup = popupFlagsInOpenOrder.shift() ?? false;
 		attachPageMenu(window.webContents);
 		followColorScheme(window.webContents);
-		keepLinksInTheApp(window.webContents, serviceContents);
-		if ( !openedAsPopup ) handBackSignIns(window, serviceContents, details.url);
+		keepLinksInTheApp(window.webContents, serviceContents, serviceAddress);
+		if ( !openedAsPopup ) handBackSignIns(window, serviceContents, serviceAddress, details.url);
 		const isHiddenBlankWindow = isBlank(details.url) && details.options.show === false;
 		if ( isHiddenBlankWindow ) showOnceWrittenIntoOrNavigated(window);
 	});

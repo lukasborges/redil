@@ -45,15 +45,22 @@ test('asking for browser chrome asks for a tab', () => {
 });
 
 test('a sign-in that left the service and comes back returns to the service', () => {
-	assert.equal(isReturnToService('https://acme.slack.com/', 'https://acme.okta.com/login', 'https://acme.slack.com/sso/saml?code=1'), true);
-	assert.equal(isReturnToService('https://mail.google.com/mail/u/0/', 'https://accounts.google.com/v3/signin/identifier', 'https://mail.google.com/mail/u/0/'), true);
+	assert.equal(isReturnToService(['https://acme.slack.com/'], 'https://acme.okta.com/login', 'https://acme.slack.com/sso/saml?code=1'), true);
+	assert.equal(isReturnToService(['https://mail.google.com/mail/u/0/'], 'https://accounts.google.com/v3/signin/identifier', 'https://mail.google.com/mail/u/0/'), true);
 });
 
 test('a window that never left the service, or goes elsewhere, is not a return', () => {
-	assert.equal(isReturnToService('https://mail.google.com/mail/u/0/', 'https://mail.google.com/mail/u/0/?view=pt', 'https://mail.google.com/mail/u/0/?view=pt&search=1'), false);
-	assert.equal(isReturnToService('https://mail.google.com/mail/u/0/', 'https://docs.google.com/document/d/1', 'https://docs.google.com/document/d/1/edit'), false);
+	assert.equal(isReturnToService(['https://mail.google.com/mail/u/0/'], 'https://mail.google.com/mail/u/0/?view=pt', 'https://mail.google.com/mail/u/0/?view=pt&search=1'), false);
+	assert.equal(isReturnToService(['https://mail.google.com/mail/u/0/'], 'https://docs.google.com/document/d/1', 'https://docs.google.com/document/d/1/edit'), false);
 });
 
 test('a blank window the page fills has not left the service', () => {
-	assert.equal(isReturnToService('https://mail.google.com/mail/u/0/', 'about:blank', 'https://mail.google.com/mail/u/0/?view=print'), false);
+	assert.equal(isReturnToService(['https://mail.google.com/mail/u/0/'], 'about:blank', 'https://mail.google.com/mail/u/0/?view=print'), false);
+});
+
+test('hands back a sign-in that ends at the address the service was added with, though its page sits elsewhere', () => {
+	// signed out, chat.google.com shows Google's product page on workspace.google.com
+	const service = ['https://workspace.google.com/products/chat/', 'https://chat.google.com/'];
+	assert.equal(isReturnToService(service, 'https://accounts.google.com/v3/signin', 'https://chat.google.com/u/0/'), true);
+	assert.equal(isReturnToService(service, 'https://chat.google.com/u/0/', 'https://chat.google.com/u/0/app'), false);
 });

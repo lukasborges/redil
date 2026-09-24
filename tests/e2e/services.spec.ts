@@ -118,3 +118,27 @@ test('goes back and forward in the service with Alt and the arrows', async () =>
 	}, away);
 	await expect.poll(() => shep.app.evaluate(({ webContents }, url) => webContents.getAllWebContents().some(contents => contents.getURL().startsWith(url)), serviceUrl())).toBe(true);
 });
+
+test('hands a sign-in back to the address the service was added with, though its page sits on another site', async () => {
+	let other: Shep | undefined;
+	try {
+		// signed out, the service's address sends it elsewhere, as chat.google.com does to workspace.google.com
+		const address = at('localhost', '/go?to=' + encodeURIComponent(at('127.0.0.1', '/away.html?product-page')));
+		other = await launchShep({ store: { services: [serviceRecord('1', address)], activeServiceId: '1' } });
+		const app = other;
+		const onPage = (prefix: string) => app.app.evaluate(({ webContents }, prefix) => webContents.getAllWebContents().some(contents => contents.getURL().startsWith(prefix)), prefix);
+		await expect.poll(() => onPage(at('127.0.0.1', '/away.html?product-page'))).toBe(true);
+
+		await inService(app, at('127.0.0.1', '/away.html?product-page'), `window.open(${JSON.stringify(at('[::1]', '/away.html?sign-in'))}), null`);
+		await expect.poll(() => onPage(at('[::1]', '/away.html?sign-in'))).toBe(true);
+		await app.app.evaluate(({ BrowserWindow }, back) => {
+			const signIn = BrowserWindow.getAllWindows().find(window => window.webContents.getURL().includes('sign-in'));
+			signIn?.webContents.executeJavaScript(`location.href = ${JSON.stringify(back)}`);
+		}, at('localhost', '/service.html?signed-in'));
+
+		await expect.poll(() => app.app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().length)).toBe(1);
+		await expect.poll(() => onPage(at('localhost', '/service.html?signed-in'))).toBe(true);
+	} finally {
+		await closeShep(other);
+	}
+});

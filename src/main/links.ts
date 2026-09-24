@@ -59,10 +59,12 @@ function originOf(url: string): string | null {
 	}
 }
 
-export function isReturnToService(serviceUrl: string, fromUrl: string, toUrl: string): boolean {
-	const service = originOf(serviceUrl);
-	const from = originOf(fromUrl);
+// serviceUrls: the page the service is on, and the address it was added with. A service signed out
+// can sit on another site, as chat.google.com sits on workspace.google.com, and its sign-in ends at its own address.
+export function isReturnToService(serviceUrls: readonly string[], fromUrl: string, toUrl: string): boolean {
 	const isOpaqueOrUnparsable = (origin: string | null) => !origin || origin === 'null';
-	if ( isOpaqueOrUnparsable(service) || isOpaqueOrUnparsable(from) ) return false;
-	return originOf(toUrl) === service && from !== service;
+	const services = serviceUrls.map(originOf).filter(origin => !isOpaqueOrUnparsable(origin));
+	const from = originOf(fromUrl);
+	if ( !services.length || isOpaqueOrUnparsable(from) ) return false;
+	return services.includes(originOf(toUrl)) && !services.includes(from);
 }

@@ -367,7 +367,7 @@ export class ServiceHost {
 		if ( userAgent ) contents.setUserAgent(userAgent);
 		followColorScheme(contents);
 		attachPageMenu(contents);
-		keepLinksInTheApp(contents, contents);
+		keepLinksInTheApp(contents, contents, () => this.record(record.id).url);
 		this.applyMute(record.id);
 		contents.on('dom-ready', () => { contents.executeJavaScript(NOTIFICATION_WRAPPER).catch(() => {}); });
 

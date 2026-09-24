@@ -33,7 +33,9 @@ export function createMainWindow(startHidden: boolean, saved: WindowBounds | nul
 		...placement(saved),
 		minWidth: 600,
 		minHeight: 400,
-		show: false,
+		// Shown from the start, not on ready-to-show: on Wayland a window that was never mapped never paints,
+		// so ready-to-show never came and the app was left in the top bar. The background colour keeps it from flashing.
+		show: !startHidden,
 		title: 'Shep',
 		titleBarStyle: 'hidden',
 		titleBarOverlay: titleBarOverlay(),
@@ -52,10 +54,7 @@ export function createMainWindow(startHidden: boolean, saved: WindowBounds | nul
 	nativeTheme.on('updated', syncOverlay);
 	window.on('closed', () => nativeTheme.off('updated', syncOverlay));
 
-	window.once('ready-to-show', () => {
-		if ( saved?.maximized ) window.maximize();
-		if ( !startHidden ) window.show();
-	});
+	if ( saved?.maximized ) window.maximize();
 
 	let saving: ReturnType<typeof setTimeout> | null = null;
 	const save = () => {
