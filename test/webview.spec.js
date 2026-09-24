@@ -74,8 +74,6 @@ test('runs the service page isolated, sandboxed and without node', async () => {
 });
 
 test('bridges only the notification click into the page world', async () => {
-	// The Notification wrapper the panel injects runs in the page's own world, so
-	// an isolated preload has to expose this through contextBridge.
 	const api = await inGuest('Object.keys(window.rambox).sort().join(",")');
 	expect(api).toBe('showWindowAndActivateTab');
 });
@@ -90,10 +88,9 @@ test('carries an unread count from the page title to the global counter', async 
 	await shep.window.waitForFunction(() => Shep.util.UnreadCounter.getTotalUnreadCount() === 0, null, { timeout: 10000 });
 });
 
-test('wraps Notification so a click can reach the tab', async () => {
+test('wraps Notification so a click can reach the tab, once dom-ready has injected it', async () => {
 	// The preload patched this global in place until it lost the page's window;
 	// the panel injects it now.
-	// It is injected on dom-ready, which can land after the webview attaches.
 	await expect.poll(() => inGuest('({ marked: !!window.__ramboxNotification, isWrapper: Notification.toString().indexOf("__native") > -1 })'), { timeout: 10000 })
 		.toEqual({ marked: true, isWrapper: true });
 });
@@ -164,9 +161,7 @@ test('says what title each service last showed and what it counted', async () =>
 	await shep.window.waitForFunction(() => Shep.util.UnreadCounter.getTotalUnreadCount() === 0, null, { timeout: 10000 });
 });
 
-test('marks a service whose title says there is something, without a number', async () => {
-	// '•' cannot be added to a total, so it is a dot on the rail and the total is
-	// left alone.
+test('marks a service whose title says there is something with a dot, and leaves it out of the total', async () => {
 	await inGuest('document.title = "(•) Fixture service"');
 	await shep.window.waitForFunction(() => Shep.util.UnreadCounter.hasSomethingUnread(4242), null, { timeout: 10000 });
 
@@ -183,10 +178,7 @@ test('marks a service whose title says there is something, without a number', as
 	await shep.window.waitForFunction(() => !Shep.util.UnreadCounter.hasSomethingUnread(4242), null, { timeout: 10000 });
 });
 
-test('wears the page favicon on a tile and keeps it on the record', async () => {
-	// The fixture lists an inline SVG favicon. Main hands it back in base64,
-	// because Ext writes the icon into an unquoted url(), where its quotes and
-	// spaces were a syntax error and the rail silently kept the initials.
+test('wears an inline SVG favicon, re-encoded so Ext\'s unquoted url() paints it, and keeps it on the record', async () => {
 	await shep.window.waitForFunction(() => {
 		const tab = Ext.cq1('app-main').items.items.find(item => item.id === 'tab_4242');
 		return /^data:image\/svg\+xml;base64,/.test(tab.tab.icon || '');
@@ -195,12 +187,12 @@ test('wears the page favicon on a tile and keeps it on the record', async () => 
 	const worn = await shep.window.evaluate(() => {
 		const tab = Ext.cq1('app-main').items.items.find(item => item.id === 'tab_4242');
 		return {
-			 tile: tab.tab.hasCls('rx-tab-favicon')
+			 drawnAsFavicon: tab.tab.hasCls('rx-tab-favicon')
 			,kept: tab.record.get('favicon') === tab.tab.icon
 			,painted: tab.tab.btnIconEl.dom.style.backgroundImage.indexOf(tab.tab.icon) > -1
 		};
 	});
-	expect(worn).toEqual({ tile: true, kept: true, painted: true });
+	expect(worn).toEqual({ drawnAsFavicon: true, kept: true, painted: true });
 });
 
 test('picks the smallest favicon that is sharp at 24px on a 2x screen', async () => {
@@ -220,14 +212,14 @@ test('picks the smallest favicon that is sharp at 24px on a 2x screen', async ()
 	expect(picked).toEqual({ prefers48: true, largestWhenNoneIsSharp: true, noneLoads: null });
 });
 
-test('draws initials for a service that has shown no favicon yet', async () => {
+test('draws initials for a service that has shown no favicon yet, one from the old catalogue included', async () => {
 	const described = await shep.window.evaluate(() => {
 		const record = Ext.create('Shep.model.Service', { type: 'custom', name: 'Acme Chat', url: 'https://chat.acme.com' });
 		const legacy = Ext.create('Shep.model.Service', { type: 'whatsapp', logo: 'whatsapp.png', name: 'WhatsApp', url: 'https://web.whatsapp.com' });
 		return {
 			 initials: decodeURIComponent(Shep.util.ServiceIcon.describe(record).url).indexOf('>AC</text>') > -1
-			,legacy: Shep.util.ServiceIcon.describe(legacy).url
+			,legacy: decodeURIComponent(Shep.util.ServiceIcon.describe(legacy).url).indexOf('>WH</text>') > -1
 		};
 	});
-	expect(described).toEqual({ initials: true, legacy: 'resources/icons/whatsapp.png' });
+	expect(described).toEqual({ initials: true, legacy: true });
 });

@@ -8,10 +8,6 @@ Ext.define('Shep.view.add.AddController', {
 	],
 
 	statics: {
-		/**
-		 * The address as typed, with https:// in front when it has no scheme, or
-		 * null when it is not a web address.
-		 */
 		normalizeUrl: function(value) {
 			var typed = Ext.String.trim(value || '');
 			if ( !typed ) return null;
@@ -27,16 +23,11 @@ Ext.define('Shep.view.add.AddController', {
 			}
 		}
 
-		/**
-		 * A name for a service nobody named, from its address: the site, then
-		 * what the subdomain says when it says something, so that
-		 * chat.google.com and mail.google.com do not both read "Google".
-		 */
 		,nameFromUrl: function(value) {
 			var labels = new URL(value).hostname.split('.');
 			var generic = ['www', 'web', 'app', 'm'];
-			// co.uk, com.br: a two-letter country under a short second level
-			var siteAt = labels.length > 2 && labels[labels.length - 1].length === 2 && labels[labels.length - 2].length <= 3 ? labels.length - 3 : labels.length - 2;
+			var isCountryUnderShortSecondLevel = labels.length > 2 && labels[labels.length - 1].length === 2 && labels[labels.length - 2].length <= 3;
+			var siteAt = isCountryUnderShortSecondLevel ? labels.length - 3 : labels.length - 2;
 			var capitalize = function(word) { return word.charAt(0).toUpperCase() + word.slice(1); };
 
 			if ( siteAt < 0 ) return capitalize(labels[0]);
@@ -78,8 +69,8 @@ Ext.define('Shep.view.add.AddController', {
 			// tooltip belongs to the tab, which is a button: a panel has no
 			// setTooltip, and calling it here threw before anything was saved.
 			view.tab.setTooltip( formValues.serviceName );
-			// A service that has shown no favicon yet wears the initials of its name
-			if ( !win.record.get('favicon') && oldData.name !== formValues.serviceName ) view.setIcon(Shep.util.ServiceIcon.describe(win.record).url);
+			var wearsInitials = !win.record.get('favicon');
+			if ( wearsInitials && oldData.name !== formValues.serviceName ) view.setIcon(Shep.util.ServiceIcon.describe(win.record).url);
 			// Change the URL of the Tab
 			if ( oldData.url !== formValues.url ) view.setURL(formValues.url);
 
@@ -88,8 +79,6 @@ Ext.define('Shep.view.add.AddController', {
 
 			view.refreshUnreadCount();
 		} else {
-			// Everything else is the model's default: notifications on, sound on,
-			// counted, aligned left, and asked before the camera.
 			var service = Ext.create('Shep.model.Service', {
 				 type: 'custom'
 				,logo: ''

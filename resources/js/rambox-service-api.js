@@ -14,11 +14,6 @@
 
 const { contextBridge, ipcRenderer } = require('electron');
 
-// The Notification wrapper app/ux/WebView.js injects runs in the page's main
-// world through executeJavaScript, and this is the window.rambox it calls.
 contextBridge.exposeInMainWorld('rambox', {
-	/**
-	 * Brings the window forward and activates this service's tab.
-	 */
 	showWindowAndActivateTab: () => ipcRenderer.sendToHost('rambox.showWindowAndActivateTab')
 });

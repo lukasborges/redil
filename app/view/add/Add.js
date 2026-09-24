@@ -13,7 +13,6 @@ Ext.define('Shep.view.add.Add',{
 	}
 
 	// private
-	// The service being edited, or null when one is being added.
 	,record: null
 	,edit: false
 
@@ -25,14 +24,6 @@ Ext.define('Shep.view.add.Add',{
 	,draggable: false
 	,bodyPadding: 20
 
-	/*
-	 * There is no catalogue: a service is whatever page somebody types, and it
-	 * works the way every other one does. The icon is the page's own favicon and
-	 * the unread count comes from its title. What is left to ask is where it is
-	 * and what to call it; notifications and sound are switched from the icon's
-	 * right click, a certificate is trusted from its warning, and the camera is
-	 * asked about the first time a call wants it.
-	 */
 	,initComponent: function() {
 		var me = this;
 		var record = me.record;

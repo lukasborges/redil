@@ -986,22 +986,6 @@ body {
 	background-color: var(--rx-hover-soft);
 }
 
-/* --------------------------------------------------- service catalogue */
-
-.service {
-	border-radius: var(--rx-radius-lg);
-	transition: background-color 0.12s ease;
-}
-
-.service:hover {
-	background-color: var(--rx-hover);
-}
-
-.service span {
-	color: var(--rx-ink);
-	font-size: 13.5px;
-}
-
 /* ------------------------------------------------------------- inputs */
 
 /*
@@ -1114,9 +1098,9 @@ body {
 
 /*
  * Focus is a second line drawn inside the field, not a halo around it. A ring
- * outside the border bleeds onto whatever the field sits on, and the catalogue
- * focuses its search as it opens, so the search always wore one and read as a
- * field stuck in some state. The hover rule above carries the same two classes,
+ * outside the border bleeds onto whatever the field sits on, and a field
+ * focused as its window opens, as the Add window's address is, always wore one
+ * and read as a field stuck in some state. The hover rule above carries the same two classes,
  * so it is repeated here to lose to focus rather than fight it.
  */
 .x-form-trigger-wrap-default.x-form-trigger-wrap-focus,
@@ -1141,8 +1125,8 @@ body {
 /* ------------------------------------------------------ window chrome */
 
 /*
- * Preferences, Add a service and the catalogue are the three surfaces the app
- * puts in front of a service, and crisp gave all three a grey title bar, a
+ * Preferences and Add a service are the surfaces the app puts in front of a
+ * service, and crisp gave them a grey title bar, a
  * ridged fieldset and a blue gradient on every button. They are one shape now:
  * a white sheet, hairlines for the seams, and a single filled button per
  * window -- the one that commits.
@@ -1427,7 +1411,7 @@ body {
 /*
  * The menu behind a right click on a service. crisp drew it as a hard-edged
  * white box with a blue gradient toolbar at the top; it reads as a surface
- * lifted off the window now, like the catalogue and the windows.
+ * lifted off the window now, like the windows.
  */
 .x-menu-default {
 	border: 1px solid var(--rx-line);

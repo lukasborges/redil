@@ -17,13 +17,7 @@ Ext.define('Shep.util.UnreadCounter', {
 		 */
 		var unreadCountByService = new Map();
 
-		/**
-		 * Services that say there is something waiting but not how much, with a
-		 * title of the shape "(•) Inbox".
-		 *
-		 * @type {Set}
-		 */
-		var servicesWithSomething = new Set();
+		var servicesWithUncountedUnread = new Set();
 
 		/**
 		 * Holds the global unread count for internal usage.
@@ -65,7 +59,7 @@ Ext.define('Shep.util.UnreadCounter', {
 		 * @return {boolean}
 		 */
 		this.hasSomethingUnread = function(id) {
-			return servicesWithSomething.has(id);
+			return servicesWithUncountedUnread.has(id);
 		};
 
 		/**
@@ -76,7 +70,7 @@ Ext.define('Shep.util.UnreadCounter', {
 		 * @param {boolean} on	Whether it has something waiting.
 		 */
 		this.setSomethingUnreadForService = function(id, on) {
-			on ? servicesWithSomething.add(id) : servicesWithSomething.delete(id);
+			on ? servicesWithUncountedUnread.add(id) : servicesWithUncountedUnread.delete(id);
 		};
 
 		/**

@@ -70,12 +70,6 @@ Ext.define('Shep.ux.WebView',{
 						 beforeshow: me.syncServiceMenu
 						,scope: me
 					}
-					/*
-					 * Grouped by what is acted on: the page, then the switches, then
-					 * the service, with the developer tools last. A disabled service
-					 * has no page, so syncServiceMenu hides what is marked needsPage,
-					 * separators included, and the switches and the service stay.
-					 */
 					,items: [
 						{
 							 xtype: 'toolbar'
@@ -106,8 +100,6 @@ Ext.define('Shep.ux.WebView',{
 							]
 						}
 						,{
-							// the three zoom commands as one row, the way a browser's
-							// menu has it; the percentage resets
 							 xtype: 'toolbar'
 							,needsPage: true
 							,items: [
@@ -150,12 +142,6 @@ Ext.define('Shep.ux.WebView',{
 							,handler: me.reloadService
 						}
 						,{ xtype: 'menuseparator', needsPage: true }
-						/*
-						 * Switched on and off from day to day, so they live here
-						 * rather than in the Edit window. Anything that is switched
-						 * wears the switch: one item per position, and the menu shows
-						 * the one that is true as it opens.
-						 */
 						,{ text: 'Notifications', itemId: 'notificationsOn', glyph: 'xf205@FontAwesome', scope: me, handler: me.toggleNotificationsFromMenu }
 						,{ text: 'Notifications', itemId: 'notificationsOff', glyph: 'xf204@FontAwesome', scope: me, handler: me.toggleNotificationsFromMenu }
 						,{ text: 'Sound', itemId: 'soundOn', glyph: 'xf205@FontAwesome', scope: me, handler: me.toggleSoundFromMenu }
@@ -338,8 +324,6 @@ Ext.define('Shep.ux.WebView',{
 					}
 				}
 				,{
-					// A certificate is trusted where the question comes up, rather
-					// than from a setting in the Edit window ahead of time.
 					 xtype: 'button'
 					,itemId: 'trust'
 					,text: 'Trust this certificate'
@@ -532,7 +516,6 @@ Ext.define('Shep.ux.WebView',{
 			}
 		});
 
-		// The title is the one count every service gives: "(3) Inbox".
 		webview.addEventListener("page-title-updated", function(e) {
 			me.pageTitle = e.title;
 			me.syncTitleBarIfActive();
@@ -554,11 +537,6 @@ Ext.define('Shep.ux.WebView',{
 		});
 	}
 
-	/**
-	 * What the unread report shows for this service: the title it last read and
-	 * the count it took from it. Testing detection means logging into the
-	 * service, so the least the app can do is say what it sees.
-	 */
 	,unreadDiagnosis: function() {
 		var me = this;
 
@@ -579,22 +557,16 @@ Ext.define('Shep.ux.WebView',{
 		return isNaN(number) ? 0 : number;
 	}
 
-	/**
-	 * The count a title carries, in the shape browsers made common: "(3) Inbox",
-	 * or failing that a "(3)" anywhere, as in "Inbox (3) - someone@gmail.com".
-	 * "(1.234)" and "(99+)" count their digits, and "(•)" is '•'.
-	 */
+	,LEADING_TITLE_COUNT: /^\s*\(\s*(•|\d[\d.,+]*)\s*\)/
+	,TITLE_COUNT_ANYWHERE: /\(\s*(•|\d[\d.,+]*)\s*\)/
+
 	,countFromTitle: function(title) {
-		var match = /^\s*\(\s*(•|\d[\d.,+]*)\s*\)/.exec(title || '') || /\(\s*(•|\d[\d.,+]*)\s*\)/.exec(title || '');
+		var match = this.LEADING_TITLE_COUNT.exec(title || '') || this.TITLE_COUNT_ANYWHERE.exec(title || '');
 		if ( !match ) return 0;
 		if ( match[1] === '•' ) return '•';
 		return parseInt(match[1].match(/\d+/g).join(''), 10);
 	}
 
-	/**
-	 * Some services blink their title, putting the count back a moment after
-	 * taking it away, so a drop to nothing only counts once it has lasted.
-	 */
 	,reportTitleUnread: function(count) {
 		var me = this;
 
@@ -738,11 +710,9 @@ Ext.define('Shep.ux.WebView',{
 
 		if ( !muted && !calledFromDisturb && JSON.parse(localStorage.getItem('dontDisturb')) ) return;
 
-		// Before dom-ready the page cannot be muted yet; dom-ready applies the
-		// record's setting when it arrives.
 		try {
 			if ( me.record.get('enabled') ) webview.setAudioMuted(muted);
-		} catch (e) {}
+		} catch (e) {} // Electron throws until dom-ready, which applies the record's mute itself
 	}
 
 	// A warning stays until it is dismissed, which is what the button is for.
@@ -795,11 +765,6 @@ Ext.define('Shep.ux.WebView',{
 		if ( me.record.get('enabled') ) ipc.send('setServiceNotifications', webview.partition, notification);
 	}
 
-	/**
-	 * Whether this service is allowed the camera and the microphone without being
-	 * asked. Only a record that says so is; any other service is asked once, and
-	 * the answer is remembered.
-	 */
 	,mediaAccess: function() {
 		return this.record.get('media') === true;
 	}
@@ -926,12 +891,6 @@ Ext.define('Shep.ux.WebView',{
 		}
 	}
 
-	/**
-	 * Wears the favicon the page lists, live, fetched through the service's
-	 * session and kept on the record, so the rail shows it again before the page
-	 * loads. Services that mark something new by swapping their favicon, as
-	 * Google Chat and Meet do, show it in the rail this way.
-	 */
 	,wearFavicon: function( favicons ) {
 		var me = this;
 		if ( me.isDestroyed || !Ext.isArray(favicons) || !favicons.length ) return;
@@ -998,9 +957,6 @@ Ext.define('Shep.ux.WebView',{
 		this.setZoom(0);
 	}
 
-	// The record is the one place the level lives: the panel used to keep its
-	// own copy, which started at 0 on every launch, so the first zoom after a
-	// restart threw away the level the service was saved with.
 	,setZoom: function(level) {
 		var me = this;
 		if ( !me.record.get('enabled') ) return;
@@ -1010,10 +966,11 @@ Ext.define('Shep.ux.WebView',{
 		me.syncZoomLabel(me.tab.menu);
 	}
 
-	// Chromium scales by 1.2 for each zoom level.
+	,CHROMIUM_ZOOM_FACTOR_PER_LEVEL: 1.2
+
 	,syncZoomLabel: function(menu) {
 		var label = menu && menu.down('#zoomReset');
-		if ( label ) label.setText(Math.round(100 * Math.pow(1.2, this.record.get('zoomLevel'))) + '%');
+		if ( label ) label.setText(Math.round(100 * Math.pow(this.CHROMIUM_ZOOM_FACTOR_PER_LEVEL, this.record.get('zoomLevel'))) + '%');
 	}
 
 	,getWebView: function() {

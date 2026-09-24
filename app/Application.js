@@ -168,13 +168,12 @@ Ext.define('Shep.Application', {
 			Mousetrap.bind('ctrl+shift+i', () => { ipc.send('window:toggleDevTools'); });
 		}
 
-		// Mouse Wheel zooming, one step per turn of the wheel rather than one per
-		// event, of which a touchpad sends dozens
-		var lastWheelZoom = 0;
+		var ONE_ZOOM_STEP_PER_WHEEL_TURN_MS = 100;
+		var lastWheelZoomAt = 0;
 		document.addEventListener('mousewheel', function(e) {
 			if( e.ctrlKey ) {
-				if ( Date.now() - lastWheelZoom < 100 ) return;
-				lastWheelZoom = Date.now();
+				if ( Date.now() - lastWheelZoomAt < ONE_ZOOM_STEP_PER_WHEEL_TURN_MS ) return;
+				lastWheelZoomAt = Date.now();
 				var delta = Math.max(-1, Math.min(1, (e.wheelDelta || -e.detail)));
 
 				var tabPanel = Ext.cq1('app-main');
@@ -198,9 +197,6 @@ Ext.define('Shep.Application', {
 		}
 		Ext.getStore('Services').load();
 
-		// The loading screen in index.html. The catalogue's store took it down
-		// when the catalogue arrived, and with the catalogue gone this is the
-		// moment the app is ready.
 		Ext.get('spinner') ? Ext.get('spinner').destroy() : null;
 		Ext.get('background') ? Ext.get('background').destroy() : null;
 	}

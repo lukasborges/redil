@@ -323,28 +323,6 @@ body {
 	padding: 13px 10px 14px 10px !important;
 }
 
-/* -------------------------------------------------- service catalog list */
-
-.service {
-	width: 230px;
-	display: inline-block;
-	padding: 10px;
-	cursor: pointer;
-}
-
-.service img {
-	float: left;
-}
-
-.service span {
-	margin-left: 10px;
-	line-height: 48px;
-}
-
-.service:hover {
-	background-color: var(--shep-base-light-55);
-}
-
 /* -------------------------------------------------------------- load mask */
 
 .bottomMask {

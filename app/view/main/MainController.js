@@ -147,17 +147,10 @@ Ext.define('Shep.view.main.MainController', {
 		Ext.getCmp('tab_' + rec.get('id')).setEnabled(ligado);
 	}
 
-	// The + in the rail. There is no catalogue: a service is whatever address
-	// somebody types.
 	,openAddService: function() {
 		Ext.create('Shep.view.add.Add');
 	}
 
-	/**
-	 * The unread report. Every service counts from its title, and none of it can
-	 * be tested without logging in, so this says, for each service open right
-	 * now, the title it last read and the count it took from it.
-	 */
 	,showUnreadReport: function() {
 		var linhas = [];
 		Ext.cq1('app-main').items.each(function(aba) {

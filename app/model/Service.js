@@ -60,12 +60,6 @@ Ext.define('Shep.model.Service', {
 		,type: 'boolean'
 		,defaultValue: false
 	},{
-		/*
-		 * Camera, microphone and screen sharing without a prompt. Three states,
-		 * not two: null is what a service saved before the field existed says,
-		 * and WebView.mediaAccess answers for it. Saving the Add window always
-		 * writes true or false.
-		 */
 		 name: 'media'
 		,type: 'boolean'
 		,allowNull: true
@@ -81,14 +75,10 @@ Ext.define('Shep.model.Service', {
 		,type: 'string'
 		,defaultValue: ''
 	},{
-		// Unread detection code the Add window used to take. Kept so records
-		// written before keep their shape; nothing runs it.
 		 name: 'js_unread'
 		,type: 'string'
 		,defaultValue: ''
 	},{
-		// The page's own favicon as a data URL, kept so the rail has it before
-		// the page loads. See Shep.util.ServiceIcon.
 		 name: 'favicon'
 		,type: 'string'
 		,defaultValue: ''

@@ -46,9 +46,7 @@ test('mounts the Ext viewport with only the home tab configured', async () => {
 	expect(tabs.filter(id => id.startsWith('tab_'))).toHaveLength(0);
 });
 
-test('tells every page the running Chromium as the default, not as an override', async () => {
-	// Cloudflare's Turnstile refuses a page whose agent was overridden, whatever
-	// the string, so the clean agent is the app's default.
+test('tells every page the running Chromium as the default, since Turnstile refuses an overridden agent', async () => {
 	const agent = await shep.app.evaluate(({ app }) => app.userAgentFallback);
 	const chrome = await shep.window.evaluate(() => shep.versions.chrome);
 	expect(agent).toContain('Chrome/' + chrome);
@@ -167,7 +165,7 @@ test('splits the preferences into sections without unbinding a field', async () 
 	expect(prefs.alturaDoCancelar).toBeGreaterThan(0);
 });
 
-test('opens on a welcome page, with the Add window behind the +', async () => {
+test('opens on a welcome page, with an Add window behind the + that asks only for the address, a name and a workspace', async () => {
 	const inicio = await shep.window.evaluate(() => ({
 		 ativo: Ext.cq1('app-main').getActiveTab().id
 		,boasVindas: Ext.getCmp('shepTab').down('#welcome').el.dom.innerText.trim()
@@ -176,7 +174,6 @@ test('opens on a welcome page, with the Add window behind the +', async () => {
 	expect(inicio.ativo).toBe('shepTab');
 	expect(inicio.boasVindas).toContain('Welcome to Shep');
 
-	// There is no catalogue: the + asks for an address.
 	const janela = await shep.window.evaluate(() => {
 		Ext.cq1('app-main').getController().openAddService();
 		const win = Ext.ComponentQuery.query('window').find(w => w.$className === 'Shep.view.add.Add');
@@ -189,8 +186,6 @@ test('opens on a welcome page, with the Add window behind the +', async () => {
 	});
 
 	expect(janela.aberta).toBe(true);
-	// The address, a name and, when there are workspaces, which one. Everything
-	// else has a default, or is asked where it comes up.
 	expect(janela.campos).toEqual(['url', 'serviceName', 'workspace']);
 });
 
@@ -260,19 +255,17 @@ test('adds a service from a typed address, naming it after the site', async () =
 	expect(statics.urls).toEqual(['https://web.whatsapp.com/', 'https://claude.ai/new', 'http://localhost:8065/', null, null, null]);
 	expect(statics.names).toEqual(['Whatsapp', 'Google Chat', 'Google Mail', 'Claude', 'Bbc', 'Slack Acme']);
 
-	// Nothing listens on port 9, so the new service's page fails at once and the
-	// suite stays off the network.
-	const id = await shep.window.evaluate(() => {
+	const ADDRESS_NOTHING_LISTENS_ON = 'localhost:9';
+	const id = await shep.window.evaluate(address => {
 		Ext.cq1('app-main').getController().openAddService();
 		const win = Ext.ComponentQuery.query('window').find(w => w.$className === 'Shep.view.add.Add');
-		win.down('textfield[name=url]').setValue('localhost:9');
+		win.down('textfield[name=url]').setValue(address);
 		win.getController().doSave();
 		const store = Ext.getStore('Services');
 		return store.getAt(store.getCount() - 1).get('id');
-	});
+	}, ADDRESS_NOTHING_LISTENS_ON);
 
-	// A webview destroyed before it attaches throws inside Electron later, in
-	// whichever test happens to be running.
+	// not destroyed at once: Electron throws "Invalid guestInstanceId" later, inside whichever test is running
 	await shep.window.waitForFunction(id => {
 		try { return !!Ext.getCmp('tab_' + id).getWebView().getWebContentsId(); } catch { return false; }
 	}, id, { timeout: 10000 });
@@ -426,8 +419,6 @@ test('switches a service\'s notifications and sound from its right click', async
 });
 
 test('exposes the camera channel a service reports its setting on', async () => {
-	// A new service is saved with media false, so the camera is asked about the
-	// first time a call wants it and the answer is remembered.
 	const exposto = await shep.window.evaluate(() => {
 		try {
 			shep.ipc.send('service:setMediaAccess', 'persist:probe', true);

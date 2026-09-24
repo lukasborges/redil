@@ -35,15 +35,8 @@ const fs = require('fs');
 
 if ( isDev ) app.getVersion = function() { return require('../package.json').version; }; // FOR DEV ONLY, BECAUSE IN DEV RETURNS ELECTRON'S VERSION
 
-/*
- * Every page is told it is the Chromium it runs on, without the Shep and
- * Electron tokens, and it is told so as the app's default rather than by
- * overriding each page's agent. An override is what Cloudflare's Turnstile
- * turns away: with the same string set through setUserAgent it failed every
- * time with 600010, and as the default it passed, because Chromium keeps the
- * client hints consistent with a default and not with an override. Todoist's
- * login was where that showed.
- */
+// The default, not setUserAgent per page: Cloudflare Turnstile fails any overridden
+// agent with error 600010, since Chromium keeps client hints consistent only with a default.
 app.userAgentFallback = app.userAgentFallback.replace(/\s(Shep|Redil|Electron)\/\S+/g, '');
 
 const REDIL_PRODUCT_NAME = 'Redil';
@@ -194,18 +187,11 @@ nativeTheme.on('updated', () => {
 	themedPages.forEach(tellColorScheme);
 });
 
-/*
- * A service's page is not told the theme. themeSource reaches the app's own
- * window, but inside a <webview> prefers-color-scheme answers light whatever it
- * says, so every service stayed light beside a dark app, and a favicon drawn for
- * a light page -- GitHub's black mark -- vanished on the dark rail. The
- * DevTools protocol sets the media feature on the page itself, and it holds
- * across navigations; it is sent again whenever the theme changes.
- */
 const themedPages = new Set();
 
 function tellColorScheme(contents) {
 	if ( contents.isDestroyed() ) return themedPages.delete(contents);
+	// nativeTheme.themeSource never reaches prefers-color-scheme inside a <webview>; this does, across navigations
 	contents.debugger.sendCommand('Emulation.setEmulatedMedia', {
 		features: [{ name: 'prefers-color-scheme', value: nativeTheme.shouldUseDarkColors ? 'dark' : 'light' }]
 	}).catch(() => {});
@@ -560,9 +546,8 @@ const PROMPTED_PERMISSIONS = {
 
 /*
  * Services the person has allowed the camera, the microphone and screen sharing
- * for without being asked. The catalogue marks the apps whose purpose is calls,
- * the Add window turns that into a per-service setting, and the renderer reports
- * it here as each service loads -- the same route the trust flag takes, because
+ * for without being asked. It is a flag on the service's record, and the
+ * renderer reports it here as each service loads -- the same route the trust flag takes, because
  * the setting lives in the renderer's localStorage.
  *
  * It grants the permission, not the picker: screen sharing still opens the
@@ -750,16 +735,8 @@ ipcMain.on('webview:setTrust', function(event, webContentsId, trust) {
 	trust ? trustedWebContents.add(webContentsId) : trustedWebContents.delete(webContentsId);
 });
 
-/*
- * A service's favicons, as data URLs the rail can keep. They are fetched here,
- * through the service's own session, because some sit behind its cookies and
- * the renderer could not read the bytes of a cross-origin image anyway. One
- * that fails or is not an image is left out.
- */
 const FAVICON_BYTES_LIMIT = 1024 * 1024;
 
-// Ext writes an icon into an unquoted CSS url(), where the quotes and spaces an
-// inline SVG favicon carries are a syntax error, and the rail kept the old icon.
 function asBase64DataUrl(url) {
 	const comma = url.indexOf(',');
 	const header = url.slice(0, comma);
@@ -775,9 +752,11 @@ ipcMain.handle('favicon:fetch', async function(event, webContentsId, urls) {
 	if ( !contents || contents.isDestroyed() || !Array.isArray(urls) ) return [];
 
 	const fetched = await Promise.all(urls.slice(0, 8).map(async url => {
+		// not the data URL as the page wrote it: Ext's setIcon puts it in an unquoted url(), which an inline SVG's quotes break
 		if ( url.startsWith('data:image/') ) return asBase64DataUrl(url);
 		if ( !/^https?:\/\//.test(url) ) return null;
 		try {
+			// not from the renderer: some favicons need the service's cookies, and a page cannot read a cross-origin image's bytes
 			const response = await contents.session.fetch(url);
 			const type = (response.headers.get('content-type') || '').split(';')[0].trim();
 			if ( !response.ok || !(type.startsWith('image/') || type === 'application/octet-stream') ) return null;
@@ -812,21 +791,15 @@ app.on('second-instance', (event, commandLine, workingDirectory) => {
 	}
 });
 
-// Every link a service opens stays inside the app, in a window that shares the
-// service's session. See electron/links.js for the cases.
 function handleWindowOpen(contents, serviceContents) {
-	// did-create-window follows its setWindowOpenHandler call in order, and needs
-	// to know which of the two kinds of window it was.
-	const opening = [];
+	const popupFlagsInOpenOrder = [];
 	contents.setWindowOpenHandler(({ url, features }) => {
 		const kind = classifyWindowOpen({ url, features });
 		const popup = kind === 'popup' || (kind === 'blank' && isPopupRequested(features));
-		if ( ['blank', 'popup', 'window'].includes(kind) ) opening.push(popup);
+		if ( ['blank', 'popup', 'window'].includes(kind) ) popupFlagsInOpenOrder.push(popup);
 		switch ( kind ) {
 			case 'blank':
-				// A blank window the page asked to size is its own window, which it
-				// fills without navigating, as Meet's "Open in new window" does. The
-				// others are held hidden until they show what they are for.
+				// Meet's "Open in new window" fills a sized blank window without navigating, so that one is shown at once
 				return popup
 					? { action: 'allow' }
 					: { action: 'allow', overrideBrowserWindowOptions: { show: false } };
@@ -843,22 +816,24 @@ function handleWindowOpen(contents, serviceContents) {
 	});
 	contents.on('did-create-window', (win, details) => {
 		win.center();
-		// A popup's opener is waiting for it to come back, so it is left to do so.
-		setUpAuxiliaryWindow(win, serviceContents, details.url, !opening.shift());
-		if ( !['about:blank', 'about:blank#blocked'].includes(details.url) || details.options.show !== false ) return;
+		const openedAsPopup = popupFlagsInOpenOrder.shift();
+		setUpAuxiliaryWindow(win, serviceContents, details.url, !openedAsPopup);
+		const isHiddenBlankWindow = ['about:blank', 'about:blank#blocked'].includes(details.url) && details.options.show === false;
+		if ( isHiddenBlankWindow ) showOnceWrittenIntoOrNavigated(win);
+	});
+}
 
-		// A blank window is shown once it is written into or navigated.
-		let shown = false;
-		const show = () => { if ( !shown && !win.isDestroyed() ) { shown = true; win.show(); } };
-		setTimeout(() => {
-			if ( shown || win.isDestroyed() ) return;
-			win.webContents.executeJavaScript('!!document.body && document.body.childElementCount > 0')
-				.then(written => written && show())
-				.catch(() => {});
-		}, 1000);
-		win.webContents.on('did-start-navigation', (event) => {
-			if ( event.isMainFrame && !['about:blank', 'about:blank#blocked'].includes(event.url) ) show();
-		});
+function showOnceWrittenIntoOrNavigated(win) {
+	let shown = false;
+	const show = () => { if ( !shown && !win.isDestroyed() ) { shown = true; win.show(); } };
+	setTimeout(() => {
+		if ( shown || win.isDestroyed() ) return;
+		win.webContents.executeJavaScript('!!document.body && document.body.childElementCount > 0')
+			.then(written => written && show())
+			.catch(() => {});
+	}, 1000);
+	win.webContents.on('did-start-navigation', (event) => {
+		if ( event.isMainFrame && !['about:blank', 'about:blank#blocked'].includes(event.url) ) show();
 	});
 }
 
@@ -889,8 +864,6 @@ app.on('web-contents-created', (webContentsCreatedEvent, contents) => {
 	if (contents.getType() !== 'webview') return;
 	contextMenu.attach(contents);
 	followColorScheme(contents);
-	// A user agent typed into Preferences is used exactly as written, which is
-	// an override and so meets the Turnstile refusal described at the top.
 	if ( config.get('user_agent') ) contents.setUserAgent(config.get('user_agent'));
 
 	// A service calling getDisplayMedia used to be answered by a patch the
