@@ -4,7 +4,11 @@ import { WebContentsView, type BrowserWindow } from 'electron';
 export type OverlayDialog =
 	| { dialog: 'add' }
 	| { dialog: 'edit'; serviceId: string }
-	| { dialog: 'workspace'; workspaceId: string | null };
+	| { dialog: 'workspace'; workspaceId: string | null }
+	| { dialog: 'preferences' }
+	| { dialog: 'about' }
+	| { dialog: 'unreadReport' }
+	| { dialog: 'lockPassword' };
 
 // Dialogs live in a view of their own because a WebContentsView paints over the
 // window's own page, so a dialog drawn there would sit behind the service.

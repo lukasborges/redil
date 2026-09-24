@@ -1,12 +1,16 @@
 import { join } from 'node:path';
-import { app, ipcMain, type IpcMainInvokeEvent, type WebContents } from 'electron';
-import { productName, version } from '../../package.json';
+import { app, ipcMain, session, shell, type IpcMainInvokeEvent, type WebContents } from 'electron';
+import { productName, version, bugs, homepage } from '../../package.json';
 import { withoutAppTokens } from './useragent.ts';
 import { createMainWindow } from './window.ts';
 import { ServiceHost } from './services.ts';
 import { Overlay, type OverlayDialog } from './overlay.ts';
 import { Workspaces } from './workspaces.ts';
-import { store } from './store.ts';
+import { preferences, store } from './store.ts';
+import { hashPassword } from './password.ts';
+import { PreferenceHost, applyThemeBeforeTheWindow } from './preferences.ts';
+import { APP_ACTIONS, type AppAction } from '../shared/channels.ts';
+import { DEFAULT_PREFERENCES, type Preferences } from '../shared/preferences.ts';
 import { shortcutFor, type KeyInput, type ShortcutAction } from './shortcuts.ts';
 import type { AppState } from '../shared/channels.ts';
 
@@ -20,6 +24,8 @@ if ( !app.isPackaged && !hasOwnUserData ) app.setPath('userData', join(app.getPa
 // The default, not setUserAgent per page: Cloudflare Turnstile fails any overridden
 // agent with error 600010, since Chromium keeps client hints consistent only with a default.
 app.userAgentFallback = withoutAppTokens(app.userAgentFallback);
+
+if ( !preferences().hardwareAcceleration ) app.disableHardwareAcceleration();
 
 // The Wayland app_id the desktop entry matches, or the window is an iconless second app.
 app.commandLine.appendSwitch('class', 'shep');
@@ -35,6 +41,7 @@ if ( !app.requestSingleInstanceLock() ) {
 	let services: ServiceHost | null = null;
 	let overlay: Overlay | null = null;
 	let workspaces: Workspaces | null = null;
+	let prefs: PreferenceHost | null = null;
 
 	app.on('second-instance', () => {
 		if ( !mainWindow ) return;
@@ -69,7 +76,8 @@ if ( !app.requestSingleInstanceLock() ) {
 		dontDisturb: store.get('dontDisturb'),
 		workspaces: store.get('workspaces'),
 		activeWorkspace: store.get('activeWorkspace'),
-		unreadElsewhere: services?.unreadElsewhere() ?? false
+		unreadElsewhere: services?.unreadElsewhere() ?? false,
+		language: preferences().language === 'auto' ? app.getLocale() : preferences().language
 	});
 	const announceState = () => mainWindow?.webContents.send('app:state', appState());
 	const setDontDisturb = (on: boolean) => {
@@ -77,6 +85,30 @@ if ( !app.requestSingleInstanceLock() ) {
 		announceState();
 	};
 	handle('app:state', () => appState());
+	handle('preferences:get', () => preferences());
+	handle('preferences:set', (event, key, value) => {
+		if ( typeof key !== 'string' || !(key in DEFAULT_PREFERENCES) ) return false;
+		return prefs?.set(key as keyof Preferences, value) ?? false;
+	});
+	handle('spellcheck:languages', () => session.defaultSession.availableSpellCheckerLanguages);
+	handle('lock:hasPassword', () => store.get('lockPasswordHash') !== '');
+	handle('lock:setPassword', (event, password) => {
+		const chosen = text(password);
+		store.set('lockPasswordHash', chosen ? hashPassword(chosen) : '');
+		if ( !chosen ) prefs?.set('lockOnStart', false);
+	});
+	handle('app:about', () => ({ version, electron: process.versions.electron, chrome: process.versions.chrome, homepage }));
+	handle('services:report', () => services?.list().map(service => ({ name: service.name, pageTitle: service.pageTitle, unread: service.unread })) ?? []);
+	handle('app:action', (event, action) => {
+		if ( !APP_ACTIONS.includes(action as AppAction) ) return;
+		switch ( action as AppAction ) {
+			case 'reportIssue': return shell.openExternal(bugs.url);
+			case 'clearCache': return services?.clearCaches();
+			case 'removeAllServices': return services?.confirmRemoveAll();
+			case 'relaunch': app.relaunch(); app.exit(0); return;
+			case 'checkForUpdates': return;
+		}
+	});
 	handle('app:setDontDisturb', (event, on) => setDontDisturb(on === true));
 
 	const bringForward = () => {
@@ -110,7 +142,8 @@ if ( !app.requestSingleInstanceLock() ) {
 			case 'dontDisturb': return setDontDisturb(!store.get('dontDisturb'));
 			case 'quit': app.quit(); return;
 			case 'workspace': return workspaces?.chooseNumber(shortcut.index);
-			case 'preferences': case 'lock': return;
+			case 'preferences': overlay?.open({ dialog: 'preferences' }); return;
+			case 'lock': return;
 		}
 	}
 
@@ -124,11 +157,18 @@ if ( !app.requestSingleInstanceLock() ) {
 	});
 
 	app.whenReady().then(() => {
+		applyThemeBeforeTheWindow();
 		const window = createMainWindow();
 		mainWindow = window;
 		listenForShortcuts(window.webContents);
 		overlay = new Overlay(window, () => services?.focusActive(), listenForShortcuts);
-		services = new ServiceHost(window, { edit: id => overlay?.open({ dialog: 'edit', serviceId: id }), shortcut: handleShortcut, changed: announceState });
+		prefs = new PreferenceHost(window, announceState);
+		services = new ServiceHost(window, {
+			edit: id => overlay?.open({ dialog: 'edit', serviceId: id }),
+			shortcut: handleShortcut,
+			changed: announceState,
+			sessionStarted: session => prefs?.followProxy(session)
+		});
 		workspaces = new Workspaces(window, services, id => overlay?.open({ dialog: 'workspace', workspaceId: id }));
 		window.webContents.once('did-finish-load', () => services?.start());
 	});

@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { messagesFor } from '../shared/i18n.ts';
-	import { activeService, loadServices } from './services.svelte.ts';
+	import { activeService, appState, loadServices } from './services.svelte.ts';
 	import TitleBar from './TitleBar.svelte';
 	import Rail from './Rail.svelte';
 	import Welcome from './Welcome.svelte';
 
-	const messages = messagesFor(window.shep.locale);
+	const messages = $derived(messagesFor(appState.language || window.shep.locale));
 	loadServices();
 </script>
 

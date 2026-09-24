@@ -3,7 +3,7 @@ import { app, dialog, Menu, WebContentsView, type BrowserWindow, type WebContent
 import { RAIL_WIDTH, TITLE_BAR_HEIGHT } from '../shared/chrome.ts';
 import { nameFromUrl, normalizeUrl } from '../shared/address.ts';
 import type { ServiceRecord, ServiceState, UnreadCount } from '../shared/service.ts';
-import { store, updateService } from './store.ts';
+import { preferences, store, updateService } from './store.ts';
 import { countFromTitle, createBlinkGuard, totalUnread } from './unread.ts';
 import { faviconFor } from './favicon.ts';
 import { followColorScheme } from './theme.ts';
@@ -25,6 +25,7 @@ interface RunningService {
 export interface ServiceHostEvents {
 	edit(id: string): void;
 	changed(): void;
+	sessionStarted(session: Electron.Session): void;
 	// true when the key was an app shortcut, which the page then never sees
 	shortcut(input: KeyInput): boolean;
 }
@@ -41,8 +42,26 @@ export class ServiceHost {
 
 	start(): void {
 		for ( const record of store.get('services') ) if ( record.enabled ) this.run(record);
-		const active = store.get('activeServiceId');
-		this.activate(active && this.running.has(active) ? active : null);
+		const { openOnStart } = preferences();
+		const wanted = openOnStart === 'welcome' ? null : openOnStart === 'last' ? store.get('activeServiceId') : openOnStart;
+		this.activate(wanted && this.running.has(wanted) && this.shownIds().includes(wanted) ? wanted : null);
+	}
+
+	async clearCaches(): Promise<void> {
+		await Promise.all([...this.running.values()].map(service => service.view.webContents.session.clearCache()));
+	}
+
+	async confirmRemoveAll(): Promise<void> {
+		const { response } = await dialog.showMessageBox(this.window, {
+			type: 'warning', buttons: ['Remove All', 'Cancel'], defaultId: 1, cancelId: 1,
+			message: 'Remove every service?', detail: 'Their sign-ins and everything they stored on this computer go with them.'
+		});
+		if ( response !== 0 ) return;
+		const sessions = [...this.running.values()].map(service => service.view.webContents.session);
+		for ( const id of [...this.running.keys()] ) this.stop(id);
+		store.set('services', []);
+		await Promise.all(sessions.map(session => session.clearStorageData().catch(() => {})));
+		this.activate(null);
 	}
 
 	list(): ServiceState[] {
@@ -326,6 +345,10 @@ export class ServiceHost {
 		this.running.set(record.id, { view, unread: 0, pageTitle: '', disposeBlinkGuard: blinkGuard.dispose });
 
 		applyPermissionPolicy(contents.session, this.window, () => this.record(record.id));
+		this.events.sessionStarted(contents.session);
+		// typed into Preferences, and so an override, which Cloudflare's Turnstile refuses
+		const { userAgent } = preferences();
+		if ( userAgent ) contents.setUserAgent(userAgent);
 		followColorScheme(contents);
 		attachPageMenu(contents);
 		keepLinksInTheApp(contents, contents);

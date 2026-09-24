@@ -1,7 +1,7 @@
 import type { ServiceState } from '../shared/service.ts';
 import type { AppState } from '../shared/channels.ts';
 
-export const appState = $state<AppState>({ dontDisturb: false, workspaces: [], activeWorkspace: null, unreadElsewhere: false });
+export const appState = $state<AppState>({ dontDisturb: false, workspaces: [], activeWorkspace: null, unreadElsewhere: false, language: '' });
 
 export const services = $state<{ list: ServiceState[]; hover: string; found: { active: number; matches: number } | null }>({
 	list: [],
@@ -33,3 +33,4 @@ export const find = (id: string, query: string, forward: boolean) => window.shep
 export const stopFind = (id: string) => window.shep.invoke('service:stopFind', id);
 export const setDontDisturb = (on: boolean) => window.shep.invoke('app:setDontDisturb', on);
 export const showWorkspaceMenu = () => window.shep.invoke('workspaces:menu');
+export const openPreferences = () => window.shep.invoke('overlay:open', { dialog: 'preferences' });
