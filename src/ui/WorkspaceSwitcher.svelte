@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Messages } from '../shared/i18n.ts';
+	import type { Messages } from '../shared/i18n/index.ts';
 	import { appState, showWorkspaceMenu } from './services.svelte.ts';
 	import { initials } from './initials.ts';
 

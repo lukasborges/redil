@@ -1,4 +1,5 @@
 import type { ActiveWorkspace, Workspace } from '../shared/workspace.ts';
+import type { Messages } from '../shared/i18n/index.ts';
 
 export interface WorkspaceMenuActions {
 	choose(id: ActiveWorkspace): void;
@@ -18,15 +19,15 @@ export interface WorkspaceMenuItem {
 const SEPARATOR: WorkspaceMenuItem = { type: 'separator' };
 const NUMBERED_SHORTCUTS = 9;
 
-export function workspaceMenu(workspaces: readonly Workspace[], active: ActiveWorkspace, actions: WorkspaceMenuActions): WorkspaceMenuItem[] {
+export function workspaceMenu(workspaces: readonly Workspace[], active: ActiveWorkspace, actions: WorkspaceMenuActions, messages: Messages): WorkspaceMenuItem[] {
 	const shortcut = (index: number) => index < NUMBERED_SHORTCUTS ? `Ctrl+Alt+${index + 1}` : undefined;
 	const choices: WorkspaceMenuItem[] = [
 		...workspaces.map((workspace, index) => ({
 			label: workspace.name, type: 'radio' as const, checked: workspace.id === active, accelerator: shortcut(index), click: () => actions.choose(workspace.id)
 		})),
-		{ label: 'All Services', type: 'radio', checked: active === null, accelerator: shortcut(workspaces.length), click: () => actions.choose(null) }
+		{ label: messages['menu.allServices'], type: 'radio', checked: active === null, accelerator: shortcut(workspaces.length), click: () => actions.choose(null) }
 	];
-	const managing: WorkspaceMenuItem[] = [{ label: 'New Workspace…', click: actions.create }];
-	if ( active !== null ) managing.push({ label: 'Rename…', click: () => actions.rename(active) }, { label: 'Delete', click: () => actions.remove(active) });
+	const managing: WorkspaceMenuItem[] = [{ label: messages['menu.newWorkspace'], click: actions.create }];
+	if ( active !== null ) managing.push({ label: messages['menu.renameWorkspace'], click: () => actions.rename(active) }, { label: messages['menu.deleteWorkspace'], click: () => actions.remove(active) });
 	return [...choices, SEPARATOR, ...managing];
 }

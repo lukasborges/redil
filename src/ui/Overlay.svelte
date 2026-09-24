@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { messagesFor } from '../shared/i18n.ts';
+	import { messagesFor } from '../shared/i18n/index.ts';
 	import type { AppState } from '../shared/channels.ts';
 	import ServiceDialog from './ServiceDialog.svelte';
 	import WorkspaceDialog from './WorkspaceDialog.svelte';

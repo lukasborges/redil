@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { Menu, Tray, nativeImage } from 'electron';
+import { mainMessages } from './messages.ts';
 
 export interface TrayActions {
 	isWindowShown(): boolean;
@@ -42,11 +43,12 @@ export class TopBarIcon {
 	}
 
 	refreshMenu(): void {
+		const messages = mainMessages();
 		this.tray?.setContextMenu(Menu.buildFromTemplate([
-			{ label: this.actions.isWindowShown() ? 'Hide Shep' : 'Show Shep', click: () => { this.actions.toggleWindow(); this.refreshMenu(); } },
-			{ label: "Don't Disturb", type: 'checkbox', checked: this.actions.isDontDisturb(), click: () => this.actions.toggleDontDisturb() },
+			{ label: this.actions.isWindowShown() ? messages['tray.hide'] : messages['tray.show'], click: () => { this.actions.toggleWindow(); this.refreshMenu(); } },
+			{ label: messages['tray.dontDisturb'], type: 'checkbox', checked: this.actions.isDontDisturb(), click: () => this.actions.toggleDontDisturb() },
 			{ type: 'separator' },
-			{ label: 'Quit', click: () => this.actions.quit() }
+			{ label: messages['tray.quit'], click: () => this.actions.quit() }
 		]));
 	}
 }

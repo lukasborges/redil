@@ -7,6 +7,7 @@ import { ServiceHost } from './services.ts';
 import { Overlay, type OverlayDialog } from './overlay.ts';
 import { Workspaces } from './workspaces.ts';
 import { preferences, store } from './store.ts';
+import { resolvedLanguage } from './messages.ts';
 import { hashPassword, matchesPassword } from './password.ts';
 import { TopBarIcon } from './tray.ts';
 import { whatClosingDoes } from './closing.ts';
@@ -88,9 +89,13 @@ if ( !app.requestSingleInstanceLock() ) {
 		workspaces: store.get('workspaces'),
 		activeWorkspace: store.get('activeWorkspace'),
 		unreadElsewhere: services?.unreadElsewhere() ?? false,
-		language: preferences().language === 'auto' ? app.getLocale() : preferences().language
+		language: resolvedLanguage()
 	});
-	const announceState = () => mainWindow?.webContents.send('app:state', appState());
+	const announceState = () => {
+		const state = appState();
+		mainWindow?.webContents.send('app:state', state);
+		overlay?.contents()?.send('app:state', state);
+	};
 	const setDontDisturb = (on: boolean) => {
 		services?.setDontDisturb(on);
 		announceState();

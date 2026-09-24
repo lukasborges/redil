@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Messages } from '../shared/i18n.ts';
+	import type { Messages } from '../shared/i18n/index.ts';
 
 	type Source = { id: string; name: string; thumbnail: string };
 	const { messages, sources }: { messages: Messages; sources: Source[] } = $props();

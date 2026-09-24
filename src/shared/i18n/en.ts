@@ -1,4 +1,4 @@
-const en = {
+export const en = {
 	'welcome.title': 'Welcome to Shep',
 	'welcome.body': 'Add a service with the + in the bar on the left.',
 	'rail.add': 'Add a service',
@@ -61,7 +61,6 @@ const en = {
 	'prefs.lockPassword.hint': 'Locks Shep with Alt+Shift+L, or when it starts.',
 	'prefs.lockPassword.set': 'Set Password…',
 	'prefs.lockPassword.change': 'Change Password…',
-	'prefs.lockPassword.remove': 'Remove Password',
 	'prefs.lockOnStart': 'Ask for it when Shep starts',
 	'prefs.proxy': 'Use a proxy',
 	'prefs.proxyHost': 'Host',
@@ -99,14 +98,61 @@ const en = {
 	'share.title': 'Share Your Screen',
 	'share.body': 'Choose what the service will see.',
 	'share.cancel': 'Cancel',
-	'share.share': 'Share'
+	'share.share': 'Share',
+	'menu.back': 'Back',
+	'menu.forward': 'Forward',
+	'menu.reload': 'Reload',
+	'menu.zoomIn': 'Zoom In',
+	'menu.zoomOut': 'Zoom Out',
+	'menu.actualSize': 'Actual Size ({percent}%)',
+	'menu.notifications': 'Notifications',
+	'menu.sound': 'Sound',
+	'menu.enabled': 'Enabled',
+	'menu.edit': 'Edit…',
+	'menu.moveToWorkspace': 'Move to Workspace',
+	'menu.noWorkspace': 'None',
+	'menu.remove': 'Remove…',
+	'menu.developerTools': 'Developer Tools',
+	'menu.allServices': 'All Services',
+	'menu.newWorkspace': 'New Workspace…',
+	'menu.renameWorkspace': 'Rename…',
+	'menu.deleteWorkspace': 'Delete',
+	'menu.copyLink': 'Copy Link',
+	'menu.copyEmail': 'Copy Email Address',
+	'menu.openInBrowser': 'Open Link in Browser',
+	'menu.copyImage': 'Copy Image',
+	'menu.copyImageUrl': 'Copy Image URL',
+	'menu.search': 'Search with Google',
+	'menu.noSuggestions': 'No Spelling Suggestions',
+	'menu.addToDictionary': 'Add to Dictionary',
+	'menu.cut': 'Cut',
+	'menu.copy': 'Copy',
+	'menu.paste': 'Paste',
+	'tray.show': 'Show Shep',
+	'tray.hide': 'Hide Shep',
+	'tray.dontDisturb': "Don't Disturb",
+	'tray.quit': 'Quit',
+	'permission.title': 'Permission request',
+	'permission.camera': '{name} wants to use your camera and microphone.',
+	'permission.screen': '{name} wants to capture your screen.',
+	'permission.detail': 'Shep remembers this answer for this service.',
+	'permission.allow': 'Allow',
+	'permission.block': 'Block',
+	'remove.message': 'Remove {name}?',
+	'remove.detail': 'Its sign-in and everything it stored on this computer go with it.',
+	'remove.confirm': 'Remove',
+	'removeAll.message': 'Remove every service?',
+	'removeAll.detail': 'Their sign-ins and everything they stored on this computer go with them.',
+	'removeAll.confirm': 'Remove All',
+	'deleteWorkspace.message': 'Delete {name}?',
+	'deleteWorkspace.detail': 'Its services stay, and show in every workspace.',
+	'deleteWorkspace.confirm': 'Delete',
+	'updates.upToDate': 'Shep is up to date.',
+	'updates.latest': 'Version {version} is the latest.',
+	'updates.ready': 'Shep {version} is ready.',
+	'updates.restart': 'Restart Shep to use it.',
+	'updates.restartNow': 'Restart Now',
+	'updates.later': 'Later',
+	'updates.failed': 'Shep could not check for updates.',
+	'updates.packagedOnly': 'Updates come to packaged builds only.'
 } as const;
-
-export type MessageKey = keyof typeof en;
-export type Messages = Record<MessageKey, string>;
-
-const catalogues: Record<string, Messages> = { en };
-
-export function messagesFor(locale: string): Messages {
-	return catalogues[locale] ?? catalogues[locale.split('-')[0] ?? ''] ?? en;
-}

@@ -46,6 +46,14 @@ test('resolves the language, the system\'s when none is picked', async () => {
 	expect(((await shep.window.evaluate(() => window.shep.invoke('app:state'))) as AppState).language).toBe(await shep.app.evaluate(({ app }) => app.getLocale()));
 });
 
+test('speaks the language picked, in the window and in Preferences, at once', async () => {
+	await setPref('language', 'pt-BR');
+	await expect(shep.window.locator('.titlebar button[aria-label="Voltar"]')).toBeVisible();
+	await expect.poll(() => inOverlay<string>('document.querySelector(".preferences nav h2")?.textContent ?? ""')).toBe('Preferências');
+	await setPref('language', 'auto');
+	await expect(shep.window.locator('.titlebar button[aria-label="Back"]')).toBeVisible();
+});
+
 test('keeps the window above others at once', async () => {
 	await setPref('alwaysOnTop', true);
 	expect(await shep.app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]?.isAlwaysOnTop())).toBe(true);

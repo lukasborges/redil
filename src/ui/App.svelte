@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { messagesFor } from '../shared/i18n.ts';
+	import { messagesFor } from '../shared/i18n/index.ts';
 	import { activeService, appState, loadServices } from './services.svelte.ts';
 	import TitleBar from './TitleBar.svelte';
 	import Rail from './Rail.svelte';

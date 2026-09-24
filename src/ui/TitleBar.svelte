@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Messages } from '../shared/i18n.ts';
+	import type { Messages } from '../shared/i18n/index.ts';
 	import { services, activeService, navigate, find, stopFind } from './services.svelte.ts';
 	import { initials } from './initials.ts';
 	import Icon from './Icon.svelte';

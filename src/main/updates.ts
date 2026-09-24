@@ -1,5 +1,7 @@
 import { app, dialog, type BrowserWindow } from 'electron';
 import electronUpdater from 'electron-updater';
+import { mainMessages } from './messages.ts';
+import { fill } from '../shared/i18n/index.ts';
 
 const { autoUpdater } = electronUpdater;
 
@@ -13,26 +15,28 @@ export class Updates {
 		autoUpdater.on('update-not-available', () => {
 			if ( !this.askedByHand ) return;
 			this.askedByHand = false;
-			dialog.showMessageBox(window, { type: 'info', message: 'Shep is up to date.', detail: `Version ${app.getVersion()} is the latest.` });
+			const messages = mainMessages();
+			dialog.showMessageBox(window, { type: 'info', message: messages['updates.upToDate'], detail: fill(messages['updates.latest'], { version: app.getVersion() }) });
 		});
 		autoUpdater.on('update-downloaded', async info => {
+			const messages = mainMessages();
 			const { response } = await dialog.showMessageBox(window, {
-				type: 'info', buttons: ['Restart Now', 'Later'], defaultId: 0, cancelId: 1,
-				message: `Shep ${info.version} is ready.`, detail: 'Restart Shep to use it.'
+				type: 'info', buttons: [messages['updates.restartNow'], messages['updates.later']], defaultId: 0, cancelId: 1,
+				message: fill(messages['updates.ready'], { version: info.version }), detail: messages['updates.restart']
 			});
 			if ( response === 0 ) autoUpdater.quitAndInstall(true, true);
 		});
 		autoUpdater.on('error', error => {
 			if ( !this.askedByHand ) return;
 			this.askedByHand = false;
-			dialog.showMessageBox(window, { type: 'warning', message: 'Shep could not check for updates.', detail: String(error.message ?? error) });
+			dialog.showMessageBox(window, { type: 'warning', message: mainMessages()['updates.failed'], detail: String(error.message ?? error) });
 		});
 	}
 
 	// Only a packaged build has an update to install.
 	check(byHand: boolean): void {
 		if ( !app.isPackaged ) {
-			if ( byHand ) dialog.showMessageBox(this.window, { type: 'info', message: 'Updates come to packaged builds only.' });
+			if ( byHand ) dialog.showMessageBox(this.window, { type: 'info', message: mainMessages()['updates.packagedOnly'] });
 			return;
 		}
 		this.askedByHand = byHand;

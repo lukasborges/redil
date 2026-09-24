@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Messages } from '../shared/i18n.ts';
+	import type { Messages } from '../shared/i18n/index.ts';
 	import type { UnreadCount } from '../shared/service.ts';
 
 	const { messages, onclose }: { messages: Messages; onclose: () => void } = $props();

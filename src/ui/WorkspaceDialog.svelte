@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Messages } from '../shared/i18n.ts';
+	import type { Messages } from '../shared/i18n/index.ts';
 	import type { Workspace } from '../shared/workspace.ts';
 
 	const { messages, workspaceId, onclose }: { messages: Messages; workspaceId: string | null; onclose: () => void } = $props();

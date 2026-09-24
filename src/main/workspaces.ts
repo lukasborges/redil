@@ -3,6 +3,8 @@ import { WORKSPACE_HUES, workspaceForNumber, type ActiveWorkspace, type Workspac
 import { store } from './store.ts';
 import { workspaceMenu } from './workspacemenu.ts';
 import type { ServiceHost } from './services.ts';
+import { mainMessages } from './messages.ts';
+import { fill } from '../shared/i18n/index.ts';
 
 export class Workspaces {
 	constructor(private readonly window: BrowserWindow, private readonly services: ServiceHost, private readonly askForName: (id: string | null) => void) {}
@@ -39,9 +41,10 @@ export class Workspaces {
 	async remove(id: string): Promise<void> {
 		const workspace = this.list().find(candidate => candidate.id === id);
 		if ( !workspace ) return;
+		const messages = mainMessages();
 		const { response } = await dialog.showMessageBox(this.window, {
-			type: 'question', buttons: ['Delete', 'Cancel'], defaultId: 1, cancelId: 1,
-			message: `Delete ${workspace.name}?`, detail: 'Its services stay, and show in every workspace.'
+			type: 'question', buttons: [messages['deleteWorkspace.confirm'], messages['dialog.cancel']], defaultId: 1, cancelId: 1,
+			message: fill(messages['deleteWorkspace.message'], { name: workspace.name }), detail: messages['deleteWorkspace.detail']
 		});
 		if ( response !== 0 ) return;
 		store.set('services', store.get('services').map(service => service.workspace === id ? { ...service, workspace: '' } : service));
@@ -55,7 +58,7 @@ export class Workspaces {
 			create: () => this.askForName(null),
 			rename: id => this.askForName(id),
 			remove: id => { this.remove(id); }
-		});
+		}, mainMessages());
 		Menu.buildFromTemplate(items).popup({ window: this.window });
 	}
 }

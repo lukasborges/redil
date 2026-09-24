@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { pageMenu, type PageActions, type PageClick } from '../../src/main/pagemenu.ts';
+import { en } from '../../src/shared/i18n/en.ts';
 
 const done: string[] = [];
 const actions: PageActions = {
@@ -17,7 +18,7 @@ const base: PageClick = {
 	linkURL: '', linkText: '', srcURL: '', hasImageContents: false, selectionText: '', isEditable: false,
 	misspelledWord: '', dictionarySuggestions: [], editFlags: { canCut: true, canCopy: true, canPaste: true }
 };
-const menu = (click: Partial<PageClick>) => pageMenu({ ...base, ...click }, actions);
+const menu = (click: Partial<PageClick>) => pageMenu({ ...base, ...click }, actions, en);
 const labels = (click: Partial<PageClick>) => menu(click).map(item => item.type === 'separator' ? '---' : item.label);
 
 test('offers copy and open in the browser for a link, the way out of the app', () => {

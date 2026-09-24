@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Messages } from '../shared/i18n.ts';
+	import type { Messages } from '../shared/i18n/index.ts';
 
 	const { messages, onclose, thenLock = false }: { messages: Messages; onclose: () => void; thenLock?: boolean } = $props();
 

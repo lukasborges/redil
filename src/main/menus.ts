@@ -1,5 +1,6 @@
 import { Menu, clipboard, shell, type WebContents } from 'electron';
 import { pageMenu } from './pagemenu.ts';
+import { mainMessages } from './messages.ts';
 
 export function attachPageMenu(contents: WebContents): void {
 	contents.on('context-menu', (event, params) => {
@@ -12,7 +13,7 @@ export function attachPageMenu(contents: WebContents): void {
 			paste: () => contents.paste(),
 			replaceMisspelling: word => contents.replaceMisspelling(word),
 			addToDictionary: word => { contents.session.addWordToSpellCheckerDictionary(word); }
-		});
+		}, mainMessages());
 		if ( items.length ) Menu.buildFromTemplate(items).popup();
 	});
 }

@@ -13,6 +13,8 @@ import { attachPageMenu } from './menus.ts';
 import { serviceMenu } from './servicemenu.ts';
 import { NOTIFICATION_WRAPPER } from './notifications.ts';
 import type { KeyInput } from './shortcuts.ts';
+import { mainMessages } from './messages.ts';
+import { fill } from '../shared/i18n/index.ts';
 import { isShownIn, type ActiveWorkspace } from '../shared/workspace.ts';
 
 interface RunningService {
@@ -53,9 +55,10 @@ export class ServiceHost {
 	}
 
 	async confirmRemoveAll(): Promise<void> {
+		const messages = mainMessages();
 		const { response } = await dialog.showMessageBox(this.window, {
-			type: 'warning', buttons: ['Remove All', 'Cancel'], defaultId: 1, cancelId: 1,
-			message: 'Remove every service?', detail: 'Their sign-ins and everything they stored on this computer go with them.'
+			type: 'warning', buttons: [messages['removeAll.confirm'], messages['dialog.cancel']], defaultId: 1, cancelId: 1,
+			message: messages['removeAll.message'], detail: messages['removeAll.detail']
 		});
 		if ( response !== 0 ) return;
 		const sessions = [...this.running.values()].map(service => service.view.webContents.session);
@@ -201,7 +204,7 @@ export class ServiceHost {
 			moveToWorkspace: workspace => this.moveToWorkspace(id, workspace),
 			remove: () => { this.confirmRemove(id); },
 			developerTools: () => contents?.openDevTools({ mode: 'detach' })
-		});
+		}, mainMessages());
 		Menu.buildFromTemplate(items).popup({ window: this.window });
 	}
 
@@ -291,13 +294,14 @@ export class ServiceHost {
 	}
 
 	private async confirmRemove(id: string): Promise<void> {
+		const messages = mainMessages();
 		const { response } = await dialog.showMessageBox(this.window, {
 			type: 'question',
-			buttons: ['Remove', 'Cancel'],
+			buttons: [messages['remove.confirm'], messages['dialog.cancel']],
 			defaultId: 1,
 			cancelId: 1,
-			message: `Remove ${this.record(id).name}?`,
-			detail: 'Its sign-in and everything it stored on this computer go with it.'
+			message: fill(messages['remove.message'], { name: this.record(id).name }),
+			detail: messages['remove.detail']
 		});
 		if ( response !== 0 ) return;
 		const session = this.contentsOf(id)?.session;

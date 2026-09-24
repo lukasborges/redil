@@ -1,3 +1,5 @@
+import { fill, type Messages } from '../shared/i18n/index.ts';
+
 export interface ServiceMenuState {
 	enabled: boolean;
 	canGoBack: boolean;
@@ -44,28 +46,28 @@ export function zoomPercent(level: number): number {
 const SEPARATOR: ServiceMenuItem = { type: 'separator' };
 
 // Grouped by what is acted on: the page, what is switched, the service, and the developer's tools.
-export function serviceMenu(state: ServiceMenuState, actions: ServiceMenuActions): ServiceMenuItem[] {
+export function serviceMenu(state: ServiceMenuState, actions: ServiceMenuActions, messages: Messages): ServiceMenuItem[] {
 	const page: ServiceMenuItem[] = [
-		{ label: 'Back', enabled: state.canGoBack, click: actions.back },
-		{ label: 'Forward', enabled: state.canGoForward, click: actions.forward },
-		{ label: 'Reload', click: actions.reload },
+		{ label: messages['menu.back'], enabled: state.canGoBack, click: actions.back },
+		{ label: messages['menu.forward'], enabled: state.canGoForward, click: actions.forward },
+		{ label: messages['menu.reload'], click: actions.reload },
 		SEPARATOR,
-		{ label: 'Zoom In', click: actions.zoomIn },
-		{ label: 'Zoom Out', click: actions.zoomOut },
-		{ label: `Actual Size (${zoomPercent(state.zoomLevel)}%)`, enabled: state.zoomLevel !== 0, click: actions.resetZoom },
+		{ label: messages['menu.zoomIn'], click: actions.zoomIn },
+		{ label: messages['menu.zoomOut'], click: actions.zoomOut },
+		{ label: fill(messages['menu.actualSize'], { percent: zoomPercent(state.zoomLevel) }), enabled: state.zoomLevel !== 0, click: actions.resetZoom },
 		SEPARATOR
 	];
 	const switches: ServiceMenuItem[] = [
-		{ label: 'Notifications', type: 'checkbox', checked: state.notifications, click: actions.toggleNotifications },
-		{ label: 'Sound', type: 'checkbox', checked: state.sound, click: actions.toggleSound },
-		{ label: 'Enabled', type: 'checkbox', checked: state.enabled, click: actions.toggleEnabled },
+		{ label: messages['menu.notifications'], type: 'checkbox', checked: state.notifications, click: actions.toggleNotifications },
+		{ label: messages['menu.sound'], type: 'checkbox', checked: state.sound, click: actions.toggleSound },
+		{ label: messages['menu.enabled'], type: 'checkbox', checked: state.enabled, click: actions.toggleEnabled },
 		SEPARATOR
 	];
 	const moveToWorkspace: ServiceMenuItem[] = state.workspaces.length ? [{
-		label: 'Move to Workspace',
+		label: messages['menu.moveToWorkspace'],
 		type: 'submenu',
 		submenu: [
-			{ label: 'None', type: 'radio', checked: state.workspace === '', click: () => actions.moveToWorkspace('') },
+			{ label: messages['menu.noWorkspace'], type: 'radio', checked: state.workspace === '', click: () => actions.moveToWorkspace('') },
 			SEPARATOR,
 			...state.workspaces.map(workspace => ({
 				label: workspace.name, type: 'radio' as const, checked: state.workspace === workspace.id, click: () => actions.moveToWorkspace(workspace.id)
@@ -73,11 +75,11 @@ export function serviceMenu(state: ServiceMenuState, actions: ServiceMenuActions
 		]
 	}] : [];
 	const service: ServiceMenuItem[] = [
-		{ label: 'Edit…', click: actions.edit },
+		{ label: messages['menu.edit'], click: actions.edit },
 		...moveToWorkspace,
-		{ label: 'Remove…', click: actions.remove }
+		{ label: messages['menu.remove'], click: actions.remove }
 	];
-	const tools: ServiceMenuItem[] = [SEPARATOR, { label: 'Developer Tools', click: actions.developerTools }];
+	const tools: ServiceMenuItem[] = [SEPARATOR, { label: messages['menu.developerTools'], click: actions.developerTools }];
 
 	return state.enabled ? [...page, ...switches, ...service, ...tools] : [...switches, ...service];
 }

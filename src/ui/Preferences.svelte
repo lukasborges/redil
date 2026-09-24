@@ -6,7 +6,7 @@
 </script>
 
 <script lang="ts">
-	import type { Messages } from '../shared/i18n.ts';
+	import type { Messages } from '../shared/i18n/index.ts';
 	import { LANGUAGES, type Preferences } from '../shared/preferences.ts';
 	import type { ServiceState } from '../shared/service.ts';
 	import type { AppAction } from '../shared/channels.ts';

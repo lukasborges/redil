@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Messages } from '../shared/i18n.ts';
+	import type { Messages } from '../shared/i18n/index.ts';
 	import logo from './lib/logo.svg';
 
 	const { messages }: { messages: Messages } = $props();

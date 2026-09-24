@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Messages } from '../shared/i18n.ts';
+	import type { Messages } from '../shared/i18n/index.ts';
 	import type { ServiceRecord } from '../shared/service.ts';
 	import { normalizeUrl } from '../shared/address.ts';
 	import type { AppState } from '../shared/channels.ts';
