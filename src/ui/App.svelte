@@ -1,18 +1,22 @@
 <script lang="ts">
 	import { messagesFor } from '../shared/i18n.ts';
+	import { activeService, loadServices } from './services.svelte.ts';
 	import TitleBar from './TitleBar.svelte';
 	import Rail from './Rail.svelte';
 	import Welcome from './Welcome.svelte';
 
 	const messages = messagesFor(window.shep.locale);
+	loadServices();
 </script>
 
 <div class="shell">
-	<TitleBar />
+	<TitleBar name={activeService()?.name ?? 'Shep'} />
 	<div class="body">
 		<Rail {messages} />
 		<main class="content">
-			<Welcome {messages} />
+			{#if !activeService()}
+				<Welcome {messages} />
+			{/if}
 		</main>
 	</div>
 </div>

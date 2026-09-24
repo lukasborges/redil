@@ -12,9 +12,9 @@ export interface Shep {
 }
 
 // A profile of its own per launch, or the run would read the developer's services and talk to the network.
-export async function launchShep({ config }: { config?: Record<string, unknown> } = {}): Promise<Shep> {
+export async function launchShep({ store }: { store?: Record<string, unknown> } = {}): Promise<Shep> {
 	const userDataDir = mkdtempSync(join(tmpdir(), 'shep-next-test-'));
-	if ( config ) writeFileSync(join(userDataDir, 'config.json'), JSON.stringify(config));
+	if ( store ) writeFileSync(join(userDataDir, 'shep.json'), JSON.stringify(store));
 
 	const app = await _electron.launch({
 		args: [join(repoRoot, 'out', 'main', 'index.js'), `--user-data-dir=${userDataDir}`],
@@ -31,4 +31,20 @@ export async function closeShep(shep: Shep | undefined): Promise<void> {
 	if ( !shep ) return;
 	await shep.app.close();
 	rmSync(shep.userDataDir, { recursive: true, force: true });
+}
+
+export function serviceRecord(id: string, url: string, overrides: Record<string, unknown> = {}) {
+	return {
+		id, name: 'Service ' + id, url, partition: `persist:custom_${id}`, workspace: '', enabled: true,
+		notifications: false, muted: true, media: false, trust: false, zoomLevel: 0, favicon: '', ...overrides
+	};
+}
+
+// Runs in the page of the service whose address starts with urlPrefix.
+export function inService<T>(shep: Shep, urlPrefix: string, expression: string): Promise<T> {
+	return shep.app.evaluate(async ({ webContents }, { urlPrefix, expression }) => {
+		const contents = webContents.getAllWebContents().find(candidate => candidate.getURL().startsWith(urlPrefix));
+		if ( !contents ) throw new Error('No page at ' + urlPrefix);
+		return contents.executeJavaScript(expression);
+	}, { urlPrefix, expression }) as Promise<T>;
 }
