@@ -1,0 +1,83 @@
+.dialog {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	width: min(420px, calc(100vw - 32px));
+	padding: 20px;
+	border-radius: 12px;
+	background-color: var(--rx-raised);
+	color: var(--rx-ink);
+	box-shadow: 0 0 0 1px var(--rx-line), 0 8px 32px var(--rx-shadow);
+}
+
+.dialog h2 {
+	margin: 0 0 4px;
+	font-size: 16px;
+	font-weight: 700;
+}
+
+.dialog label, .dialog .field {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	font-size: 13px;
+	font-weight: 600;
+}
+
+.dialog input, .dialog select {
+	height: 34px;
+	padding: 0 10px;
+	border: 1px solid var(--rx-line);
+	border-radius: 8px;
+	background-color: var(--rx-field);
+	color: inherit;
+	font: inherit;
+	font-weight: 400;
+	outline: none;
+}
+
+.dialog input:focus, .dialog select:focus {
+	border-color: var(--rx-accent);
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--rx-accent) 25%, transparent);
+}
+
+.dialog input[aria-invalid='true'] {
+	border-color: var(--rx-alert);
+}
+
+.dialog small {
+	color: var(--rx-alert);
+	font-weight: 400;
+}
+
+.dialog footer {
+	display: flex;
+	justify-content: flex-end;
+	gap: 8px;
+	margin-top: 6px;
+}
+
+.dialog footer button {
+	height: 32px;
+	padding: 0 16px;
+	border: 0;
+	border-radius: 8px;
+	font: inherit;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.dialog .secondary {
+	background-color: color-mix(in srgb, var(--rx-ink) 8%, transparent);
+	color: inherit;
+}
+
+.dialog .primary {
+	background-color: var(--rx-accent);
+	color: var(--rx-on-accent);
+}
+
+.dialog .primary:disabled {
+	opacity: 0.5;
+	cursor: default;
+}

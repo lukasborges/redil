@@ -5,6 +5,7 @@ import { withoutAppTokens } from './useragent.ts';
 import { createMainWindow } from './window.ts';
 import { ServiceHost } from './services.ts';
 import { Overlay, type OverlayDialog } from './overlay.ts';
+import { Workspaces } from './workspaces.ts';
 import { store } from './store.ts';
 import { shortcutFor, type KeyInput, type ShortcutAction } from './shortcuts.ts';
 import type { AppState } from '../shared/channels.ts';
@@ -33,6 +34,7 @@ if ( !app.requestSingleInstanceLock() ) {
 	let mainWindow: ReturnType<typeof createMainWindow> | null = null;
 	let services: ServiceHost | null = null;
 	let overlay: Overlay | null = null;
+	let workspaces: Workspaces | null = null;
 
 	app.on('second-instance', () => {
 		if ( !mainWindow ) return;
@@ -46,8 +48,8 @@ if ( !app.requestSingleInstanceLock() ) {
 	handle('app:getVersion', () => version);
 	handle('services:list', () => services?.list() ?? []);
 	handle('services:activate', (event, id) => services?.activate(typeof id === 'string' ? id : null));
-	handle('services:add', (event, url, name) => services?.add(text(url), text(name)) ?? null);
-	handle('services:update', (event, id, url, name) => services?.update(text(id), text(url), text(name)) ?? false);
+	handle('services:add', (event, url, name, workspace) => services?.add(text(url), text(name), typeof workspace === 'string' ? workspace : undefined) ?? null);
+	handle('services:update', (event, id, url, name, workspace) => services?.update(text(id), text(url), text(name), typeof workspace === 'string' ? workspace : undefined) ?? false);
 	handle('services:reorder', (event, ids) => services?.reorder(Array.isArray(ids) ? ids.map(text) : []));
 	handle('services:menu', (event, id) => services?.showMenu(text(id)));
 	handle('services:record', (event, id) => store.get('services').find(service => service.id === text(id)) ?? null);
@@ -59,7 +61,16 @@ if ( !app.requestSingleInstanceLock() ) {
 	handle('overlay:open', (event, dialog) => overlay?.open(dialog as OverlayDialog));
 	handle('overlay:close', () => overlay?.close());
 
-	const appState = (): AppState => ({ dontDisturb: store.get('dontDisturb') });
+	handle('workspaces:menu', () => workspaces?.showMenu());
+	handle('workspaces:save', (event, id, name) => workspaces?.save(typeof id === 'string' ? id : null, text(name)));
+	handle('workspaces:get', (event, id) => store.get('workspaces').find(workspace => workspace.id === text(id)) ?? null);
+
+	const appState = (): AppState => ({
+		dontDisturb: store.get('dontDisturb'),
+		workspaces: store.get('workspaces'),
+		activeWorkspace: store.get('activeWorkspace'),
+		unreadElsewhere: services?.unreadElsewhere() ?? false
+	});
 	const announceState = () => mainWindow?.webContents.send('app:state', appState());
 	const setDontDisturb = (on: boolean) => {
 		services?.setDontDisturb(on);
@@ -98,7 +109,8 @@ if ( !app.requestSingleInstanceLock() ) {
 			case 'addService': overlay?.open({ dialog: 'add' }); return;
 			case 'dontDisturb': return setDontDisturb(!store.get('dontDisturb'));
 			case 'quit': app.quit(); return;
-			case 'workspace': case 'preferences': case 'lock': return;
+			case 'workspace': return workspaces?.chooseNumber(shortcut.index);
+			case 'preferences': case 'lock': return;
 		}
 	}
 
@@ -116,7 +128,8 @@ if ( !app.requestSingleInstanceLock() ) {
 		mainWindow = window;
 		listenForShortcuts(window.webContents);
 		overlay = new Overlay(window, () => services?.focusActive(), listenForShortcuts);
-		services = new ServiceHost(window, { edit: id => overlay?.open({ dialog: 'edit', serviceId: id }), shortcut: handleShortcut });
+		services = new ServiceHost(window, { edit: id => overlay?.open({ dialog: 'edit', serviceId: id }), shortcut: handleShortcut, changed: announceState });
+		workspaces = new Workspaces(window, services, id => overlay?.open({ dialog: 'workspace', workspaceId: id }));
 		window.webContents.once('did-finish-load', () => services?.start());
 	});
 	app.on('window-all-closed', () => app.quit());

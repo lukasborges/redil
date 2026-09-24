@@ -4,6 +4,7 @@
 	import { services, appState, activate, openAddDialog, reorder, setDontDisturb, showServiceMenu } from './services.svelte.ts';
 	import { initials } from './initials.ts';
 	import Icon from './Icon.svelte';
+	import WorkspaceSwitcher from './WorkspaceSwitcher.svelte';
 
 	const { messages }: { messages: Messages } = $props();
 
@@ -11,7 +12,7 @@
 
 	let dragged = $state<string | null>(null);
 	let preview = $state<ServiceState[] | null>(null);
-	const shown = $derived(preview ?? services.list);
+	const shown = $derived((preview ?? services.list).filter(service => service.shown));
 
 	function badge(service: ServiceState): string {
 		if ( service.unread === '•' ) return '•';
@@ -22,6 +23,7 @@
 	function dragOver(event: DragEvent, over: string) {
 		if ( !dragged || dragged === over ) return;
 		event.preventDefault();
+		// the whole list, hidden services included, so a drag in one workspace keeps the others' order
 		const list = [...(preview ?? services.list)];
 		const from = list.findIndex(service => service.id === dragged);
 		const to = list.findIndex(service => service.id === over);
@@ -38,6 +40,7 @@
 </script>
 
 <nav class="rail" aria-label="Services">
+	<WorkspaceSwitcher {messages} />
 	{#each shown as service (service.id)}
 		<button class="service" class:active={service.active} class:disabled={!service.enabled} class:dragged={dragged === service.id}
 			type="button" draggable="true" title={service.name} aria-label={service.name} aria-current={service.active ? 'page' : undefined}

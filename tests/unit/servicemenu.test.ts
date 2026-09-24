@@ -3,8 +3,9 @@ import assert from 'node:assert/strict';
 import { serviceMenu, zoomPercent, type ServiceMenuActions, type ServiceMenuState } from '../../src/main/servicemenu.ts';
 
 const noop = () => {};
-const actions: ServiceMenuActions = { back: noop, forward: noop, reload: noop, zoomIn: noop, zoomOut: noop, resetZoom: noop, toggleNotifications: noop, toggleSound: noop, toggleEnabled: noop, edit: noop, remove: noop, developerTools: noop };
-const running: ServiceMenuState = { enabled: true, canGoBack: true, canGoForward: false, notifications: true, sound: false, zoomLevel: 1 };
+const moved: string[] = [];
+const actions: ServiceMenuActions = { back: noop, forward: noop, reload: noop, zoomIn: noop, zoomOut: noop, resetZoom: noop, toggleNotifications: noop, toggleSound: noop, toggleEnabled: noop, edit: noop, moveToWorkspace: id => moved.push(id), remove: noop, developerTools: noop };
+const running: ServiceMenuState = { enabled: true, canGoBack: true, canGoForward: false, notifications: true, sound: false, zoomLevel: 1, workspaces: [], workspace: '' };
 const labels = (state: ServiceMenuState) => serviceMenu(state, actions).map(item => item.type === 'separator' ? '---' : item.label);
 
 test('groups the page, the switches, the service and the developer tools', () => {
@@ -25,4 +26,13 @@ test('keeps only what can be done to a disabled service, which has no page', () 
 
 test('shows the zoom as the percentage Chromium draws it at', () => {
 	assert.deepEqual([0, 1, 1.25, -1].map(zoomPercent), [100, 120, 126, 83]);
+});
+
+test('moves a service to a workspace, or to none, once there are workspaces', () => {
+	const withWorkspaces = { ...running, workspaces: [{ id: 'w1', name: 'Work' }], workspace: 'w1' };
+	const submenu = serviceMenu(withWorkspaces, actions).find(item => item.label === 'Move to Workspace')?.submenu ?? [];
+	assert.deepEqual(submenu.map(item => item.type === 'separator' ? '---' : `${item.label}${item.checked ? ' ✓' : ''}`), ['None', '---', 'Work ✓']);
+	submenu[0]?.click?.();
+	assert.deepEqual(moved, ['']);
+	assert.equal(labels(running).includes('Move to Workspace'), false);
 });

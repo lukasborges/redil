@@ -28,4 +28,6 @@ export interface ServiceState {
 	canGoBack: boolean;
 	canGoForward: boolean;
 	loading: boolean;
+	workspace: string;
+	shown: boolean;
 }

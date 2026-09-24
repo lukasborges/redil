@@ -13,6 +13,7 @@ import { attachPageMenu } from './menus.ts';
 import { serviceMenu } from './servicemenu.ts';
 import { NOTIFICATION_WRAPPER } from './notifications.ts';
 import type { KeyInput } from './shortcuts.ts';
+import { isShownIn, type ActiveWorkspace } from '../shared/workspace.ts';
 
 interface RunningService {
 	view: WebContentsView;
@@ -23,6 +24,7 @@ interface RunningService {
 
 export interface ServiceHostEvents {
 	edit(id: string): void;
+	changed(): void;
 	// true when the key was an app shortcut, which the page then never sees
 	shortcut(input: KeyInput): boolean;
 }
@@ -58,7 +60,9 @@ export class ServiceHost {
 				active: record.id === active,
 				canGoBack: history?.canGoBack() ?? false,
 				canGoForward: history?.canGoForward() ?? false,
-				loading: running?.view.webContents.isLoading() ?? false
+				loading: running?.view.webContents.isLoading() ?? false,
+				workspace: record.workspace,
+				shown: isShownIn(record.workspace, store.get('activeWorkspace'))
 			};
 		});
 	}
@@ -76,13 +80,13 @@ export class ServiceHost {
 		if ( active ) this.running.get(active)?.view.webContents.focus();
 	}
 
-	add(address: string, name: string): string | null {
+	add(address: string, name: string, workspace = store.get('activeWorkspace') ?? ''): string | null {
 		const url = normalizeUrl(address);
 		if ( !url ) return null;
 		const services = store.get('services');
 		const id = String(services.reduce((highest, service) => Math.max(highest, Number(service.id) || 0), 0) + 1);
 		const record: ServiceRecord = {
-			id, url, name: name.trim() || nameFromUrl(url), partition: `persist:custom_${id}`, workspace: '',
+			id, url, name: name.trim() || nameFromUrl(url), partition: `persist:custom_${id}`, workspace,
 			enabled: true, notifications: true, muted: false, media: false, trust: false, zoomLevel: 0, favicon: ''
 		};
 		store.set('services', [...services, record]);
@@ -91,13 +95,13 @@ export class ServiceHost {
 		return id;
 	}
 
-	update(id: string, address: string, name: string): boolean {
+	update(id: string, address: string, name: string, workspace = this.record(id).workspace): boolean {
 		const url = normalizeUrl(address);
 		if ( !url ) return false;
 		const before = this.record(id);
-		updateService(id, { url, name: name.trim() || nameFromUrl(url) });
+		updateService(id, { url, name: name.trim() || nameFromUrl(url), workspace });
 		if ( before.url !== url ) this.running.get(id)?.view.webContents.loadURL(url);
-		this.announce();
+		this.showWorkspace(store.get('activeWorkspace'));
 		return true;
 	}
 
@@ -150,7 +154,9 @@ export class ServiceHost {
 			canGoForward: history?.canGoForward() ?? false,
 			notifications: record.notifications,
 			sound: !record.muted,
-			zoomLevel: record.zoomLevel
+			zoomLevel: record.zoomLevel,
+			workspaces: store.get('workspaces'),
+			workspace: record.workspace
 		}, {
 			back: () => this.navigate(id, 'back'),
 			forward: () => this.navigate(id, 'forward'),
@@ -165,6 +171,7 @@ export class ServiceHost {
 			},
 			toggleEnabled: () => this.setEnabled(id, !this.record(id).enabled),
 			edit: () => this.events.edit(id),
+			moveToWorkspace: workspace => this.moveToWorkspace(id, workspace),
 			remove: () => { this.confirmRemove(id); },
 			developerTools: () => contents?.openDevTools({ mode: 'detach' })
 		});
@@ -191,7 +198,30 @@ export class ServiceHost {
 
 	// The services the rail shows, in its order.
 	shownIds(): string[] {
-		return store.get('services').map(service => service.id);
+		const active = store.get('activeWorkspace');
+		return store.get('services').filter(service => isShownIn(service.workspace, active)).map(service => service.id);
+	}
+
+	// Hides the services of other workspaces from the rail; they keep running, counting and notifying.
+	showWorkspace(workspace: ActiveWorkspace): void {
+		store.set('activeWorkspace', workspace);
+		const shown = this.shownIds();
+		const active = store.get('activeServiceId');
+		if ( active && !shown.includes(active) ) this.activate(shown.find(id => this.running.has(id)) ?? null);
+		else this.announce();
+	}
+
+	moveToWorkspace(id: string, workspace: string): void {
+		updateService(id, { workspace });
+		this.showWorkspace(store.get('activeWorkspace'));
+	}
+
+	unreadElsewhere(): boolean {
+		const active = store.get('activeWorkspace');
+		return active !== null && store.get('services').some(record => {
+			const unread = this.running.get(record.id)?.unread ?? 0;
+			return !isShownIn(record.workspace, active) && (unread === '•' || unread > 0);
+		});
 	}
 
 	activateNth(index: number): void {
@@ -263,6 +293,7 @@ export class ServiceHost {
 		if ( this.window.isDestroyed() ) return;
 		this.window.webContents.send('services:changed', this.list());
 		app.setBadgeCount(totalUnread([...this.running.values()].map(service => service.unread)));
+		this.events.changed();
 	}
 
 	private stop(id: string): void {

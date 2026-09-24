@@ -1,6 +1,7 @@
 import { mount } from 'svelte';
 import { RAIL_WIDTH, TITLE_BAR_HEIGHT } from '../shared/chrome.ts';
 import './tokens.css';
+import './dialog.css';
 import App from './App.svelte';
 import Overlay from './Overlay.svelte';
 

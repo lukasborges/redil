@@ -1,5 +1,6 @@
 import Store from 'electron-store';
 import type { ServiceRecord } from '../shared/service.ts';
+import type { ActiveWorkspace, Workspace } from '../shared/workspace.ts';
 
 interface Schema {
 	services: ServiceRecord[];
@@ -7,12 +8,14 @@ interface Schema {
 	// partition|permission → the answer the person gave once
 	permissions: Record<string, boolean>;
 	dontDisturb: boolean;
+	workspaces: Workspace[];
+	activeWorkspace: ActiveWorkspace;
 }
 
 // shep.json, not config.json: Shep 0.10's config.json stays readable for the migration.
 export const store = new Store<Schema>({
 	name: 'shep',
-	defaults: { services: [], activeServiceId: null, permissions: {}, dontDisturb: false }
+	defaults: { services: [], activeServiceId: null, permissions: {}, dontDisturb: false, workspaces: [], activeWorkspace: null }
 });
 
 export function updateService(id: string, changes: Partial<ServiceRecord>): void {

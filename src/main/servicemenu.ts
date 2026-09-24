@@ -5,6 +5,8 @@ export interface ServiceMenuState {
 	notifications: boolean;
 	sound: boolean;
 	zoomLevel: number;
+	workspaces: readonly { id: string; name: string }[];
+	workspace: string;
 }
 
 export interface ServiceMenuActions {
@@ -18,13 +20,15 @@ export interface ServiceMenuActions {
 	toggleSound(): void;
 	toggleEnabled(): void;
 	edit(): void;
+	moveToWorkspace(id: string): void;
 	remove(): void;
 	developerTools(): void;
 }
 
 export interface ServiceMenuItem {
 	label?: string;
-	type?: 'separator' | 'checkbox';
+	type?: 'separator' | 'checkbox' | 'radio' | 'submenu';
+	submenu?: ServiceMenuItem[];
 	checked?: boolean;
 	enabled?: boolean;
 	accelerator?: string;
@@ -57,8 +61,20 @@ export function serviceMenu(state: ServiceMenuState, actions: ServiceMenuActions
 		{ label: 'Enabled', type: 'checkbox', checked: state.enabled, click: actions.toggleEnabled },
 		SEPARATOR
 	];
+	const moveToWorkspace: ServiceMenuItem[] = state.workspaces.length ? [{
+		label: 'Move to Workspace',
+		type: 'submenu',
+		submenu: [
+			{ label: 'None', type: 'radio', checked: state.workspace === '', click: () => actions.moveToWorkspace('') },
+			SEPARATOR,
+			...state.workspaces.map(workspace => ({
+				label: workspace.name, type: 'radio' as const, checked: state.workspace === workspace.id, click: () => actions.moveToWorkspace(workspace.id)
+			}))
+		]
+	}] : [];
 	const service: ServiceMenuItem[] = [
 		{ label: 'Edit…', click: actions.edit },
+		...moveToWorkspace,
 		{ label: 'Remove…', click: actions.remove }
 	];
 	const tools: ServiceMenuItem[] = [SEPARATOR, { label: 'Developer Tools', click: actions.developerTools }];
