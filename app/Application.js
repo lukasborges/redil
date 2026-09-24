@@ -9,14 +9,12 @@ Ext.define('Shep.Application', {
 	]
 
 	,stores: [
-		 'ServicesList'
-		,'Services'
+		'Services'
 	]
 
 	,config: {
 		 totalServicesLoaded: 0
 		,totalNotifications: 0
-		,googleURLs: []
 	}
 
 	,launch: function () {
@@ -97,147 +95,114 @@ Ext.define('Shep.Application', {
 			});
 		}
 
+		// Load language for Ext JS library
+		Ext.Loader.loadScript({url: Ext.util.Format.format("ext/packages/ext-locale/build/ext-locale-{0}.js", localStorage.getItem('locale-extjs') || 'en')});
 
-		Ext.getStore('ServicesList').load(function (records, operations, success) {
-
-			if (!success) {
-				Ext.cq1('app-main').addDocked({
-					 xtype: 'toolbar'
-					,dock: 'top'
-					,ui: 'servicesnotloaded'
-					,style: { background: '#efef6d' }
-					,items: [
-						'->'
-						,{
-							 xtype: 'label'
-							,html: '<b>Services couldn\'t be loaded, some Shep features will not be available.</b>'
-						}
-						,{
-							 xtype: 'button'
-							,text: 'Reload'
-							,handler: function() { ipc.send('reloadApp'); }
-						}
-						,'->'
-						,{
-							 glyph: 'xf00d@FontAwesome'
-							,baseCls: ''
-							,style: 'cursor:pointer;'
-							,handler: function(btn) { Ext.cq1('app-main').removeDocked(btn.up('toolbar'), true); }
-						}
-					]
-				});
-			}
-
-			// Load language for Ext JS library
-			Ext.Loader.loadScript({url: Ext.util.Format.format("ext/packages/ext-locale/build/ext-locale-{0}.js", localStorage.getItem('locale-extjs') || 'en')});
-
-			// Set Google URLs
-			Shep.app.config.googleURLs = [
-				"accounts.google.com/ServiceLogin",
-				"accounts.google.com/signin",
-				"accounts.google.com/_/lookup/accountlookup",
-				"accounts.google.com/o/oauth2",
-				"accounts.google.com/_/signin",
-				"accounts.google.com/AddSession?",
-				"accounts.google.com/_/"
-			];
-
-			// Shortcuts
-			const platform = shep.platform;
-			// Prevents default behaviour of Mousetrap, that prevents shortcuts in textareas
-			Mousetrap.prototype.stopCallback = function(e, element, combo) {
-				return false;
-			};
-			// Add shortcuts to switch services using CTRL + Number
-			Mousetrap.bind(platform === 'darwin' ? ["command+1","command+2","command+3","command+4","command+5","command+6","command+7","command+8","command+9"] : ["ctrl+1","ctrl+2","ctrl+3","ctrl+4","ctrl+5","ctrl+6","ctrl+7","ctrl+8","ctrl+9"], function(e, combo) { // GROUPS
-				// counted over the services the rail is showing, which in a workspace
-				// is not every service there is
-				var tab = Shep.util.Workspaces.visibleServiceTabs()[parseInt(e.key, 10) - 1];
-				if ( tab ) Ext.cq1('app-main').setActiveTab(tab);
-			});
-			// Ctrl+Alt+1..9 switches workspace, beside Ctrl+1..9 for the services in it
-			Mousetrap.bind([1,2,3,4,5,6,7,8,9].map(n => (platform === 'darwin' ? 'command+alt+' : 'ctrl+alt+') + n), function(e) {
-				Shep.util.Workspaces.activateByNumber(parseInt(e.key, 10));
-			});
-			// Add shortcut to main tab (ctrl+,)
-			Mousetrap.bind(platform === 'darwin' ? 'command+,' : 'ctrl+,', (e, combo) => {
-				Ext.cq1('app-main').setActiveTab(0);
-			});
-			// Add shortcuts to navigate through services: the ones on show, cycling
-			var cycleServices = function(step) {
-				var tabs = Shep.util.Workspaces.visibleServiceTabs();
-				if ( !tabs.length ) return;
-				var i = tabs.indexOf(Ext.cq1('app-main').getActiveTab());
-				// from the home tab, forward is the first and back is the last
-				i = i === -1 ? (step > 0 ? 0 : tabs.length - 1) : (i + step + tabs.length) % tabs.length;
-				Ext.cq1('app-main').setActiveTab(tabs[i]);
-			};
-			Mousetrap.bind(['ctrl+tab', 'ctrl+pagedown'], () => cycleServices(1));
-			Mousetrap.bind(['ctrl+shift+tab', 'ctrl+pageup'], () => cycleServices(-1));
-			// Add shortcut to search inside a service
-			Mousetrap.bind(shep.platform === 'darwin' ? ['command+alt+f'] : ['shift+alt+f'], (e, combo) => {
-				var currentTab = Ext.cq1('app-main').getActiveTab();
-				if ( currentTab.getWebView ) currentTab.showSearchBox(true);
-			});
-			// Add shortcut to Do Not Disturb
-			Mousetrap.bind(platform === 'darwin' ? ["command+alt+d"] : ["shift+alt+d"], function(e, combo) {
-				var btn = Ext.getCmp('disturbBtn');
-				btn.toggle();
-				Ext.cq1('app-main').getController().dontDisturb(btn, true);
-			});
-			// Add shortcut to Lock Shep
-			Mousetrap.bind(platform === 'darwin' ? ['command+alt+l'] : ['shift+alt+l'], (e, combo) => {
-				var btn = Ext.getCmp('lockShepBtn');
-				Ext.cq1('app-main').getController().lockShep(btn);
-			});
-
-			/*
-			 * The accelerators the menu bar used to carry. macOS keeps its menu and
-			 * its accelerators; elsewhere there is no menu, and main.js replays a
-			 * key typed inside a service into this window, so these answer there
-			 * as well.
-			 */
-			if ( platform !== 'darwin' ) {
-				const activeService = () => {
-					var tab = Ext.cq1('app-main').getActiveTab();
-					return tab.getWebView && tab.record.get('enabled') ? tab : null;
-				};
-				Mousetrap.bind('ctrl+q', () => { ipc.send('app:quit'); });
-				Mousetrap.bind('ctrl+r', () => { ipc.send('reloadApp'); });
-				Mousetrap.bind('ctrl+shift+r', () => { var tab = activeService(); if ( tab ) tab.reloadService(); });
-				Mousetrap.bind(['ctrl+=', 'ctrl+plus'], () => { var tab = activeService(); if ( tab ) tab.zoomIn(); });
-				Mousetrap.bind('ctrl+-', () => { var tab = activeService(); if ( tab ) tab.zoomOut(); });
-				Mousetrap.bind('ctrl+0', () => { var tab = activeService(); if ( tab ) tab.resetZoom(); });
-				Mousetrap.bind('f11', () => { ipc.send('window:toggleFullScreen'); });
-				Mousetrap.bind('ctrl+shift+i', () => { ipc.send('window:toggleDevTools'); });
-			}
-
-			// Mouse Wheel zooming
-			document.addEventListener('mousewheel', function(e) {
-				if( e.ctrlKey ) {
-					var delta = Math.max(-1, Math.min(1, (e.wheelDelta || -e.detail)));
-
-					var tabPanel = Ext.cq1('app-main');
-					if ( tabPanel.items.indexOf(tabPanel.getActiveTab()) === 0 ) return false;
-
-					if ( delta === 1 ) { // Zoom In
-						tabPanel.getActiveTab().zoomIn();
-					} else { // Zoom Out
-						tabPanel.getActiveTab().zoomOut();
-					}
-				}
-			});
-
-			// Define default value
-			if ( localStorage.getItem('dontDisturb') === null ) localStorage.setItem('dontDisturb', false);
-			ipc.send('setDontDisturb', localStorage.getItem('dontDisturb')); // We store it in config
-
-			if ( localStorage.getItem('locked') ) {
-				console.info('Lock Shep:', 'Enabled');
-				Ext.cq1('app-main').getController().showLockWindow();
-			}
-			Ext.getStore('Services').load();
+		// Shortcuts
+		const platform = shep.platform;
+		// Prevents default behaviour of Mousetrap, that prevents shortcuts in textareas
+		Mousetrap.prototype.stopCallback = function(e, element, combo) {
+			return false;
+		};
+		// Add shortcuts to switch services using CTRL + Number
+		Mousetrap.bind(platform === 'darwin' ? ["command+1","command+2","command+3","command+4","command+5","command+6","command+7","command+8","command+9"] : ["ctrl+1","ctrl+2","ctrl+3","ctrl+4","ctrl+5","ctrl+6","ctrl+7","ctrl+8","ctrl+9"], function(e, combo) { // GROUPS
+			// counted over the services the rail is showing, which in a workspace
+			// is not every service there is
+			var tab = Shep.util.Workspaces.visibleServiceTabs()[parseInt(e.key, 10) - 1];
+			if ( tab ) Ext.cq1('app-main').setActiveTab(tab);
 		});
+		// Ctrl+Alt+1..9 switches workspace, beside Ctrl+1..9 for the services in it
+		Mousetrap.bind([1,2,3,4,5,6,7,8,9].map(n => (platform === 'darwin' ? 'command+alt+' : 'ctrl+alt+') + n), function(e) {
+			Shep.util.Workspaces.activateByNumber(parseInt(e.key, 10));
+		});
+		// Add shortcut to main tab (ctrl+,)
+		Mousetrap.bind(platform === 'darwin' ? 'command+,' : 'ctrl+,', (e, combo) => {
+			Ext.cq1('app-main').setActiveTab(0);
+		});
+		// Add shortcuts to navigate through services: the ones on show, cycling
+		var cycleServices = function(step) {
+			var tabs = Shep.util.Workspaces.visibleServiceTabs();
+			if ( !tabs.length ) return;
+			var i = tabs.indexOf(Ext.cq1('app-main').getActiveTab());
+			// from the home tab, forward is the first and back is the last
+			i = i === -1 ? (step > 0 ? 0 : tabs.length - 1) : (i + step + tabs.length) % tabs.length;
+			Ext.cq1('app-main').setActiveTab(tabs[i]);
+		};
+		Mousetrap.bind(['ctrl+tab', 'ctrl+pagedown'], () => cycleServices(1));
+		Mousetrap.bind(['ctrl+shift+tab', 'ctrl+pageup'], () => cycleServices(-1));
+		// Add shortcut to search inside a service
+		Mousetrap.bind(shep.platform === 'darwin' ? ['command+alt+f'] : ['shift+alt+f'], (e, combo) => {
+			var currentTab = Ext.cq1('app-main').getActiveTab();
+			if ( currentTab.getWebView ) currentTab.showSearchBox(true);
+		});
+		// Add shortcut to Do Not Disturb
+		Mousetrap.bind(platform === 'darwin' ? ["command+alt+d"] : ["shift+alt+d"], function(e, combo) {
+			var btn = Ext.getCmp('disturbBtn');
+			btn.toggle();
+			Ext.cq1('app-main').getController().dontDisturb(btn, true);
+		});
+		// Add shortcut to Lock Shep
+		Mousetrap.bind(platform === 'darwin' ? ['command+alt+l'] : ['shift+alt+l'], (e, combo) => {
+			var btn = Ext.getCmp('lockShepBtn');
+			Ext.cq1('app-main').getController().lockShep(btn);
+		});
+
+		/*
+		 * The accelerators the menu bar used to carry. macOS keeps its menu and
+		 * its accelerators; elsewhere there is no menu, and main.js replays a
+		 * key typed inside a service into this window, so these answer there
+		 * as well.
+		 */
+		if ( platform !== 'darwin' ) {
+			const activeService = () => {
+				var tab = Ext.cq1('app-main').getActiveTab();
+				return tab.getWebView && tab.record.get('enabled') ? tab : null;
+			};
+			Mousetrap.bind('ctrl+q', () => { ipc.send('app:quit'); });
+			Mousetrap.bind('ctrl+r', () => { ipc.send('reloadApp'); });
+			Mousetrap.bind('ctrl+shift+r', () => { var tab = activeService(); if ( tab ) tab.reloadService(); });
+			Mousetrap.bind(['ctrl+=', 'ctrl+plus'], () => { var tab = activeService(); if ( tab ) tab.zoomIn(); });
+			Mousetrap.bind('ctrl+-', () => { var tab = activeService(); if ( tab ) tab.zoomOut(); });
+			Mousetrap.bind('ctrl+0', () => { var tab = activeService(); if ( tab ) tab.resetZoom(); });
+			Mousetrap.bind('f11', () => { ipc.send('window:toggleFullScreen'); });
+			Mousetrap.bind('ctrl+shift+i', () => { ipc.send('window:toggleDevTools'); });
+		}
+
+		// Mouse Wheel zooming, one step per turn of the wheel rather than one per
+		// event, of which a touchpad sends dozens
+		var lastWheelZoom = 0;
+		document.addEventListener('mousewheel', function(e) {
+			if( e.ctrlKey ) {
+				if ( Date.now() - lastWheelZoom < 100 ) return;
+				lastWheelZoom = Date.now();
+				var delta = Math.max(-1, Math.min(1, (e.wheelDelta || -e.detail)));
+
+				var tabPanel = Ext.cq1('app-main');
+				if ( tabPanel.items.indexOf(tabPanel.getActiveTab()) === 0 ) return false;
+
+				if ( delta === 1 ) { // Zoom In
+					tabPanel.getActiveTab().zoomIn();
+				} else { // Zoom Out
+					tabPanel.getActiveTab().zoomOut();
+				}
+			}
+		});
+
+		// Define default value
+		if ( localStorage.getItem('dontDisturb') === null ) localStorage.setItem('dontDisturb', false);
+		ipc.send('setDontDisturb', localStorage.getItem('dontDisturb')); // We store it in config
+
+		if ( localStorage.getItem('locked') ) {
+			console.info('Lock Shep:', 'Enabled');
+			Ext.cq1('app-main').getController().showLockWindow();
+		}
+		Ext.getStore('Services').load();
+
+		// The loading screen in index.html. The catalogue's store took it down
+		// when the catalogue arrived, and with the catalogue gone this is the
+		// moment the app is ready.
+		Ext.get('spinner') ? Ext.get('spinner').destroy() : null;
+		Ext.get('background') ? Ext.get('background').destroy() : null;
 	}
 
 	,updateTotalNotifications: function( newValue, oldValue ) {

@@ -8,14 +8,12 @@ Ext.define('Shep.ux.WebView',{
 
 	,requires: [
 		 'Shep.util.Format'
-		,'Shep.util.Notifier'
 		,'Shep.util.UnreadCounter'
-		,'Shep.util.IconLoader'
 		,'Shep.util.Workspaces'
+		,'Shep.util.ServiceIcon'
 	]
 
 	// private
-	,zoomLevel: 0
 	,currentUnreadCount: 0
 
 	// CONFIG
@@ -47,7 +45,7 @@ Ext.define('Shep.ux.WebView',{
 			// went with the labels they used to govern.
 			,title: ''
 			,tooltip: me.record.get('name')
-			,icon: me.record.get('type') === 'custom' ? (me.record.get('logo') === '' ? 'resources/icons/custom.png' : me.record.get('logo')) : 'resources/icons/'+me.record.get('logo')
+			,icon: Shep.util.ServiceIcon.describe(me.record).url
 			,src: me.record.get('url')
 			,type: me.record.get('type')
 			,align: me.record.get('align')
@@ -64,6 +62,7 @@ Ext.define('Shep.ux.WebView',{
 					,scope: me
 				}
 				,clickEvent: ''
+				,cls: Shep.util.ServiceIcon.describe(me.record).cls
 				,style: !me.record.get('enabled') ? '-webkit-filter: grayscale(1)' : ''
 				,menu:  {
 					 plain: true
@@ -71,6 +70,12 @@ Ext.define('Shep.ux.WebView',{
 						 beforeshow: me.syncServiceMenu
 						,scope: me
 					}
+					/*
+					 * Grouped by what is acted on: the page, then the switches, then
+					 * the service, with the developer tools last. A disabled service
+					 * has no page, so syncServiceMenu hides what is marked needsPage,
+					 * separators included, and the switches and the service stay.
+					 */
 					,items: [
 						{
 							 xtype: 'toolbar'
@@ -100,29 +105,43 @@ Ext.define('Shep.ux.WebView',{
 								}
 							]
 						}
-						,'-'
 						,{
-							 text: 'Zoom In'
+							// the three zoom commands as one row, the way a browser's
+							// menu has it; the percentage resets
+							 xtype: 'toolbar'
 							,needsPage: true
-							,glyph: 'xf00e@FontAwesome'
-							,scope: me
-							,handler: me.zoomIn
+							,items: [
+								{
+									 xtype: 'segmentedbutton'
+									,allowToggle: false
+									,flex: 1
+									,items: [
+										{
+											 glyph: 'xf068@FontAwesome'
+											,tooltip: 'Zoom Out'
+											,flex: 1
+											,scope: me
+											,handler: me.zoomOut
+										}
+										,{
+											 itemId: 'zoomReset'
+											,text: '100%'
+											,tooltip: 'Reset Zoom'
+											,flex: 1
+											,scope: me
+											,handler: me.resetZoom
+										}
+										,{
+											 glyph: 'xf067@FontAwesome'
+											,tooltip: 'Zoom In'
+											,flex: 1
+											,scope: me
+											,handler: me.zoomIn
+										}
+									]
+								}
+							]
 						}
-						,{
-							 text: 'Zoom Out'
-							,needsPage: true
-							,glyph: 'xf010@FontAwesome'
-							,scope: me
-							,handler: me.zoomOut
-						}
-						,{
-							 text: 'Reset Zoom'
-							,needsPage: true
-							,glyph: 'xf002@FontAwesome'
-							,scope: me
-							,handler: me.resetZoom
-						}
-						,'-'
 						,{
 							 text: locale['app.webview[0]']
 							,needsPage: true
@@ -130,18 +149,19 @@ Ext.define('Shep.ux.WebView',{
 							,scope: me
 							,handler: me.reloadService
 						}
-						,'-'
-						,{
-							 text: locale['app.webview[3]']
-							,needsPage: true
-							,glyph: 'xf121@FontAwesome'
-							,scope: me
-							,handler: me.toggleDevTools
-						}
+						,{ xtype: 'menuseparator', needsPage: true }
 						/*
-						 * What the list on the home tab used to offer, per row. The
-						 * icon is the service, so it is the thing to ask.
+						 * Switched on and off from day to day, so they live here
+						 * rather than in the Edit window. Anything that is switched
+						 * wears the switch: one item per position, and the menu shows
+						 * the one that is true as it opens.
 						 */
+						,{ text: 'Notifications', itemId: 'notificationsOn', glyph: 'xf205@FontAwesome', scope: me, handler: me.toggleNotificationsFromMenu }
+						,{ text: 'Notifications', itemId: 'notificationsOff', glyph: 'xf204@FontAwesome', scope: me, handler: me.toggleNotificationsFromMenu }
+						,{ text: 'Sound', itemId: 'soundOn', glyph: 'xf205@FontAwesome', scope: me, handler: me.toggleSoundFromMenu }
+						,{ text: 'Sound', itemId: 'soundOff', glyph: 'xf204@FontAwesome', scope: me, handler: me.toggleSoundFromMenu }
+						,{ text: 'Enabled', itemId: 'disableService', glyph: 'xf205@FontAwesome', scope: me, handler: me.toggleService }
+						,{ text: 'Enabled', itemId: 'enableService', glyph: 'xf204@FontAwesome', scope: me, handler: me.toggleService }
 						,'-'
 						,{
 							 text: locale['app.window[1]']
@@ -157,24 +177,18 @@ Ext.define('Shep.ux.WebView',{
 							,menu: { plain: true, items: [] }
 						}
 						,{
-							 text: locale['app.service[0]']
-							,itemId: 'disableService'
-							,glyph: 'xf204@FontAwesome'
-							,scope: me
-							,handler: me.toggleService
-						}
-						,{
-							 text: locale['app.service[1]']
-							,itemId: 'enableService'
-							,glyph: 'xf205@FontAwesome'
-							,scope: me
-							,handler: me.toggleService
-						}
-						,{
 							 text: locale['app.main[14]']
 							,glyph: 'xf1f8@FontAwesome'
 							,scope: me
 							,handler: me.removeService
+						}
+						,{ xtype: 'menuseparator', needsPage: true }
+						,{
+							 text: 'Developer Tools'
+							,needsPage: true
+							,glyph: 'xf121@FontAwesome'
+							,scope: me
+							,handler: me.toggleDevTools
 						}
 					]
 				}
@@ -282,7 +296,6 @@ Ext.define('Shep.ux.WebView',{
 					,webpreferences: 'spellcheck=' + (ipc.sendSync('getConfig').spellcheck ? 'yes' : 'no') + ', contextIsolation=no, sandbox=no'
 					,allowpopups: 'on'
 					// ,disablewebsecurity: 'on' // Disabled because some services (Like Google Drive) dont work with this enabled
-					,useragent: me.getUserAgent()
 					,preload: new URL('resources/js/rambox-service-api.js', window.location.href).href
 				}
 			}];
@@ -290,26 +303,6 @@ Ext.define('Shep.ux.WebView',{
 
 		return cfg;
 	}
-	,getUserAgent: function() {
-		// A user agent typed into Preferences is used exactly as written.
-		var configured = ipc.sendSync('getConfig').user_agent;
-		if ( configured ) return configured;
-
-		var catalogEntry = Ext.getStore('ServicesList').getById(this.record.get('type'));
-		var pinned = catalogEntry ? catalogEntry.get('userAgent') : '';
-
-		if ( !pinned ) {
-			return window.clientInformation.userAgent.replace(/Shep\/([0-9]\.?)+\s/ig,'').replace(/Electron\/([0-9]\.?)+\s/ig,'');
-		}
-
-		// The agents pinned in resources/services.json name whatever Chrome was
-		// current when the entry was written. WhatsApp's still says 70, from 2018,
-		// and the site now turns away anything below 100. The platform half of each
-		// string is still doing a job, so only the version is moved up to the
-		// Chromium this build actually runs on.
-		return pinned.replace(/Chrome\/[0-9.]+/i, 'Chrome/' + shep.versions.chrome);
-	}
-
 	,statusBarConstructor: function() {
 		var me = this;
 
@@ -343,6 +336,18 @@ Ext.define('Shep.ux.WebView',{
 						 text: 'Dismiss'
 						,mouseOffset: [0,-60]
 					}
+				}
+				,{
+					// A certificate is trusted where the question comes up, rather
+					// than from a setting in the Edit window ahead of time.
+					 xtype: 'button'
+					,itemId: 'trust'
+					,text: 'Trust this certificate'
+					,scale: 'small'
+					,ui: 'decline'
+					,scope: me
+					,hidden: true
+					,handler: me.trustCertificate
 				}
 			]
 		};
@@ -384,8 +389,6 @@ Ext.define('Shep.ux.WebView',{
 				webview.blur();
 				webview.focus();
 			}
-			// Set special icon for some service (like Slack)
-			Shep.util.IconLoader.loadServiceIconUrl(me, webview);
 		});
 
 		// On search text
@@ -457,37 +460,16 @@ Ext.define('Shep.ux.WebView',{
 			e.preventDefault();
 		});
 
-		let firstDomReady = true;
 		webview.addEventListener("dom-ready", function(e) {
 			// Mute Webview
 			if ( me.record.get('muted') || localStorage.getItem('locked') || JSON.parse(localStorage.getItem('dontDisturb')) ) me.setAudioMuted(true, true);
 
 			var js_inject = '';
-			// Injected code to detect new messages
-			if ( me.record ) {
-				var js_unread = Ext.getStore('ServicesList').getById(me.record.get('type')) ? Ext.getStore('ServicesList').getById(me.record.get('type')).get('js_unread') : '' ;
-				js_unread = js_unread + me.record.get('js_unread');
-				if ( js_unread !== '' ) {
-					console.groupCollapsed(me.record.get('type').toUpperCase() + ' - JS Injected to Detect New Messages');
-					console.info(me.type);
-					console.log(js_unread);
-					js_inject += js_unread;
-				}
-			}
-
-			// Prevent Title blinking (some services have) and only allow when the title have an unread regex match: "(3) Title"
-			if ( Ext.getStore('ServicesList').getById(me.record.get('type')) ? Ext.getStore('ServicesList').getById(me.record.get('type')).get('titleBlink') : false ) {
-				var js_preventBlink = 'var originalTitle=document.title;Object.defineProperty(document,"title",{configurable:!0,set:function(a){null===a.match(new RegExp("[(]([0-9•]+)[)][ ](.*)","g"))&&a!==originalTitle||(document.getElementsByTagName("title")[0].innerHTML=a)},get:function(){return document.getElementsByTagName("title")[0].innerHTML}});';
-				console.log(js_preventBlink);
-				js_inject += js_preventBlink;
-			}
-
-			console.groupEnd();
 
 			// Wraps Notification so clicking one brings the window forward and
 			// activates this tab. The preload used to patch the global directly;
 			// it now runs in an isolated world, so this has to be injected, which
-			// puts it in the page's own world alongside the js_unread snippets.
+			// puts it in the page's own world.
 			js_inject += 'if(!window.__ramboxNotification&&window.rambox){window.__ramboxNotification=true;'
 				+ 'var __native=Notification;'
 				+ 'window.Notification=function(t,o){var n=new __native(t,o);'
@@ -529,63 +511,18 @@ Ext.define('Shep.ux.WebView',{
 					if (webContentsId !== webview.getWebContentsId()) return;
 
 					me.showStatusWarning('<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Certification Warning');
+					me.down('statusbar #trust').show();
 				};
 				ipc.on('webview:certificate-error', me.certificateWarning);
 				me.on('destroy', function() { ipc.removeListener('webview:certificate-error', me.certificateWarning); });
 			}
-			if (firstDomReady) {
-				firstDomReady = false;
-
-				Shep.app.config.googleURLs.forEach((loginURL) => {	if ( webview.getURL().indexOf(loginURL) > -1 ) webview.reload() })
-			}
-			// The error is kept, not only logged: a snippet that throws is the first
-			// thing the unread report has to be able to say.
-			me.injectionError = null;
-			webview.executeJavaScript(js_inject)
-				.then(() => {})
-				.catch(err => { me.injectionError = String(err && err.message ? err.message : err); console.log(err); })
+			webview.executeJavaScript(js_inject).catch(err => console.log(err));
 		});
 
 		webview.addEventListener('ipc-message', function(event) {
-			var channel = event.channel;
-			switch (channel) {
-				case 'rambox.setUnreadCount':
-					handleSetUnreadCount(event);
-					break;
-				case 'rambox.clearUnreadCount':
-					handleClearUnreadCount(event);
-					break;
-				case 'rambox.showWindowAndActivateTab':
-					showWindowAndActivateTab(event);
-					break;
-			}
-			/**
-			 * Handles 'rambox.clearUnreadCount' messages.
-			 * Clears the unread count.
-			 */
-			function handleClearUnreadCount() {
-				me.tab.setBadgeText('');
-				me.currentUnreadCount = 0;
-				me.reportSnippetUnread(0);
-			}
+			if ( event.channel === 'rambox.showWindowAndActivateTab' ) showWindowAndActivateTab();
 
-			/**
-			 * Handles 'rambox.setUnreadCount' messages.
-			 * Sets the badge text if the event contains an integer or a '•' (indicating non-zero but unknown number of unreads) as first argument.
-			 *
-			 * @param event
-			 */
-			function handleSetUnreadCount(event) {
-				if (Array.isArray(event.args) === true && event.args.length > 0) {
-					var count = event.args[0];
-					if (count === parseInt(count, 10) || "•" === count) {
-						if ( count === 999999 ) count = "•";
-						me.reportSnippetUnread(count);
-					}
-				}
-			}
-
-			function showWindowAndActivateTab(event) {
+			function showWindowAndActivateTab() {
 				ipc.send('window:show');
 				var tabPanel = Ext.cq1('app-main');
 				// Temp fix missing cursor after upgrade to electron 3.x +
@@ -595,30 +532,19 @@ Ext.define('Shep.ux.WebView',{
 			}
 		});
 
-		/*
-		 * The title is read for every service, not only for the ones without a
-		 * snippet. A snippet is written against a site that keeps changing, and
-		 * when it stops matching it reports zero for ever -- the service goes
-		 * quiet and nothing says why. reportTitleUnread decides which of the two
-		 * answers to believe; see effectiveUnreadCount.
-		 */
+		// The title is the one count every service gives: "(3) Inbox".
 		webview.addEventListener("page-title-updated", function(e) {
 			me.pageTitle = e.title;
 			me.syncTitleBarIfActive();
-
-			var count = e.title.match(/\(([^)]+)\)/); // Get text between (...)
-			count = count ? count[1] : '0';
-			count = count === '•' ? count : Ext.isArray(count.match(/\d+/g)) ? count.match(/\d+/g).join("") : count.match(/\d+/g); // Some services have special characters. Example: (•)
-			count = count === null ? '0' : count;
-
-			me.reportTitleUnread(count);
+			me.reportTitleUnread(me.countFromTitle(e.title));
 		});
 
 		// back and forward in the title bar follow the page's own history
 		webview.addEventListener('did-navigate-in-page', function() { me.syncTitleBarIfActive(); });
-		webview.addEventListener('did-navigate', function( e ) {
-			me.syncTitleBarIfActive();
-			if ( e.isMainFrame && me.record.get('type') === 'tweetdeck' ) Ext.defer(function() { webview.loadURL(e.newURL); }, 1000); // Applied a defer because sometimes is not redirecting. TweetDeck 2FA is an example.
+		webview.addEventListener('did-navigate', function() { me.syncTitleBarIfActive(); });
+
+		webview.addEventListener('page-favicon-updated', function( e ) {
+			me.wearFavicon(e.favicons);
 		});
 
 		webview.addEventListener('update-target-url', function( url ) {
@@ -629,27 +555,17 @@ Ext.define('Shep.ux.WebView',{
 	}
 
 	/**
-	 * Everything the app knows about how this service is being counted, for the
-	 * report under View. Testing unread detection means logging into the service,
-	 * so the least this can do is say what it sees rather than leave the person
-	 * guessing why a tab is quiet.
+	 * What the unread report shows for this service: the title it last read and
+	 * the count it took from it. Testing detection means logging into the
+	 * service, so the least the app can do is say what it sees.
 	 */
 	,unreadDiagnosis: function() {
 		var me = this;
-		var entry = Ext.getStore('ServicesList').getById(me.record.get('type'));
-		var fromCatalogue = entry ? entry.get('js_unread') !== '' : false;
-		var fromService = !Ext.isEmpty(me.record.get('js_unread'));
 
 		return {
 			 name: me.record.get('name')
-			,snippet: fromCatalogue || fromService ? (fromService ? 'own code' : 'catalogue') : 'none'
-			,snippetUnread: me.snippetUnread === undefined || me.snippetUnread === null ? '—' : String(me.snippetUnread)
-			,snippetWorks: !!me.snippetWorks
-			,titleUnread: me.titleUnread === undefined || me.titleUnread === null ? '—' : String(me.titleUnread)
-			,counting: me.snippetWorks ? 'snippet' : (me.countOf(me.titleUnread) > me.countOf(me.snippetUnread) ? 'title' : 'neither yet')
-			,countingCls: me.snippetWorks ? 'snippet' : (me.countOf(me.titleUnread) > me.countOf(me.snippetUnread) ? 'title' : 'quiet')
-			,total: String(me.countOf(me.effectiveUnreadCount()))
-			,error: me.injectionError || ''
+			,title: me.pageTitle || '—'
+			,total: String(me.countOf(me.currentUnreadCount))
 		};
 	}
 
@@ -664,38 +580,35 @@ Ext.define('Shep.ux.WebView',{
 	}
 
 	/**
-	 * What the service's own snippet says. Once it has ever reported more than
-	 * none, it is the only answer used: it is the one that knows which chats are
-	 * muted or archived, and the title does not.
+	 * The count a title carries, in the shape browsers made common: "(3) Inbox",
+	 * or failing that a "(3)" anywhere, as in "Inbox (3) - someone@gmail.com".
+	 * "(1.234)" and "(99+)" count their digits, and "(•)" is '•'.
 	 */
-	,reportSnippetUnread: function(count) {
-		var me = this;
-
-		me.snippetUnread = count;
-		if ( me.countOf(count) > 0 ) me.snippetWorks = true;
-		me.setUnreadCount(me.effectiveUnreadCount());
+	,countFromTitle: function(title) {
+		var match = /^\s*\(\s*(•|\d[\d.,+]*)\s*\)/.exec(title || '') || /\(\s*(•|\d[\d.,+]*)\s*\)/.exec(title || '');
+		if ( !match ) return 0;
+		if ( match[1] === '•' ) return '•';
+		return parseInt(match[1].match(/\d+/g).join(''), 10);
 	}
 
 	/**
-	 * What the page title says, which is the safety net. A snippet that has
-	 * stopped matching the site reports zero rather than failing, so a service
-	 * whose title says "(3)" while its snippet says nothing is counted from the
-	 * title -- possibly counting muted chats too, which beats counting nothing.
+	 * Some services blink their title, putting the count back a moment after
+	 * taking it away, so a drop to nothing only counts once it has lasted.
 	 */
 	,reportTitleUnread: function(count) {
 		var me = this;
 
-		me.titleUnread = count;
-		me.setUnreadCount(me.effectiveUnreadCount());
+		clearTimeout(me.titleDropTimer);
+		if ( me.countOf(count) === 0 && me.countOf(me.currentUnreadCount) > 0 ) {
+			me.titleDropTimer = setTimeout(function() {
+				if ( !me.isDestroyed ) me.setUnreadCount(0);
+			}, me.titleBlinkGrace);
+			return;
+		}
+		me.setUnreadCount(count);
 	}
 
-	,effectiveUnreadCount: function() {
-		var me = this;
-
-		if ( me.snippetWorks ) return me.snippetUnread;
-		var chosen = me.countOf(me.titleUnread) > me.countOf(me.snippetUnread) ? me.titleUnread : me.snippetUnread;
-		return chosen === undefined || chosen === null ? 0 : chosen;
-	}
+	,titleBlinkGrace: 1500
 
 	,setUnreadCount: function(newUnreadCount) {
 		var me = this;
@@ -713,31 +626,11 @@ Ext.define('Shep.ux.WebView',{
 		Shep.util.Workspaces.refreshSwitcher();
 
 		me.setTabBadgeText(Shep.util.Format.formatNumber(newUnreadCount));
-
-		me.doManualNotification(parseInt(newUnreadCount));
+		me.currentUnreadCount = newUnreadCount;
 	}
 
 	,refreshUnreadCount: function() {
 		this.setUnreadCount(this.currentUnreadCount);
-	}
-
-	/**
-	 * Dispatch manual notification if
-	 * • service doesn't have notifications, so Shep does them
-	 * • count increased
-	 * • not in dnd mode
-	 * • notifications enabled
-	 *
-	 * @param {int} count
-	 */
-	,doManualNotification: function(count) {
-		var me = this;
-		var manualNotifications = Ext.getStore('ServicesList').getById(me.type) ? Ext.getStore('ServicesList').getById(me.type).get('manual_notifications') : false;
-		if ( manualNotifications && me.currentUnreadCount < count && me.record.get('notifications') && !JSON.parse(localStorage.getItem('dontDisturb'))) {
-			Shep.util.Notifier.dispatchNotification(me, count);
-		}
-
-		me.currentUnreadCount = count;
 	}
 
 	/**
@@ -845,7 +738,11 @@ Ext.define('Shep.ux.WebView',{
 
 		if ( !muted && !calledFromDisturb && JSON.parse(localStorage.getItem('dontDisturb')) ) return;
 
-		if ( me.record.get('enabled') ) webview.setAudioMuted(muted);
+		// Before dom-ready the page cannot be muted yet; dom-ready applies the
+		// record's setting when it arrives.
+		try {
+			if ( me.record.get('enabled') ) webview.setAudioMuted(muted);
+		} catch (e) {}
 	}
 
 	// A warning stays until it is dismissed, which is what the button is for.
@@ -863,8 +760,18 @@ Ext.define('Shep.ux.WebView',{
 
 		statusbar.keep = false;
 		statusbar.down('button').hide();
+		statusbar.down('#trust').hide();
 		statusbar.clearStatus({ useDefaults: true });
 		this.syncStatusBar();
+	}
+
+	,trustCertificate: function() {
+		var me = this;
+
+		me.record.set('trust', true);
+		ipc.send('webview:setTrust', me.getWebView().getWebContentsId(), true);
+		me.closeStatusBar();
+		me.reloadService();
 	}
 
 	// Shown while the page loads, while the pointer is over a link, or while a
@@ -890,16 +797,11 @@ Ext.define('Shep.ux.WebView',{
 
 	/**
 	 * Whether this service is allowed the camera and the microphone without being
-	 * asked. The record decides when it says anything; when it says null, which
-	 * is what a service configured before the setting existed says, the catalogue
-	 * entry it was created from answers for it.
+	 * asked. Only a record that says so is; any other service is asked once, and
+	 * the answer is remembered.
 	 */
 	,mediaAccess: function() {
-		var decided = this.record.get('media');
-		if ( decided === true || decided === false ) return decided;
-
-		var entry = Ext.getStore('ServicesList').getById(this.record.get('type'));
-		return !!(entry && entry.get('media'));
+		return this.record.get('media') === true;
 	}
 
 	/**
@@ -923,14 +825,31 @@ Ext.define('Shep.ux.WebView',{
 	,syncServiceMenu: function( menu ) {
 		var ligado = this.record.get('enabled');
 
-		// the separators go with the page's items, or a disabled service's menu
-		// would open on a rule
 		Ext.each(menu.items.items, function(item) {
-			if ( item.needsPage || item.isXType('menuseparator') ) item.setHidden(!ligado);
+			if ( item.needsPage ) item.setHidden(!ligado);
 		});
+		this.syncZoomLabel(menu);
 		menu.down('#disableService').setHidden(!ligado);
 		menu.down('#enableService').setHidden(ligado);
+		var notifications = this.record.get('notifications');
+		var sound = !this.record.get('muted');
+		menu.down('#notificationsOn').setHidden(!notifications);
+		menu.down('#notificationsOff').setHidden(notifications);
+		menu.down('#soundOn').setHidden(!sound);
+		menu.down('#soundOff').setHidden(sound);
 		this.syncWorkspaceMenu(menu.down('#moveToWorkspace'));
+	}
+
+	,toggleNotificationsFromMenu: function() {
+		var on = !this.record.get('notifications');
+		this.record.set('notifications', on);
+		this.setNotifications(on);
+	}
+
+	,toggleSoundFromMenu: function() {
+		var muted = !this.record.get('muted');
+		this.record.set('muted', muted);
+		this.setAudioMuted(muted);
 	}
 
 	/*
@@ -1007,6 +926,36 @@ Ext.define('Shep.ux.WebView',{
 		}
 	}
 
+	/**
+	 * Wears the favicon the page lists, live, fetched through the service's
+	 * session and kept on the record, so the rail shows it again before the page
+	 * loads. Services that mark something new by swapping their favicon, as
+	 * Google Chat and Meet do, show it in the rail this way.
+	 */
+	,wearFavicon: function( favicons ) {
+		var me = this;
+		if ( me.isDestroyed || !Ext.isArray(favicons) || !favicons.length ) return;
+
+		var webContentsId;
+		try {
+			webContentsId = me.getWebView().getWebContentsId();
+		} catch (e) {
+			return; // the page went away before its favicon arrived
+		}
+
+		var request = me.faviconRequest = (me.faviconRequest || 0) + 1;
+		ipc.invoke('favicon:fetch', webContentsId, favicons)
+			.then(Shep.util.ServiceIcon.pickFavicon)
+			.then(function( favicon ) {
+				if ( !favicon || request !== me.faviconRequest || me.isDestroyed ) return;
+				me.setIcon(favicon);
+				me.tab.addCls(Shep.util.ServiceIcon.FAVICON_CLS);
+				me.syncTitleBarIfActive();
+				if ( me.record.get('favicon') !== favicon ) me.record.set('favicon', favicon);
+			})
+			.catch(function( err ) { console.log(err); });
+	}
+
 	,syncTitleBarIfActive: function() {
 		var me = this;
 		// deferred: the navigation events arrive before the history they report
@@ -1038,40 +987,33 @@ Ext.define('Shep.ux.WebView',{
 	}
 
 	,zoomIn: function() {
-		if ( this.timeout ) clearTimeout( this.timeout );
-			this.timeout = setTimeout(() => {
-				var me = this;
-				var webview = me.getWebView();
-				me.zoomLevel = me.zoomLevel + 0.25;
-				if ( me.record.get('enabled') ) {
-					webview.setZoomLevel(me.zoomLevel);
-					me.record.set('zoomLevel', me.zoomLevel);
-				}
-		}, 100);
+		this.setZoom(this.record.get('zoomLevel') + 0.25);
 	}
 
 	,zoomOut: function() {
-		if ( this.timeout ) clearTimeout( this.timeout );
-			this.timeout = setTimeout(() => {
-				var me = this;
-				var webview = me.getWebView();
-				me.zoomLevel = me.zoomLevel - 0.25;
-				if ( me.record.get('enabled') ) {
-					webview.setZoomLevel(me.zoomLevel);
-					me.record.set('zoomLevel', me.zoomLevel);
-				}
-		}, 100);
+		this.setZoom(this.record.get('zoomLevel') - 0.25);
 	}
 
 	,resetZoom: function() {
-		var me = this;
-		var webview = me.getWebView();
+		this.setZoom(0);
+	}
 
-		me.zoomLevel = 0;
-		if ( me.record.get('enabled') ) {
-			webview.setZoomLevel(0);
-			me.record.set('zoomLevel', me.zoomLevel);
-		}
+	// The record is the one place the level lives: the panel used to keep its
+	// own copy, which started at 0 on every launch, so the first zoom after a
+	// restart threw away the level the service was saved with.
+	,setZoom: function(level) {
+		var me = this;
+		if ( !me.record.get('enabled') ) return;
+
+		me.getWebView().setZoomLevel(level);
+		me.record.set('zoomLevel', level);
+		me.syncZoomLabel(me.tab.menu);
+	}
+
+	// Chromium scales by 1.2 for each zoom level.
+	,syncZoomLabel: function(menu) {
+		var label = menu && menu.down('#zoomReset');
+		if ( label ) label.setText(Math.round(100 * Math.pow(1.2, this.record.get('zoomLevel'))) + '%');
 	}
 
 	,getWebView: function() {

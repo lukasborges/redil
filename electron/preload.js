@@ -16,6 +16,7 @@ const TO_MAIN = [
 	,'app:getVersion'
 	,'app:quit'
 	,'clipboard:writeText'
+	,'favicon:fetch'
 	,'autoUpdater:check-for-updates'
 	,'autoUpdater:quit-and-install'
 	,'getConfig'

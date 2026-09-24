@@ -5,6 +5,7 @@ const {app, BrowserWindow, shell, Menu, ipcMain, nativeImage, session, desktopCa
 const tray = require('./tray');
 // Context menus, built in this process for every webContents that gets one
 const contextMenu = require('./contextmenu');
+const { classifyWindowOpen, isReturnToService } = require('./links');
 const { isPopupRequested } = require('./popup');
 // AutoLaunch
 var AutoLaunch = require('auto-launch-patched');
@@ -33,6 +34,17 @@ const fs = require('fs');
 });
 
 if ( isDev ) app.getVersion = function() { return require('../package.json').version; }; // FOR DEV ONLY, BECAUSE IN DEV RETURNS ELECTRON'S VERSION
+
+/*
+ * Every page is told it is the Chromium it runs on, without the Shep and
+ * Electron tokens, and it is told so as the app's default rather than by
+ * overriding each page's agent. An override is what Cloudflare's Turnstile
+ * turns away: with the same string set through setUserAgent it failed every
+ * time with 600010, and as the default it passed, because Chromium keeps the
+ * client hints consistent with a default and not with an override. Todoist's
+ * login was where that showed.
+ */
+app.userAgentFallback = app.userAgentFallback.replace(/\s(Shep|Redil|Electron)\/\S+/g, '');
 
 const REDIL_PRODUCT_NAME = 'Redil';
 const REDIL_WELCOME_TAB_ID = 'redilTab';
@@ -179,7 +191,36 @@ function titleBarOverlay() {
 nativeTheme.on('updated', () => {
 	// setTitleBarOverlay does not exist on macOS, where the colours mean nothing
 	if ( process.platform !== 'darwin' && mainWindow && !mainWindow.isDestroyed() ) mainWindow.setTitleBarOverlay(titleBarOverlay());
+	themedPages.forEach(tellColorScheme);
 });
+
+/*
+ * A service's page is not told the theme. themeSource reaches the app's own
+ * window, but inside a <webview> prefers-color-scheme answers light whatever it
+ * says, so every service stayed light beside a dark app, and a favicon drawn for
+ * a light page -- GitHub's black mark -- vanished on the dark rail. The
+ * DevTools protocol sets the media feature on the page itself, and it holds
+ * across navigations; it is sent again whenever the theme changes.
+ */
+const themedPages = new Set();
+
+function tellColorScheme(contents) {
+	if ( contents.isDestroyed() ) return themedPages.delete(contents);
+	contents.debugger.sendCommand('Emulation.setEmulatedMedia', {
+		features: [{ name: 'prefers-color-scheme', value: nativeTheme.shouldUseDarkColors ? 'dark' : 'light' }]
+	}).catch(() => {});
+}
+
+function followColorScheme(contents) {
+	try {
+		if ( !contents.debugger.isAttached() ) contents.debugger.attach('1.3');
+	} catch {
+		return; // another client holds the page; it keeps the default
+	}
+	themedPages.add(contents);
+	contents.once('destroyed', () => themedPages.delete(contents));
+	tellColorScheme(contents);
+}
 
 function createWindow () {
 	// Before the window exists, so the first paint is already the right theme.
@@ -709,6 +750,47 @@ ipcMain.on('webview:setTrust', function(event, webContentsId, trust) {
 	trust ? trustedWebContents.add(webContentsId) : trustedWebContents.delete(webContentsId);
 });
 
+/*
+ * A service's favicons, as data URLs the rail can keep. They are fetched here,
+ * through the service's own session, because some sit behind its cookies and
+ * the renderer could not read the bytes of a cross-origin image anyway. One
+ * that fails or is not an image is left out.
+ */
+const FAVICON_BYTES_LIMIT = 1024 * 1024;
+
+// Ext writes an icon into an unquoted CSS url(), where the quotes and spaces an
+// inline SVG favicon carries are a syntax error, and the rail kept the old icon.
+function asBase64DataUrl(url) {
+	const comma = url.indexOf(',');
+	const header = url.slice(0, comma);
+	if ( comma < 0 || header.endsWith(';base64') ) return url;
+	try {
+		return header + ';base64,' + Buffer.from(decodeURIComponent(url.slice(comma + 1))).toString('base64');
+	} catch {
+		return null;
+	}
+}
+ipcMain.handle('favicon:fetch', async function(event, webContentsId, urls) {
+	const contents = webContents.fromId(webContentsId);
+	if ( !contents || contents.isDestroyed() || !Array.isArray(urls) ) return [];
+
+	const fetched = await Promise.all(urls.slice(0, 8).map(async url => {
+		if ( url.startsWith('data:image/') ) return asBase64DataUrl(url);
+		if ( !/^https?:\/\//.test(url) ) return null;
+		try {
+			const response = await contents.session.fetch(url);
+			const type = (response.headers.get('content-type') || '').split(';')[0].trim();
+			if ( !response.ok || !(type.startsWith('image/') || type === 'application/octet-stream') ) return null;
+			const bytes = Buffer.from(await response.arrayBuffer());
+			if ( !bytes.length || bytes.length > FAVICON_BYTES_LIMIT ) return null;
+			return 'data:' + (type.startsWith('image/') ? type : 'image/x-icon') + ';base64,' + bytes.toString('base64');
+		} catch {
+			return null;
+		}
+	}));
+	return fetched.filter(Boolean);
+});
+
 ipcMain.on('relaunchApp', function(event) {
 	app.relaunch();
 	app.exit(0);
@@ -730,47 +812,86 @@ app.on('second-instance', (event, commandLine, workingDirectory) => {
 	}
 });
 
-// ALLOWED URLS POPUPS
-let allowPopUp = [
-	'feedly.com/v3/auth/',
-	'identity.linuxfoundation.org/cas/login',
-	'auth.missiveapp.com',
-	'accounts.google.com/AccountChooser',
-	'facebook.com/v3.1/dialog/oauth?',
-	'accounts.google.com/o/oauth2',
-	'app.slack.com/files/import/gdrive',
-	'spikenow.com/s/account',
-	'app.mixmax.com/_oauth/google',
-	'officeapps.live.com',
-	'dropbox.com/profile_services/start_auth_flow',
-	'facebook.com/v3.2/dialog/oauth?',
-	'notion.so/googlepopupredirect',
-	'zoom.us/office365',
-	'figma.com/start_google_sso',
-	'mail.google.com/mail',
-	'app.slack.com/free-willy/',
-	'messenger.com/videocall',
-	'api.moo.do',
-	'manychat.com/fb?popup',
-	'=?print=true' // esta ultima checkea como anda imprimir un pedf desde gmail, si no va bie sacala
-];
+// Every link a service opens stays inside the app, in a window that shares the
+// service's session. See electron/links.js for the cases.
+function handleWindowOpen(contents, serviceContents) {
+	// did-create-window follows its setWindowOpenHandler call in order, and needs
+	// to know which of the two kinds of window it was.
+	const opening = [];
+	contents.setWindowOpenHandler(({ url, features }) => {
+		const kind = classifyWindowOpen({ url, features });
+		const popup = kind === 'popup' || (kind === 'blank' && isPopupRequested(features));
+		if ( ['blank', 'popup', 'window'].includes(kind) ) opening.push(popup);
+		switch ( kind ) {
+			case 'blank':
+				// A blank window the page asked to size is its own window, which it
+				// fills without navigating, as Meet's "Open in new window" does. The
+				// others are held hidden until they show what they are for.
+				return popup
+					? { action: 'allow' }
+					: { action: 'allow', overrideBrowserWindowOptions: { show: false } };
+			case 'popup':
+				return { action: 'allow' };
+			case 'window':
+				return { action: 'allow', overrideBrowserWindowOptions: AUXILIARY_WINDOW_OPTIONS };
+			case 'external':
+				shell.openExternal(url);
+				return { action: 'deny' };
+			default:
+				return { action: 'deny' };
+		}
+	});
+	contents.on('did-create-window', (win, details) => {
+		win.center();
+		// A popup's opener is waiting for it to come back, so it is left to do so.
+		setUpAuxiliaryWindow(win, serviceContents, details.url, !opening.shift());
+		if ( !['about:blank', 'about:blank#blocked'].includes(details.url) || details.options.show !== false ) return;
 
-/*
- * What Google's sign-in is told: Chrome on the system this runs on, with no
- * version and nothing of Electron or Shep in it. A plain, current Chrome was
- * not enough -- it was still met with "This browser or app may not be secure"
- * -- while a Chrome with no version number signs in. It is what Station does,
- * and it has to be the same in the header and in the page's own navigator.
- */
-const GOOGLE_SIGN_IN_USER_AGENT = 'Mozilla/5.0 (' + ({
-	 darwin: 'Macintosh; Intel Mac OS X 10_15_7'
-	,win32: 'Windows NT 10.0; Win64; x64'
-}[process.platform] || 'X11; Linux x86_64') + ') AppleWebKit/537.36 (KHTML, like Gecko) Chrome Safari/537.36';
-const isGoogleSignIn = url => /^https:\/\/accounts\.google\.com(\/|$)/.test(url || '');
+		// A blank window is shown once it is written into or navigated.
+		let shown = false;
+		const show = () => { if ( !shown && !win.isDestroyed() ) { shown = true; win.show(); } };
+		setTimeout(() => {
+			if ( shown || win.isDestroyed() ) return;
+			win.webContents.executeJavaScript('!!document.body && document.body.childElementCount > 0')
+				.then(written => written && show())
+				.catch(() => {});
+		}, 1000);
+		win.webContents.on('did-start-navigation', (event) => {
+			if ( event.isMainFrame && !['about:blank', 'about:blank#blocked'].includes(event.url) ) show();
+		});
+	});
+}
+
+const AUXILIARY_WINDOW_OPTIONS = { width: 1100, height: 780, autoHideMenuBar: true };
+
+function setUpAuxiliaryWindow(win, serviceContents, openedWith, handsSignInBack) {
+	const contents = win.webContents;
+	contextMenu.attach(contents);
+	followColorScheme(contents);
+	handleWindowOpen(contents, serviceContents);
+	if ( !handsSignInBack ) return;
+
+	let currentUrl = openedWith;
+	contents.on('did-navigate', (event, url) => { currentUrl = url; });
+	const returnToService = (event, legacyUrl) => {
+		const url = event.url || legacyUrl;
+		if ( serviceContents.isDestroyed() ) return;
+		if ( !isReturnToService({ serviceUrl: serviceContents.getURL(), fromUrl: currentUrl, toUrl: url }) ) return;
+		event.preventDefault();
+		serviceContents.loadURL(url);
+		win.close();
+	};
+	contents.on('will-navigate', returnToService);
+	contents.on('will-redirect', returnToService);
+}
 
 app.on('web-contents-created', (webContentsCreatedEvent, contents) => {
 	if (contents.getType() !== 'webview') return;
 	contextMenu.attach(contents);
+	followColorScheme(contents);
+	// A user agent typed into Preferences is used exactly as written, which is
+	// an override and so meets the Turnstile refusal described at the top.
+	if ( config.get('user_agent') ) contents.setUserAgent(config.get('user_agent'));
 
 	// A service calling getDisplayMedia used to be answered by a patch the
 	// preload wrote over navigator.mediaDevices. An isolated preload cannot
@@ -802,30 +923,6 @@ app.on('web-contents-created', (webContentsCreatedEvent, contents) => {
 	// Held on its own, because reading it back off a destroyed webContents throws.
 	const contentsId = contents.id;
 
-	// Google's sign-in, in the header. It used to be told it was Firefox 97,
-	// which worked while that was a recent browser; by now Google refuses it, and
-	// it contradicted the Chrome the page itself went on reporting.
-	contents.session.webRequest.onBeforeSendHeaders((details, callback) => {
-		if ( isGoogleSignIn(details.url) ) {
-			details.requestHeaders['User-Agent'] = GOOGLE_SIGN_IN_USER_AGENT;
-		}
-		callback({ cancel: false, requestHeaders: details.requestHeaders });
-	});
-
-	// And in the page, which reads navigator.userAgent: switched as the sign-in
-	// starts and given back as it leaves, so the service itself keeps its own.
-	let userAgentBeforeSignIn = null;
-	contents.on('did-start-navigation', (event) => {
-		if ( !event.isMainFrame || event.isSameDocument ) return;
-		if ( isGoogleSignIn(event.url) ) {
-			if ( userAgentBeforeSignIn === null ) userAgentBeforeSignIn = contents.getUserAgent();
-			contents.setUserAgent(GOOGLE_SIGN_IN_USER_AGENT);
-		} else if ( userAgentBeforeSignIn !== null ) {
-			contents.setUserAgent(userAgentBeforeSignIn);
-			userAgentBeforeSignIn = null;
-		}
-	});
-
 	// A bad certificate is refused unless the user marked the service trusted.
 	// Either way the renderer is told, because the warning belongs in that
 	// service's status bar and only the renderer can draw it.
@@ -855,10 +952,9 @@ app.on('web-contents-created', (webContentsCreatedEvent, contents) => {
 		if ( input.key === 'Tab' && !modifiers.length ) return;
 
 		// History navigation, which the preload drove with Mousetrap until it was
-		// sandboxed. Slack is left alone, as it was, because it routes its own.
+		// sandboxed.
 		const historyKey = process.platform === 'darwin' ? 'meta' : 'alt';
 		if ( modifiers.length === 1 && modifiers[0] === historyKey && ['ArrowLeft', 'ArrowRight'].includes(input.key) ) {
-			if ( contents.getURL().indexOf('slack.com') !== -1 ) return;
 			const history = contents.navigationHistory;
 			input.key === 'ArrowLeft' ? history.canGoBack() && history.goBack() : history.canGoForward() && history.goForward();
 			return;
@@ -897,85 +993,7 @@ app.on('web-contents-created', (webContentsCreatedEvent, contents) => {
 	// Without this the session carries no handler until the renderer reports the
 	// service's settings, and Electron's own default is to grant.
 	if ( !configuredSessions.has(contents.session) ) applyPermissionPolicy(contents.session, null, false);
-	// Block some Deep links to prevent that open its app (Ex: Slack)
-	contents.on('will-navigate', (event, url) => url.substring(0, 8) === 'slack://' && event.preventDefault());
-	// New Window handler. The about:blank case is finished in 'did-create-window'.
-	contents.setWindowOpenHandler(({ url, features }) => {
-		if (['about:blank', 'about:blank#blocked'].includes(url)) {
-			// A popup asked for with window features is the page's own window,
-			// which it fills itself without navigating, as Meet's "Open in new
-			// window" does; hidden, it never appeared.
-			if (isPopupRequested(features)) return { action: 'allow' };
-			return { action: 'allow', overrideBrowserWindowOptions: { show: false } };
-		}
-
-		// Protocol rules used to live on the webview's own 'new-window' DOM event,
-		// which was removed alongside this one.
-		let target;
-		try {
-			target = new URL(url);
-		} catch {
-			return { action: 'deny' };
-		}
-		// Block deep links that would hand the session to a native app (Ex: Slack)
-		if (target.protocol === 'slack:') return { action: 'deny' };
-		if (!['http:', 'https:'].includes(target.protocol)) {
-			shell.openExternal(url);
-			return { action: 'deny' };
-		}
-
-		// Allow the login and foreground-tab URLs that need a real popup,
-		// send everything else to the default browser.
-		let allow = false;
-		allowPopUp.forEach(allowed => url.indexOf(allowed) > -1 && (allow = true));
-		if (allow) return { action: 'allow' };
-
-		// Google's full page sign-in reaches this handler because the link that
-		// starts it carries target="_blank", but the flow ends by following its
-		// `continue` back to the service, so a window of its own would leave the
-		// user signed in beside the tab instead of inside it. Navigate the tab.
-		// The list above names paths and Google moves them: ServiceLogin now
-		// redirects to /v3/signin/identifier, which is how Chat and Calendar
-		// ended up in the default browser. `continue` is what marks a login that
-		// comes back; the OAuth handshakes carry redirect_uri instead, and the
-		// list matches them first, so they stay popups for the opener waiting on
-		// them.
-		if (target.hostname === 'accounts.google.com' && target.searchParams.has('continue')) {
-			setImmediate(() => contents.loadURL(url));
-			return { action: 'deny' };
-		}
-
-		shell.openExternal(url);
-		return { action: 'deny' };
-	});
-	contents.on('did-create-window', (win, details) => {
-		// Here we center the new window.
-		win.center();
-		// The following code is for handling the about:blank cases only.
-		if (!['about:blank', 'about:blank#blocked'].includes(details.url)) return;
-		// A popup was let through shown; only the hidden ones are routed here.
-		if (details.options.show !== false) return;
-		let once = false;
-		// A blank window that is written into rather than navigated is a window
-		// the page wants shown, even when it asked for no features.
-		setTimeout(() => {
-			if (once || win.isDestroyed()) return;
-			win.webContents.executeJavaScript('!!document.body && document.body.childElementCount > 0')
-				.then(written => written && !once && !win.isDestroyed() && win.show())
-				.catch(() => {});
-		}, 1000);
-		win.webContents.on('will-navigate', (e, nextURL) => {
-			if (once) return;
-			if (['about:blank', 'about:blank#blocked'].includes(nextURL)) return;
-			once = true;
-			let allow = false;
-			allowPopUp.forEach(allowed => nextURL.indexOf(allowed) > -1 && (allow = true));
-			// If the url is in aboutBlankOnlyWindow we handle this as a popup window
-			if (allow) return win.show();
-			shell.openExternal(nextURL);
-			win.close();
-		});
-	});
+	handleWindowOpen(contents, contents);
 });
 
 

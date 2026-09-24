@@ -3,8 +3,48 @@ Ext.define('Shep.view.add.AddController', {
 	alias: 'controller.add-add',
 
 	requires: [
-		'Shep.util.UnreadCounter'
+		 'Shep.util.UnreadCounter'
+		,'Shep.util.ServiceIcon'
 	],
+
+	statics: {
+		/**
+		 * The address as typed, with https:// in front when it has no scheme, or
+		 * null when it is not a web address.
+		 */
+		normalizeUrl: function(value) {
+			var typed = Ext.String.trim(value || '');
+			if ( !typed ) return null;
+			if ( !/^[a-z][a-z0-9+.-]*:\/\//i.test(typed) ) typed = 'https://' + typed;
+
+			try {
+				var url = new URL(typed);
+				if ( !['http:', 'https:'].includes(url.protocol) ) return null;
+				if ( url.hostname !== 'localhost' && url.hostname.indexOf('.') === -1 ) return null;
+				return url.href;
+			} catch (e) {
+				return null;
+			}
+		}
+
+		/**
+		 * A name for a service nobody named, from its address: the site, then
+		 * what the subdomain says when it says something, so that
+		 * chat.google.com and mail.google.com do not both read "Google".
+		 */
+		,nameFromUrl: function(value) {
+			var labels = new URL(value).hostname.split('.');
+			var generic = ['www', 'web', 'app', 'm'];
+			// co.uk, com.br: a two-letter country under a short second level
+			var siteAt = labels.length > 2 && labels[labels.length - 1].length === 2 && labels[labels.length - 2].length <= 3 ? labels.length - 3 : labels.length - 2;
+			var capitalize = function(word) { return word.charAt(0).toUpperCase() + word.slice(1); };
+
+			if ( siteAt < 0 ) return capitalize(labels[0]);
+			var site = capitalize(labels[siteAt]);
+			var sub = labels.slice(0, siteAt).filter(function(label) { return generic.indexOf(label) === -1; });
+			return sub.length ? site + ' ' + capitalize(sub[sub.length - 1]) : site;
+		}
+	},
 
 	doCancel: function( btn ) {
 		var me = this;
@@ -19,27 +59,15 @@ Ext.define('Shep.view.add.AddController', {
 		if ( !win.down('form').isValid() ) return false;
 
 		var formValues = win.down('form').getValues();
+		var statics = Shep.view.add.AddController;
+		formValues.url = statics.normalizeUrl(formValues.url);
+		formValues.serviceName = Ext.String.trim(formValues.serviceName || '') || statics.nameFromUrl(formValues.url);
 
 		if ( win.edit ) {
-			// Format data
-			if ( win.service.get('url').indexOf('___') >= 0 ) {
-				formValues.url = formValues.cycleValue === '1' ? win.service.get('url').replace('___', formValues.url) : formValues.url;
-			}
-
 			var oldData = win.record.getData();
 			win.record.set({
-				 logo: formValues.logo
-				,name: formValues.serviceName
+				 name: formValues.serviceName
 				,url: formValues.url
-				,align: formValues.align
-				,notifications: formValues.notifications
-				,muted: formValues.muted
-				,displayTabUnreadCounter: formValues.displayTabUnreadCounter
-				,includeInGlobalUnreadCounter: formValues.includeInGlobalUnreadCounter
-				,trust: formValues.trust
-				,media: formValues.media
-				,js_unread: formValues.js_unread
-				,disableAutoReloadOnFail: formValues.disableAutoReloadOnFail
 				,workspace: formValues.workspace || ''
 			});
 
@@ -50,57 +78,24 @@ Ext.define('Shep.view.add.AddController', {
 			// tooltip belongs to the tab, which is a button: a panel has no
 			// setTooltip, and calling it here threw before anything was saved.
 			view.tab.setTooltip( formValues.serviceName );
-			// Change sound of the Tab
-			view.setAudioMuted(formValues.muted);
-			// Change notifications of the Tab
-			view.setNotifications(formValues.notifications);
-			// Change whether the service is asked about camera and microphone
-			view.setMediaAccess(formValues.media);
-			// Change the icon of the Tab
-			if ( win.record.get('type') === 'custom' && oldData.logo !== formValues.logo ) Ext.getCmp('tab_'+win.record.get('id')).setConfig('icon', formValues.logo === '' ? 'resources/icons/custom.png' : formValues.logo);
+			// A service that has shown no favicon yet wears the initials of its name
+			if ( !win.record.get('favicon') && oldData.name !== formValues.serviceName ) view.setIcon(Shep.util.ServiceIcon.describe(win.record).url);
 			// Change the URL of the Tab
 			if ( oldData.url !== formValues.url ) view.setURL(formValues.url);
-			// Change the align of the Tab
-			if ( oldData.align !== formValues.align ) {
-				if ( formValues.align === 'left' ) {
-					Ext.cq1('app-main').moveBefore(view, Ext.getCmp('tbfill'));
-				} else {
-					Ext.cq1('app-main').moveAfter(view, Ext.getCmp('tbfill'));
-				}
-			}
-			// Apply the JS Code of the Tab
-			if ( win.down('textarea').isDirty() ) {
-				Ext.Msg.confirm(locale['app.window[8]'].toUpperCase(), 'Shep needs to reload the service to execute the new JavaScript code. Do you want to do it now?', function( btnId ) {
-					if ( btnId === 'yes' ) view.reloadService();
-				});
-			}
 
 			view.record = win.record;
 			view.tabConfig.service = win.record;
 
 			view.refreshUnreadCount();
 		} else {
-			// Format data
-			if ( win.record.get('url').indexOf('___') >= 0 ) {
-				formValues.url = formValues.cycleValue === '1' ? win.record.get('url').replace('___', formValues.url) : formValues.url;
-			}
-
+			// Everything else is the model's default: notifications on, sound on,
+			// counted, aligned left, and asked before the camera.
 			var service = Ext.create('Shep.model.Service', {
-				 type: win.record.get('id')
-				,logo: formValues.logo
+				 type: 'custom'
+				,logo: ''
 				,name: formValues.serviceName
 				,url: formValues.url
-				,align: formValues.align
-				,notifications: formValues.notifications
-				,muted: formValues.muted
-				,displayTabUnreadCounter: formValues.displayTabUnreadCounter
-				,includeInGlobalUnreadCounter: formValues.includeInGlobalUnreadCounter
-				,trust: formValues.trust
-				,media: formValues.media
-				,js_unread: formValues.js_unread
-				// The edit branch has always written this one and the add branch
-				// never did, so a service added with it ticked came back unticked.
-				,disableAutoReloadOnFail: formValues.disableAutoReloadOnFail
+				,media: false
 				,workspace: formValues.workspace || ''
 			});
 			service.save();
@@ -109,27 +104,14 @@ Ext.define('Shep.view.add.AddController', {
 			var tabData = {
 				 xtype: 'webview'
 				,id: 'tab_'+service.get('id')
-				/*
-				,title: service.get('name')
-				,icon: service.get('logo')
-				,src: service.get('url')
-				,type: service.get('type')
-				,align: formValues.align
-				,notifications: formValues.notifications
-				,muted: formValues.muted
-				*/
 				,record: service
 				,tabConfig: {
 					service: service
 				}
 			};
 
-			if ( formValues.align === 'left' ) {
-				var tbfill = Ext.cq1('app-main').getTabBar().down('tbfill');
-				Ext.cq1('app-main').insert(Ext.cq1('app-main').getTabBar().items.indexOf(tbfill), tabData).show();
-			} else {
-				Ext.cq1('app-main').add(tabData).show();
-			}
+			var tbfill = Ext.cq1('app-main').getTabBar().down('tbfill');
+			Ext.cq1('app-main').insert(Ext.cq1('app-main').getTabBar().items.indexOf(tbfill), tabData).show();
 
 			// a service added to a workspace that is not on screen takes you there,
 			// or it would vanish from the rail the moment it was added
@@ -150,9 +132,6 @@ Ext.define('Shep.view.add.AddController', {
 	}
 
 	,onShow: function(win) {
-		var me = this;
-
-		// Make focus to the name field
-		win.down('textfield[name="serviceName"]').focus(true, 100);
+		win.down('textfield[name="url"]').focus(true, 100);
 	}
 });

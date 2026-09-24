@@ -36,3 +36,30 @@ test('leaves the choice to the desktop when the preference says system', async (
 	const { escuro, ink } = await paleta('system');
 	expect(ink).toBe(escuro ? '#EDEDEF' : '#12222E');
 });
+
+test('tells a service page the theme, which a webview is not told on its own', async () => {
+	const path = require('path');
+	const { repoRoot } = require('./helpers/launch');
+	const fixture = 'file://' + path.join(repoRoot, 'test', 'fixtures', 'service.html');
+	const shep = await launchShep({ config: { theme: 'dark' } });
+	try {
+		await shep.window.evaluate(url => {
+			const rec = Ext.getStore('Services').add({ id: 8801, type: 'custom', name: 'Themed', url, enabled: true, muted: true, notifications: false })[0];
+			Ext.cq1('app-main').insert(1, { xtype: 'webview', id: 'tab_8801', record: rec, tabConfig: { service: rec } });
+			Ext.cq1('app-main').setActiveTab('tab_8801');
+		}, fixture);
+		const guestIsDark = () => shep.window.evaluate(async () => {
+			try {
+				return await Ext.getCmp('tab_8801').getWebView().executeJavaScript('matchMedia("(prefers-color-scheme: dark)").matches');
+			} catch {
+				return null;
+			}
+		});
+		await expect.poll(guestIsDark, { timeout: 10000 }).toBe(true);
+
+		await shep.app.evaluate(({ nativeTheme }) => { nativeTheme.themeSource = 'light'; });
+		await expect.poll(guestIsDark, { timeout: 10000 }).toBe(false);
+	} finally {
+		await closeShep(shep);
+	}
+});

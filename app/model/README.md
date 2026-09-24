@@ -1,25 +1,9 @@
-## Adding a service
+## Services
 
-The available services are stored in the [ServiceList.js](app/store/ServicesList.js).
-Structure of a service entry:
+There is no catalogue of services. A service is whatever address somebody types in the Add window, and every service works the same way:
 
-|Name|Description|Required|
-|---|---|---|
-|id|Unique identifier for the service, e.g. "slack"|yes|
-|logo|File name of the service logo located in "/resources/icons/", e.g. "slack.png"|yes|
-|name|Visible name for the service, e.g. "Slack"|yes|
-|description|A short description of the service, e.g. "Slack brings all your communication together..."|yes|
-|url|URL of the service, e.g. "https://\_\_\_.slack.com/". "\_\_\_" may be used as a placeholder, that can be configured when adding a service.|yes|
-|type|Defines the type of the service. Must be one of `email` or `messaging`.|yes|
-|allow_popups|Set to `true` to allow popup windows for the service.|no|
-|note|Additional info to display when adding the service.|no|
-|manual_notifications|Set to `true` to let Shep trigger notifications. Can be used for services that doesn't support browser notifications.|no|
-|js_unread|JavaScript code for setting the unread count (see below).|no|
+- its icon is the page's own favicon, kept on the record as `favicon` so the rail has it before the page loads;
+- its unread count is read from the page title, in the shape `(3) Inbox`, or `(•)` for "something, but not how many";
+- a link it opens stays inside the app, in a window that shares its session, and the context menu's Open Link in Browser is the way out.
 
-### Setting the unread count
-
-While by default the unread count is determined by looking for ` (COUNT)` to the window title, this describes the preferred way of doing it:
-
-Code provided by `js_unread` will be injected into the service website.
-You can retrieve the unread count in this JavaScript code e.g. by parsing elements.
-Set the unread count by calling `rambox.setUnreadCount(COUNT)` or clear it by calling `rambox.clearUnreadCount()`. 
+Records saved while the catalogue existed keep the catalogue id in `type`, which is part of their session partition and must not change, and the catalogue's picture in `logo` until their page shows a favicon.

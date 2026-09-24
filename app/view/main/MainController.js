@@ -9,10 +9,6 @@ Ext.define('Shep.view.main.MainController', {
 		tabPanel.setTabPosition('left');
 		tabPanel.setTabRotation(0);
 
-		// the card's own resize event does not reach here while the catalogue is
-		// floating over it, so the viewport's is used, once layout has settled
-		Ext.on('resize', this.placeCatalogue, this, { buffer: 60 });
-
 		var reorderer = tabPanel.plugins.find(function(plugin) { return plugin.ptype == "tabreorderer"});
 
 		if ( reorderer !== undefined ) {
@@ -47,9 +43,7 @@ Ext.define('Shep.view.main.MainController', {
 		var webview = newTab.down('component').el.dom;
 
 		setTimeout(function () {
-			// Whoever is active in 300ms may not be this tab any more, and the
-			// home tab has no webview to focus: opening the catalogue from a
-			// service switches twice inside that window.
+			// Whoever is active in 300ms may not be this tab any more.
 			if ( !webview || tabPanel.getActiveTab() !== newTab ) return;
 
 			newTab.getWebView().blur();
@@ -153,42 +147,16 @@ Ext.define('Shep.view.main.MainController', {
 		Ext.getCmp('tab_' + rec.get('id')).setEnabled(ligado);
 	}
 
-	/*
-	 * The catalogue lives in the home tab as a hidden floating panel rather than
-	 * in a window of its own, so that its filters, its search and its item click
-	 * keep resolving to the methods below without a second controller.
-	 */
-	/*
-	 * Built the first time it is asked for, from Main's catalogueConfig, as a
-	 * floating panel of its own: it opens over whatever is on screen, the way
-	 * Preferences does, rather than over the welcome page. See the comment there.
-	 */
-	,getCatalogue: function() {
-		var me = this;
-
-		if ( !me.catalogue || me.catalogue.destroyed ) {
-			me.catalogue = Ext.widget(Ext.apply({ ownerCmp: me.getView() }, me.getView().catalogueConfig));
-		}
-		return me.catalogue;
-	}
-
-	,openCatalogue: function() {
-		var catalogo = this.getCatalogue();
-
-		catalogo.show();
-		this.placeCatalogue();
-		// Nothing has filtered the store the first time the overlay opens, and
-		// the tally is written by the filter, so it would sit empty.
-		this.updateCatalogueCount();
-		catalogo.down('#catalogueSearch').focus(false, 100);
+	// The + in the rail. There is no catalogue: a service is whatever address
+	// somebody types.
+	,openAddService: function() {
+		Ext.create('Shep.view.add.Add');
 	}
 
 	/**
-	 * The unread report. Every service counts differently and none of it can be
-	 * tested without logging in, so this says, for each service open right now,
-	 * what its snippet answered, what its title said and which of the two the
-	 * count came from. A service reading "neither yet" with a snippet is the
-	 * shape of a snippet that has stopped matching its site.
+	 * The unread report. Every service counts from its title, and none of it can
+	 * be tested without logging in, so this says, for each service open right
+	 * now, the title it last read and the count it took from it.
 	 */
 	,showUnreadReport: function() {
 		var linhas = [];
@@ -216,24 +184,20 @@ Ext.define('Shep.view.main.MainController', {
 					,cls: 'rx-report'
 					,scrollable: 'vertical'
 					,store: Ext.create('Ext.data.Store', {
-						 fields: ['name', 'snippet', 'snippetUnread', 'snippetWorks', 'titleUnread', 'counting', 'countingCls', 'total', 'error']
+						 fields: ['name', 'title', 'total']
 						,data: linhas
 					})
 					,itemSelector: 'div.rx-report-row'
 					,tpl: [
 						 '<div class="rx-report-head">'
 							,'<span class="rx-report-name">Service</span>'
-							,'<span>Snippet</span><span>Says</span><span>Title</span><span>Counting</span><span>Total</span>'
+							,'<span>Title</span><span>Total</span>'
 						,'</div>'
 						,'<tpl for=".">'
 							,'<div class="rx-report-row">'
 								,'<span class="rx-report-name">{name}</span>'
-								,'<span>{snippet}</span>'
-								,'<span>{snippetUnread}</span>'
-								,'<span>{titleUnread}</span>'
-								,'<span class="rx-report-{countingCls}">{counting}</span>'
+								,'<span class="rx-report-title">{title}</span>'
 								,'<span>{total}</span>'
-								,'<tpl if="error"><span class="rx-report-error">{error}</span></tpl>'
 							,'</div>'
 						,'</tpl>'
 					]
@@ -246,7 +210,7 @@ Ext.define('Shep.view.main.MainController', {
 					,ui: 'decline'
 					,handler: function() {
 						var texto = linhas.map(function(l) {
-							return [l.name, l.snippet, l.snippetUnread, l.titleUnread, l.counting, l.total, l.error].join('\t');
+							return [l.name, l.title, l.total].join('\t');
 						}).join('\n');
 						ipc.send('clipboard:writeText', texto);
 					}
@@ -255,34 +219,6 @@ Ext.define('Shep.view.main.MainController', {
 				,{ text: locale['button[0]'], handler: function(b) { b.up('window').close(); } }
 			]
 		}).show();
-	}
-
-	/*
-	 * center() lost the horizontal offset inside the home card and pinned the
-	 * catalogue to the rail's edge, so it is placed by hand: in the middle of
-	 * the card, never larger than it with a margin all round, and again whenever
-	 * the window changes size while it is open, which initialize wires up.
-	 */
-	,placeCatalogue: function() {
-		var catalogo = this.catalogue;
-		if ( !catalogo || !catalogo.isVisible() ) return;
-
-		// the content area, right of the rail and under the title bar
-		var area = this.getView().body.getBox();
-		var largura = Math.min(900, area.width - 48);
-		var altura = Math.min(660, area.height - 48);
-
-		catalogo.setSize(largura, altura);
-		catalogo.setXY([
-			 Math.round(area.x + (area.width - largura) / 2)
-			,Math.round(area.y + (area.height - altura) / 2)
-		]);
-	}
-
-	,onNewServiceSelect: function( view, record, item, index, e ) {
-		Ext.create('Shep.view.add.Add', {
-			record: record
-		});
 	}
 
 	,removeServiceFn: function(serviceId, total, actual, callback) {
@@ -376,82 +312,8 @@ Ext.define('Shep.view.main.MainController', {
 	,configureService: function( gridView, rowIndex, colIndex, col, e, rec, rowEl ) {
 		Ext.create('Shep.view.add.Add', {
 			 record: rec
-			,service: Ext.getStore('ServicesList').getById(rec.get('type'))
 			,edit: true
 		});
-	}
-
-	,onSearchRender: function( field ) {
-		field.focus(false, 1000);
-	}
-
-	,onSearchEnter: function( field, e ) {
-		if ( e.getKey() !== e.ENTER ) return;
-
-		// Enter adds the one service left standing. The custom entry is always
-		// among the visible records, so it is not what "one left" counts.
-		var visiveis = [];
-		Ext.getStore('ServicesList').each(function(record) {
-			if ( record.get('type') !== 'custom' ) visiveis.push(record);
-		});
-		if ( visiveis.length !== 1 ) return;
-
-		this.onNewServiceSelect(null, visiveis[0]);
-		this.onClearClick(field);
-	}
-
-	/*
-	 * The type buttons and the search box are one filter, not two. Each handler
-	 * writes its value and this reads both, so typing a name no longer forgets
-	 * which type is selected, and picking a type no longer clears the search.
-	 */
-	,applyCatalogueFilter: function() {
-		var catalogo = this.catalogue;
-		if ( !catalogo ) return;
-
-		var tipo = catalogo.down('#catalogueFilter').getValue() || 'all';
-		var termo = (catalogo.down('#catalogueSearch').getValue() || '').toLowerCase();
-
-		Ext.getStore('ServicesList').getFilters().replaceAll({
-			fn: function(record) {
-				// The synthetic custom entry belongs to every view of the list.
-				if ( record.get('type') === 'custom' ) return true;
-				if ( tipo !== 'all' && record.get('type') !== tipo ) return false;
-				return termo === '' || record.get('name').toLowerCase().indexOf(termo) > -1;
-			}
-		});
-
-		this.updateCatalogueCount();
-	}
-
-	,doTypeFilter: function() {
-		this.applyCatalogueFilter();
-	}
-
-	,updateCatalogueCount: function() {
-		var catalogo = this.catalogue;
-		var contagem = catalogo && catalogo.down('#catalogueCount');
-		if ( !contagem ) return;
-
-		var total = 0;
-		Ext.getStore('ServicesList').each(function(record) {
-			if ( record.get('type') !== 'custom' ) total++;
-		});
-
-		contagem.setHtml(total + (total === 1 ? ' service' : ' services'));
-	}
-
-	,onSearchServiceChange: function(field, newValue) {
-		field.getTrigger('clear')[ Ext.isEmpty(newValue) ? 'hide' : 'show' ]();
-		field.updateLayout();
-		this.applyCatalogueFilter();
-	}
-
-	,onClearClick: function(field) {
-		field.reset();
-		field.getTrigger('clear').hide();
-		field.updateLayout();
-		this.applyCatalogueFilter();
 	}
 
 	,dontDisturb: function(btn, e, called) {

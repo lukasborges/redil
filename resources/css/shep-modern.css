@@ -398,6 +398,24 @@ body {
 	opacity: 1;
 }
 
+/*
+ * A favicon is drawn at 24px straight on the rail, as vertical tabs draw it,
+ * rather than stretched over the 30px square, where a 16 or 32px favicon was
+ * the blurry one in a rail of sharp pictures. 16px, a browser tab's size, was
+ * sharp but small in a 68px rail; most services serve 128px or a vector, and
+ * the ones that stop at 32px -- Gmail, X, Instagram, Chat -- soften only a
+ * little at 24. A tile
+ * behind it was tried twice: translucent, it was the grey of the active
+ * service's band and vanished on the one service that mattered; opaque and
+ * light, it was a row of white plates. The page follows the app's theme, so a
+ * site that draws a light favicon for dark pages, as GitHub does, gives one.
+ */
+#mainTabBar .x-tab-default-left.rx-tab-favicon .x-tab-icon-el {
+	background-size: 24px 24px;
+	background-position: center;
+	background-repeat: no-repeat;
+}
+
 /* The three at the foot, pinned there by the fill ahead of them. */
 #mainTabBar .x-btn-default-small {
 	background: none;
@@ -623,10 +641,9 @@ body {
 	border-color: var(--rx-muted);
 }
 
-/* The two banner toolbars: no version update or catalogue failure should look
-   like an error, so they read as notices in the app's own colours. */
-.x-toolbar-newversion,
-.x-toolbar-servicesnotloaded {
+/* The version banner: an update should not look like an error, so it reads as
+   a notice in the app's own colours. */
+.x-toolbar-newversion {
 	background-color: var(--rx-sunken);
 	background-image: none;
 	border-bottom: 1px solid var(--rx-line);
@@ -773,134 +790,6 @@ body {
 	height: 26px;
 }
 
-/* ---------------------------------------------------- the catalogue */
-
-/*
- * The overlay that opens from the + in the rail. Its list was three columns of
- * 68px rows with a 48px icon, which turned 104 services into a long scroll; it
- * is four columns of 44px rows now. The filter was two checkboxes that are
- * always both ticked, which is not a filter.
- */
-
-.rx-catalogue .x-panel-header-default {
-	background-color: var(--rx-surface);
-	border-bottom: 0;
-	padding: 18px 24px 4px;
-}
-
-.rx-catalogue .x-panel-header-title-default .x-title-text {
-	font-size: 17px;
-	font-weight: 700;
-}
-
-.rx-catalogue-head {
-	padding: 8px 24px 16px;
-	background-color: var(--rx-surface);
-	border-bottom: 1px solid var(--rx-line);
-}
-
-.rx-catalogue-head .x-form-trigger-wrap-default {
-	border-radius: var(--rx-radius-lg);
-	/* the magnifier is the last 22px of the wrap, hard against a 9px corner */
-	padding-right: 6px;
-}
-
-/* one step larger than a form field, and nothing else about it differs */
-.rx-catalogue-head .x-form-text-default {
-	min-height: 40px;
-	padding: 10px 12px;
-	font-size: 14px;
-}
-
-.rx-catalogue-filters {
-	margin-top: 12px;
-}
-
-.rx-catalogue-count {
-	font-size: 13px;
-	color: var(--rx-muted);
-}
-
-/* The segmented control, which crisp draws as three blue toolbar buttons. */
-.rx-catalogue-filters .x-segmented-button {
-	background-color: var(--rx-sunken);
-	border-radius: 7px;
-	padding: 3px;
-}
-
-.rx-catalogue-filters .x-segmented-button .x-btn {
-	background: none;
-	background-image: none;
-	background-color: transparent;
-	border: 0;
-	border-radius: 5px;
-	box-shadow: none;
-	padding: 6px 14px;
-}
-
-.rx-catalogue-filters .x-segmented-button .x-btn .x-btn-inner {
-	color: var(--rx-muted);
-	font-size: 13px;
-	line-height: 18px;
-}
-
-.rx-catalogue-filters .x-segmented-button .x-btn.x-btn-pressed {
-	background-color: var(--rx-surface);
-	border: 1px solid var(--rx-line);
-	padding: 5px 13px;
-}
-
-.rx-catalogue-filters .x-segmented-button .x-btn.x-btn-pressed .x-btn-inner {
-	color: var(--rx-ink);
-	font-weight: 600;
-}
-
-/* The list itself: a grid of rows, not a wall of 48px logos. */
-/* The items are children of the view's own element, not of a wrapper. */
-.rx-catalogue-list {
-	display: grid;
-	/* as many columns as fit, so a small window gets fewer rather than
-	   names running into the next icon */
-	grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-	align-content: start;
-	gap: 2px;
-	padding: 12px 16px 16px;
-	background-color: var(--rx-surface);
-}
-
-.rx-catalogue-list .service {
-	display: flex;
-	align-items: center;
-	gap: 12px;
-	height: 44px;
-	padding: 0 8px;
-	border-radius: var(--rx-radius);
-	cursor: pointer;
-	overflow: hidden;
-}
-
-.rx-catalogue-list .service:hover {
-	background-color: var(--rx-hover);
-}
-
-.rx-catalogue-list .service img {
-	width: 26px;
-	height: 26px;
-	border-radius: 6px;
-	flex-shrink: 0;
-}
-
-.rx-catalogue-list .service span {
-	/* a flex item will not shrink below its text without this, so the
-	   ellipsis never happened */
-	min-width: 0;
-	font-size: 13px;
-	color: var(--rx-ink);
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-
 /* -------------------------------------------- preferences navigation */
 
 /*
@@ -975,16 +864,24 @@ body {
 	 * The theme pins the badge to the top right of the tab, which in a 68 by 52
 	 * rail cell leaves it floating a centimetre away from a 30px icon. It
 	 * belongs on the icon's own corner, and the icon is centred, so the left
-	 * edge is measured from the middle rather than from the cell.
+	 * edge is measured from the middle rather than from the cell. The favicon
+	 * reaches 12px either side of the middle and starts 14px down, so a badge
+	 * from 8px right and 2px down overlaps its corner by 4px each way, as an
+	 * app's badge does; nearer the middle it covered a quarter of the icon.
 	 */
-	top: 4px;
+	top: 2px;
 	right: auto;
-	left: calc(50% + 5px);
-	border-radius: 999px;
-	padding: 1px 5px;
+	left: calc(50% + 8px);
+	/* a circle for one digit, stretched to a pill for more */
+	box-sizing: border-box;
+	min-width: 16px;
+	height: 16px;
+	border-radius: 8px;
+	padding: 0 4px;
+	text-align: center;
 	font-size: 10px;
 	font-weight: 700;
-	line-height: 14px;
+	line-height: 16px;
 	text-shadow: none;
 	/* a ring in the rail's colour lifts the count clear of the icon */
 	box-shadow: 0 0 0 2px var(--rx-chrome);
@@ -996,17 +893,17 @@ body {
 }
 
 /*
- * A service that can only say "there is something" -- Google Chat, which counts
- * nothing anywhere but swaps its favicon -- reports '\2022'. That is a dot, so
- * it is drawn as one rather than as a character in a pill.
+ * A service whose title only says "there is something", as "(•) Inbox" does,
+ * reports '\2022'. That is a dot, so it is drawn as one rather than as a
+ * character in a pill.
  */
 .x-badge[data-badge-text="\2022"]:after {
 	content: '';
 	width: 10px;
 	height: 10px;
 	padding: 0;
-	top: 6px;
-	left: calc(50% + 7px);
+	top: 7px;
+	left: calc(50% + 9px);
 	border-radius: 999px;
 }
 
@@ -1349,7 +1246,6 @@ body {
 }
 
 .rx-prefs-hint a,
-.rx-note a,
 .x-fieldset-header-text a {
 	color: var(--rx-brand);
 }
@@ -1402,32 +1298,6 @@ body {
 .x-fieldset-header-checkbox .x-form-cb-wrap {
 	min-height: 0;
 	height: auto;
-}
-
-/* The note the Add window shows for services that need a setting changed
-   inside them. It was a cyan panel; it is a quiet aside now. */
-.rx-note {
-	display: flex;
-	align-items: flex-start;
-	gap: 12px;
-	padding: 14px 16px;
-	border: 1px solid var(--rx-line);
-	border-left: 3px solid var(--rx-brand);
-	border-radius: var(--rx-radius);
-	background-color: var(--rx-sunken);
-	color: var(--rx-ink);
-	font-size: 13px;
-	line-height: 19px;
-}
-
-.rx-note .fa {
-	color: var(--rx-brand);
-	font-size: 17px;
-	line-height: 19px;
-	/* the tpl writes the icon and the text as inline siblings, so the gap needs
-	   a margin as well for the case where the container is not laid out as flex */
-	margin-right: 12px;
-	flex-shrink: 0;
 }
 
 /* ------------------------------------------------------- tag field */
@@ -1509,62 +1379,16 @@ body {
 	color: var(--rx-ink);
 }
 
-/* ------------------------------------------------------- the url row */
-
-/*
- * A service with a domain of its own asks for the middle of a url: a fixed
- * prefix, what you type, and a picker for the server. They are three Ext
- * components, and they read as one control only if the corners of whichever
- * ones are showing are the only round ones -- which is what the two :has rules
- * work out, since the prefix and the picker come and go as the picker changes.
- */
-.rx-url .x-btn-default-small {
-	background-color: var(--rx-sunken);
-	border: 1px solid var(--rx-line);
-	border-radius: 0;
-	padding: 0 12px;
-}
-
-.rx-url .x-btn-default-small .x-btn-inner {
-	color: var(--rx-muted);
-}
-
-.rx-url .rx-url-prefix {
-	border-top-left-radius: var(--rx-radius-lg);
-	border-bottom-left-radius: var(--rx-radius-lg);
-	border-right-width: 0;
-}
-
-.rx-url .rx-url-suffix {
-	border-top-right-radius: var(--rx-radius-lg);
-	border-bottom-right-radius: var(--rx-radius-lg);
-	border-left-width: 0;
-}
-
-.rx-url .x-form-trigger-wrap-default {
-	border-radius: var(--rx-radius-lg);
-}
-
-.rx-url:has(.rx-url-prefix:not([class*="x-hidden"])) .x-form-trigger-wrap-default {
-	border-top-left-radius: 0;
-	border-bottom-left-radius: 0;
-}
-
-.rx-url:has(.rx-url-suffix:not([class*="x-hidden"])) .x-form-trigger-wrap-default {
-	border-top-right-radius: 0;
-	border-bottom-right-radius: 0;
-}
-
 /* ------------------------------------------------------ unread report */
 
 /*
- * What each service's unread count is coming from. A table, because that is
- * what it is, drawn from a template for the same reason the service list is.
+ * What each service's title last said and the count taken from it. A table,
+ * because that is what it is.
  */
 .rx-report .rx-report-head,
 .rx-report .rx-report-row {
 	display: grid;
-	grid-template-columns: 1.6fr 1fr 0.6fr 0.6fr 1fr 0.5fr;
+	grid-template-columns: 1fr 2fr 0.4fr;
 	gap: 10px;
 	align-items: center;
 	padding: 9px 20px;
@@ -1591,23 +1415,11 @@ body {
 	font-weight: 600;
 }
 
-/* the one column worth reading twice: where the number came from */
-.rx-report .rx-report-snippet {
-	color: var(--rx-ok);
-}
-
 .rx-report .rx-report-title {
-	color: var(--rx-info);
-}
-
-.rx-report .rx-report-quiet {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 	color: var(--rx-muted);
-}
-
-.rx-report .rx-report-error {
-	grid-column: 1 / -1;
-	font-size: 12px;
-	color: var(--rx-alert);
 }
 
 /* -------------------------------------------------------------- menus */

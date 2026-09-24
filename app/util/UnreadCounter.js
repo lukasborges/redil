@@ -18,10 +18,8 @@ Ext.define('Shep.util.UnreadCounter', {
 		var unreadCountByService = new Map();
 
 		/**
-		 * Services that can say there is something waiting but not how much.
-		 * Google Chat is the case: it puts no count in its title and its own
-		 * markup is generated class names, but it swaps its favicon for one
-		 * named favicon_chat_new_notif_*.ico, which is a yes or no.
+		 * Services that say there is something waiting but not how much, with a
+		 * title of the shape "(•) Inbox".
 		 *
 		 * @type {Set}
 		 */

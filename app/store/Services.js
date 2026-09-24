@@ -3,7 +3,8 @@ Ext.define('Shep.store.Services', {
 	,alias: 'store.services'
 
 	,requires: [
-		'Ext.data.proxy.LocalStorage'
+		 'Ext.data.proxy.LocalStorage'
+		,'Shep.util.ServiceIcon'
 	]
 
 	,model: 'Shep.model.Service'
@@ -33,7 +34,7 @@ Ext.define('Shep.store.Services', {
 					 xtype: 'webview'
 					,id: 'tab_'+service.get('id')
 					,title: service.get('name')
-					,icon: service.get('type') !== 'custom' ? 'resources/icons/'+service.get('logo') : ( service.get('logo') === '' ? 'resources/icons/custom.png' : service.get('logo'))
+					,icon: Shep.util.ServiceIcon.describe(service).url
 					,src: service.get('url')
 					,type: service.get('type')
 					,muted: service.get('muted')
@@ -41,7 +42,6 @@ Ext.define('Shep.store.Services', {
 					,displayTabUnreadCounter: service.get('displayTabUnreadCounter')
 					,enabled: service.get('enabled')
 					,record: service
-					,useragent: ipc.sendSync('getConfig').user_agent
 					,tabConfig: {
 						service: service
 					}

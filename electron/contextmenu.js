@@ -88,7 +88,7 @@ function template(contents, params) {
 				// Omit the mailto: portion of the link; we just want the address
 				,click: () => clipboard.writeText(isEmailAddress ? params.linkText : params.linkURL)
 			}
-			,{ label: 'Open Link', click: () => shell.openExternal(params.linkURL) }
+			,{ label: 'Open Link in Browser', click: () => shell.openExternal(params.linkURL) }
 		];
 		if ( params.srcURL ) items.push({ type: 'separator' }, ...imageItems(contents, params));
 		return items;

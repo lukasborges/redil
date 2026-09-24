@@ -22,16 +22,9 @@ Never commit to `main`. Branch as `fix/short-description` or `feature/short-desc
 
 Keep the commit subject on one line and say what changed rather than what you touched.
 
-## Adding or changing a service
+## Services
 
-Services live in `resources/services.json`. Append to the end of the array and copy the shape of a neighbouring entry.
-
-Two fields are worth understanding:
-
-- `userAgent` only needs to be set when the service refuses the default one. Give the platform you want to present and any Chrome version; the app rewrites the version to the Chromium it is running, so the entry will not rot.
-- `js_unread` runs inside the service's page and reports the unread count by calling `rambox.setUnreadCount(n)` or `rambox.clearUnreadCount()`. That global keeps its original name on purpose: every entry in the catalogue calls it, and renaming it would break all of them at once.
-
-Run `npm run check:services` before opening a pull request that touches the catalogue. It reports entries whose URLs have rotted. A domain that does not resolve is conclusive; a timeout or a 403 usually means bot protection rather than a dead service, so check those by hand.
+There is no catalogue to add a service to: the Add window takes any address, and every service is handled the same way, with its favicon as the icon, its page title as the unread count, and its links kept inside the app. A change that only one service needs is a change to that general rule, not a special case.
 
 ## Building
 

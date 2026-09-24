@@ -46,32 +46,16 @@ test('mounts the Ext viewport with only the home tab configured', async () => {
 	expect(tabs.filter(id => id.startsWith('tab_'))).toHaveLength(0);
 });
 
-test('loads the service catalogue and appends the synthetic custom entry', async () => {
-	const catalogue = await shep.window.evaluate(() => {
-		const store = Ext.getStore('ServicesList');
-		return { total: store.getCount(), hasCustom: !!store.getById('custom') };
-	});
+test('tells every page the running Chromium as the default, not as an override', async () => {
+	// Cloudflare's Turnstile refuses a page whose agent was overridden, whatever
+	// the string, so the clean agent is the app's default.
+	const agent = await shep.app.evaluate(({ app }) => app.userAgentFallback);
+	const chrome = await shep.window.evaluate(() => shep.versions.chrome);
+	expect(agent).toContain('Chrome/' + chrome);
+	expect(agent).not.toMatch(/Shep|Electron/);
 
-	expect(catalogue.total).toBeGreaterThan(50);
-	expect(catalogue.hasCustom).toBe(true);
-});
-
-test('rewrites a pinned user agent to the running Chromium', async () => {
-	const agent = await shep.window.evaluate(() => ({
-		 pinned: Ext.getStore('ServicesList').getById('whatsapp').get('userAgent')
-		// Calls the real method with only the piece of a panel it reads, so the
-		// assertion covers getUserAgent rather than a copy of it.
-		,served: Shep.ux.WebView.prototype.getUserAgent.call({ record: { get: () => 'whatsapp' } })
-		,chrome: shep.versions.chrome
-	}));
-
-	// The catalogue still names Chrome 70, from 2018, and WhatsApp turns away
-	// anything below 100, which is why the token is moved at all.
-	expect(agent.pinned).toContain('Chrome/70');
-	expect(agent.served).toContain('Chrome/' + agent.chrome);
-	expect(Number(agent.served.match(/Chrome\/(\d+)/)[1])).toBeGreaterThanOrEqual(100);
-	// The platform half is the reason those entries exist; it must survive.
-	expect(agent.served).toContain('Windows NT 10.0; Win64; x64');
+	const attribute = await shep.window.evaluate(() => document.querySelector('webview') ? document.querySelector('webview').getAttribute('useragent') : 'no webview');
+	expect(['no webview', null]).toContain(attribute);
 });
 
 test('wires the two files the theme package still provides', async () => {
@@ -144,7 +128,7 @@ test('puts the service bar on the left, as a rail of icons', async () => {
 	// Add a service above the fill; below it the three that were the home tab's
 	// own toolbar until they moved here, which meant they vanished whenever a
 	// service was open. The home tab has no button: it is what the app opens on.
-	expect(rail.botoes).toEqual(['openCatalogue', 'dontDisturb', 'lockShep', 'openPreferences']);
+	expect(rail.botoes).toEqual(['openAddService', 'dontDisturb', 'lockShep', 'openPreferences']);
 	expect(rail.abaInicialOculta).toBe(true);
 	// Icons only: the label elements exist, and none of them is shown.
 	expect(rail.rotulos).toBeGreaterThan(0);
@@ -183,32 +167,31 @@ test('splits the preferences into sections without unbinding a field', async () 
 	expect(prefs.alturaDoCancelar).toBeGreaterThan(0);
 });
 
-test('opens on a welcome page, with the catalogue behind a button', async () => {
-	const inicio = await shep.window.evaluate(() => {
-		const catalogo = Ext.cq1('app-main').getController().getCatalogue();
-		return {
-			 ativo: Ext.cq1('app-main').getActiveTab().id
-			,flutuante: !!catalogo.floating
-			,oculto: catalogo.isHidden()
-			,boasVindas: Ext.getCmp('shepTab').down('#welcome').el.dom.innerText.trim()
-		};
-	});
+test('opens on a welcome page, with the Add window behind the +', async () => {
+	const inicio = await shep.window.evaluate(() => ({
+		 ativo: Ext.cq1('app-main').getActiveTab().id
+		,boasVindas: Ext.getCmp('shepTab').down('#welcome').el.dom.innerText.trim()
+	}));
 
 	expect(inicio.ativo).toBe('shepTab');
-	// The catalogue used to be two thirds of this screen, which made a list of
-	// 104 services the app's front door.
-	expect(inicio.flutuante).toBe(true);
-	expect(inicio.oculto).toBe(true);
 	expect(inicio.boasVindas).toContain('Welcome to Shep');
 
-	const aberto = await shep.window.evaluate(() => {
-		Ext.cq1('app-main').getController().openCatalogue();
-		const catalogo = Ext.cq1('app-main').getController().getCatalogue();
-		const visivel = catalogo.isVisible();
-		catalogo.hide();
-		return visivel;
+	// There is no catalogue: the + asks for an address.
+	const janela = await shep.window.evaluate(() => {
+		Ext.cq1('app-main').getController().openAddService();
+		const win = Ext.ComponentQuery.query('window').find(w => w.$className === 'Shep.view.add.Add');
+		const resultado = {
+			 aberta: !!win && win.isVisible()
+			,campos: win.down('form').getForm().getFields().items.map(f => f.getName()).filter(Boolean)
+		};
+		win.destroy();
+		return resultado;
 	});
-	expect(aberto).toBe(true);
+
+	expect(janela.aberta).toBe(true);
+	// The address, a name and, when there are workspaces, which one. Everything
+	// else has a default, or is asked where it comes up.
+	expect(janela.campos).toEqual(['url', 'serviceName', 'workspace']);
 });
 
 test('edits, disables and enables a service from its icon\'s right click', async () => {
@@ -252,9 +235,9 @@ test('edits, disables and enables a service from its icon\'s right click', async
 		return { ligado: ligado, desligado: desligado, religado: religado };
 	}, fixture);
 
-	expect(passos.ligado).toEqual(['Zoom In', 'Zoom Out', 'Reset Zoom', 'Reload', 'Toggle Developer Tools', 'Edit', 'Disable', 'Remove']);
+	expect(passos.ligado).toEqual(['Reload', 'Notifications', 'Sound', 'Enabled', 'Edit', 'Remove', 'Developer Tools']);
 	// a disabled service has no page, so only what can be done to the service is left
-	expect(passos.desligado).toEqual({ menu: ['Edit', 'Enable', 'Remove'], existe: true, enabled: false, pagina: true });
+	expect(passos.desligado).toEqual({ menu: ['Notifications', 'Sound', 'Enabled', 'Edit', 'Remove'], existe: true, enabled: false, pagina: true });
 	expect(passos.religado).toEqual({ enabled: true, webview: true });
 });
 
@@ -265,65 +248,53 @@ test('installs no menu bar outside macOS', async () => {
 	expect(menu).toBeNull();
 });
 
-test('filters the catalogue by type and by name at the same time', async () => {
-	// The two controls used to filter the store independently, so typing a name
-	// replaced the type filter and vice versa. They are one filter now, and the
-	// tally under them counts what is left, minus the synthetic custom entry.
-	const filtro = await shep.window.evaluate(() => {
-		const controlador = Ext.cq1('app-main').getController();
-		const catalogo = Ext.cq1('app-main').getController().getCatalogue();
-		controlador.openCatalogue();
-
-		const contagem = () => catalogo.down('#catalogueCount').el.dom.textContent;
-		const nomes = () => {
-			const lista = [];
-			Ext.getStore('ServicesList').each(r => { if ( r.get('type') !== 'custom' ) lista.push(r.get('name')); });
-			return lista;
-		};
-
-		const resultado = { aberto: contagem() };
-
-		// pressing the button, not setValue: Ext suppresses the toggle event while
-		// it applies a value, so setValue would change the control and filter nothing
-		const porTipo = valor => catalogo.down('#catalogueFilter').items.findBy(b => b.value === valor).setPressed(true);
-		porTipo('email');
-		resultado.email = nomes().length;
-		const tipos = [];
-		Ext.getStore('ServicesList').each(r => { if ( !tipos.includes(r.get('type')) ) tipos.push(r.get('type')); });
-		resultado.tipos = tipos.sort();
-
-		catalogo.down('#catalogueSearch').setValue('gm');
-		resultado.emailEGm = nomes();
-		resultado.rotulo = contagem();
-
-		catalogo.down('#catalogueSearch').setValue('');
-		porTipo('all');
-		catalogo.hide();
-		return resultado;
-	});
-
-	expect(filtro.aberto).toMatch(/^\d+ services$/);
-	expect(filtro.email).toBeGreaterThan(3);
-	// the custom entry stays whatever the filter says, since it is how a service
-	// the catalogue does not carry gets added
-	expect(filtro.tipos).toEqual(['custom', 'email']);
-	expect(filtro.emailEGm).toEqual(['Gmail']);
-	expect(filtro.rotulo).toBe('1 service');
-});
-
-test('keeps the custom entry last under a name the add window can print', async () => {
-	const custom = await shep.window.evaluate(() => {
-		const store = Ext.getStore('ServicesList');
+test('adds a service from a typed address, naming it after the site', async () => {
+	const statics = await shep.window.evaluate(() => {
+		const c = Shep.view.add.AddController;
 		return {
-			 nome: store.getById('custom').get('name')
-			,ultimo: store.getAt(store.getCount() - 1).getId()
+			 urls: ['web.whatsapp.com', 'https://claude.ai/new', 'http://localhost:8065', 'ftp://example.com', 'intranet', ''].map(c.normalizeUrl)
+			,names: ['https://web.whatsapp.com/', 'https://chat.google.com/', 'https://mail.google.com/', 'https://claude.ai/', 'https://www.bbc.co.uk/', 'https://acme.slack.com/'].map(c.nameFromUrl)
 		};
 	});
 
-	// It used to be called '_Custom Service' to sort itself to the end, and the
-	// Add window titles itself from the record, so it read "Add _Custom Service".
-	expect(custom.nome).toBe('Custom Service');
-	expect(custom.ultimo).toBe('custom');
+	expect(statics.urls).toEqual(['https://web.whatsapp.com/', 'https://claude.ai/new', 'http://localhost:8065/', null, null, null]);
+	expect(statics.names).toEqual(['Whatsapp', 'Google Chat', 'Google Mail', 'Claude', 'Bbc', 'Slack Acme']);
+
+	// Nothing listens on port 9, so the new service's page fails at once and the
+	// suite stays off the network.
+	const id = await shep.window.evaluate(() => {
+		Ext.cq1('app-main').getController().openAddService();
+		const win = Ext.ComponentQuery.query('window').find(w => w.$className === 'Shep.view.add.Add');
+		win.down('textfield[name=url]').setValue('localhost:9');
+		win.getController().doSave();
+		const store = Ext.getStore('Services');
+		return store.getAt(store.getCount() - 1).get('id');
+	});
+
+	// A webview destroyed before it attaches throws inside Electron later, in
+	// whichever test happens to be running.
+	await shep.window.waitForFunction(id => {
+		try { return !!Ext.getCmp('tab_' + id).getWebView().getWebContentsId(); } catch { return false; }
+	}, id, { timeout: 10000 });
+
+	const adicionado = await shep.window.evaluate(id => {
+		const store = Ext.getStore('Services');
+		const rec = store.getById(id);
+		const tab = Ext.getCmp('tab_' + id);
+		const resultado = {
+			 type: rec.get('type')
+			,name: rec.get('name')
+			,url: rec.get('url')
+			,media: rec.get('media')
+			,initials: decodeURIComponent(tab.tab.icon).indexOf('>LO</text>') > -1
+		};
+		tab.destroy();
+		store.remove(rec);
+		Ext.cq1('app-main').setActiveTab('shepTab');
+		return resultado;
+	}, id);
+
+	expect(adicionado).toEqual({ type: 'custom', name: 'Localhost', url: 'https://localhost:9/', media: false, initials: true });
 });
 
 test('reorders the rail and writes the order back to the store', async () => {
@@ -391,12 +362,7 @@ test('exposes the online check the renderer runs at boot', async () => {
 	expect(exposto).toBe(true);
 });
 
-test('opens the catalogue over a service and leaves the service on screen', async () => {
-	// The catalogue was a floating child of the home tab, so the card layout hid
-	// it with the card: from a service the + did nothing, and the fix was to
-	// switch to the welcome page first, which put it over that page's near-black
-	// rather than over the service. It is a panel of its own now, so the service
-	// stays active behind it, dimmed by the mask like Preferences.
+test('opens the Add window over a service and leaves the service on screen', async () => {
 	const fixture = 'file://' + path.join(repoRoot, 'test', 'fixtures', 'service.html');
 	const passo = await shep.window.evaluate(url => {
 		const painel = Ext.cq1('app-main');
@@ -410,48 +376,58 @@ test('opens the catalogue over a service and leaves the service on screen', asyn
 		painel.resumeEvent('add');
 		painel.setActiveTab('tab_7101');
 
-		const controlador = painel.getController();
-		const catalogo = Ext.cq1('app-main').getController().getCatalogue();
-
-		controlador.openCatalogue();
-		const aberto = { visivel: catalogo.isVisible(), ativo: painel.getActiveTab().id };
-
-		// close(), not hide(): a panel closes by destroying itself unless it is
-		// told otherwise, and a destroyed catalogue makes every later + a no-op.
-		catalogo.close();
-		const fechado = { visivel: catalogo.isVisible(), ativo: painel.getActiveTab().id };
-
-		controlador.openCatalogue();
-		const reaberto = { visivel: catalogo.isVisible(), ativo: painel.getActiveTab().id };
-		catalogo.close();
+		painel.getController().openAddService();
+		const win = Ext.ComponentQuery.query('window').find(w => w.$className === 'Shep.view.add.Add');
+		const aberto = { visivel: win.isVisible(), ativo: painel.getActiveTab().id };
+		win.close();
 
 		Ext.getCmp('tab_7101').destroy();
 		store.remove(store.getById(7101));
-		return { aberto: aberto, fechado: fechado, reaberto: reaberto };
+		return aberto;
 	}, fixture);
 
-	expect(passo.aberto).toEqual({ visivel: true, ativo: 'tab_7101' });
-	expect(passo.fechado).toEqual({ visivel: false, ativo: 'tab_7101' });
-	expect(passo.reaberto).toEqual({ visivel: true, ativo: 'tab_7101' });
+	expect(passo).toEqual({ visivel: true, ativo: 'tab_7101' });
 });
 
-test('seeds the media permission from the catalogue and exposes the channel', async () => {
-	// A person who adds Google Meet is asking for a camera and a microphone, so
-	// the checkbox arrives ticked and main grants the permission without a
-	// dialog. Anything the catalogue does not mark still has to be answered.
-	const caixas = await shep.window.evaluate(() => {
-		const ler = id => {
-			const janela = Ext.create('Shep.view.add.Add', { record: Ext.getStore('ServicesList').getById(id) });
-			const valor = janela.down('checkbox[name=media]').getValue();
-			janela.destroy();
-			return valor;
+test('switches a service\'s notifications and sound from its right click', async () => {
+	const fixture = 'file://' + path.join(repoRoot, 'test', 'fixtures', 'service.html');
+	const passos = await shep.window.evaluate(url => {
+		const painel = Ext.cq1('app-main');
+		const store = Ext.getStore('Services');
+		const rec = store.add({ id: 7401, type: 'custom', name: 'Toggles', url: url, enabled: true })[0];
+
+		painel.suspendEvent('add');
+		painel.insert(1, { xtype: 'webview', id: 'tab_7401', record: rec, tabConfig: { service: rec } });
+		painel.resumeEvent('add');
+
+		const aba = Ext.getCmp('tab_7401');
+		const menu = aba.tab.menu;
+		const chaves = () => {
+			menu.show();
+			const r = { notificacoes: menu.down('#notificationsOn').isVisible(), som: menu.down('#soundOn').isVisible() };
+			menu.hide();
+			return r;
 		};
+		const antes = chaves();
+		menu.down('#notificationsOn').handler.call(aba);
+		menu.down('#soundOn').handler.call(aba);
+		const depois = { notifications: rec.get('notifications'), muted: rec.get('muted'), abaMuda: aba.muted };
+		const reaberto = chaves();
 
-		return { chamada: ler('googlemeet'), correio: ler('gmail') };
-	});
+		aba.destroy();
+		store.remove(rec);
+		painel.setActiveTab('shepTab');
+		return { antes, depois, reaberto };
+	}, fixture);
 
-	expect(caixas).toEqual({ chamada: true, correio: false });
+	expect(passos.antes).toEqual({ notificacoes: true, som: true });
+	expect(passos.depois).toEqual({ notifications: false, muted: true, abaMuda: true });
+	expect(passos.reaberto).toEqual({ notificacoes: false, som: false });
+});
 
+test('exposes the camera channel a service reports its setting on', async () => {
+	// A new service is saved with media false, so the camera is asked about the
+	// first time a call wants it and the answer is remembered.
 	const exposto = await shep.window.evaluate(() => {
 		try {
 			shep.ipc.send('service:setMediaAccess', 'persist:probe', true);
@@ -462,4 +438,36 @@ test('seeds the media permission from the catalogue and exposes the channel', as
 	});
 
 	expect(exposto).toBe(true);
+});
+
+test('zooms from the level a service was saved with and shows it as a percentage', async () => {
+	const fixture = 'file://' + path.join(repoRoot, 'test', 'fixtures', 'service.html');
+	const id = await shep.window.evaluate(url => {
+		const rec = Ext.getStore('Services').add({ id: 7501, type: 'custom', name: 'Zoom', url, enabled: true, zoomLevel: 1 })[0];
+		Ext.cq1('app-main').insert(1, { xtype: 'webview', id: 'tab_7501', record: rec, tabConfig: { service: rec } });
+		Ext.cq1('app-main').setActiveTab('tab_7501');
+		return 7501;
+	}, fixture);
+	await shep.window.waitForFunction(id => {
+		try { return !!Ext.getCmp('tab_' + id).getWebView().getWebContentsId(); } catch { return false; }
+	}, id, { timeout: 10000 });
+
+	const zoom = await shep.window.evaluate(() => {
+		const aba = Ext.getCmp('tab_7501');
+		const menu = aba.tab.menu;
+		menu.show();
+		const aberto = menu.down('#zoomReset').getText();
+		aba.zoomIn();
+		const depois = { nivel: aba.record.get('zoomLevel'), rotulo: menu.down('#zoomReset').getText() };
+		aba.resetZoom();
+		const zerado = menu.down('#zoomReset').getText();
+		menu.hide();
+
+		aba.destroy();
+		Ext.getStore('Services').remove(aba.record);
+		Ext.cq1('app-main').setActiveTab('shepTab');
+		return { aberto, depois, zerado };
+	});
+
+	expect(zoom).toEqual({ aberto: '120%', depois: { nivel: 1.25, rotulo: '126%' }, zerado: '100%' });
 });

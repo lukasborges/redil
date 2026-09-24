@@ -22,7 +22,7 @@ const labels = params => template(contents, { ...base, ...params })
 
 test('offers copy and open for a link', () => {
 	expect(labels({ linkURL: 'https://example.com/a', linkText: 'a' }))
-		.toEqual(['Copy Link', 'Open Link']);
+		.toEqual(['Copy Link', 'Open Link in Browser']);
 });
 
 test('names the email case differently and copies the address alone', () => {
@@ -32,7 +32,7 @@ test('names the email case differently and copies the address alone', () => {
 
 test('adds the image items to a link that wraps an image', () => {
 	expect(labels({ linkURL: 'https://example.com/a', linkText: 'a', srcURL: 'https://example.com/i.png' }))
-		.toEqual(['Copy Link', 'Open Link', '---', 'Copy Image', 'Copy Image URL']);
+		.toEqual(['Copy Link', 'Open Link in Browser', '---', 'Copy Image', 'Copy Image URL']);
 });
 
 test('offers only the image items for an image', () => {

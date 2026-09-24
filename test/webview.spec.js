@@ -73,29 +73,29 @@ test('runs the service page isolated, sandboxed and without node', async () => {
 	expect(reach).toEqual({ process: 'undefined', module: 'undefined' });
 });
 
-test('bridges window.rambox into the page world for the injected snippets', async () => {
-	// js_unread from the catalogue runs here, in the page's own world, so an
-	// isolated preload has to expose this through contextBridge or nothing the
-	// catalogue injects can report anything.
+test('bridges only the notification click into the page world', async () => {
+	// The Notification wrapper the panel injects runs in the page's own world, so
+	// an isolated preload has to expose this through contextBridge.
 	const api = await inGuest('Object.keys(window.rambox).sort().join(",")');
-	expect(api).toBe('clearUnreadCount,setUnreadCount,showWindowAndActivateTab');
+	expect(api).toBe('showWindowAndActivateTab');
 });
 
-test('carries an unread count from the page to the global counter', async () => {
+test('carries an unread count from the page title to the global counter', async () => {
 	expect(await shep.window.evaluate(() => Shep.util.UnreadCounter.getTotalUnreadCount())).toBe(0);
 
-	await inGuest('window.rambox.setUnreadCount(7)');
+	await inGuest('document.title = "(7) Fixture service"');
 	await shep.window.waitForFunction(() => Shep.util.UnreadCounter.getTotalUnreadCount() === 7, null, { timeout: 10000 });
 
-	await inGuest('window.rambox.clearUnreadCount()');
+	await inGuest('document.title = "Fixture service"');
 	await shep.window.waitForFunction(() => Shep.util.UnreadCounter.getTotalUnreadCount() === 0, null, { timeout: 10000 });
 });
 
 test('wraps Notification so a click can reach the tab', async () => {
 	// The preload patched this global in place until it lost the page's window;
-	// the panel injects it now, beside the js_unread snippets.
-	const wrapped = await inGuest('({ marked: !!window.__ramboxNotification, isWrapper: Notification.toString().indexOf("__native") > -1 })');
-	expect(wrapped).toEqual({ marked: true, isWrapper: true });
+	// the panel injects it now.
+	// It is injected on dom-ready, which can land after the webview attaches.
+	await expect.poll(() => inGuest('({ marked: !!window.__ramboxNotification, isWrapper: Notification.toString().indexOf("__native") > -1 })'), { timeout: 10000 })
+		.toEqual({ marked: true, isWrapper: true });
 });
 
 test('grants the camera and the microphone only to a service marked for calls', async () => {
@@ -124,90 +124,110 @@ test('grants the camera and the microphone only to a service marked for calls', 
 	expect(await inGuest(consulta)).toBe('camera=denied microphone=denied');
 });
 
-test('counts unread from the title until the snippet proves it can count', async () => {
-	// What WhatsApp needed: its catalogue snippet was written against class names
-	// the site stopped generating years ago, so it reported zero for ever and the
-	// service went quiet. The title, which every messenger writes as "(3) Name",
-	// answers for a snippet that has never said anything -- and an earlier test
-	// in this file made this one say 7, so the reset is what "never" means here.
-	await shep.window.evaluate(() => {
-		const tab = Ext.cq1('app-main').items.items.find(item => item.id === 'tab_4242');
-		tab.snippetWorks = false;
-		tab.snippetUnread = 0;
-	});
+test('reads the count in the shapes services write it in the title', async () => {
+	const counts = await shep.window.evaluate(() => [
+		 '(3) WhatsApp'
+		,'Inbox (12) - someone@gmail.com - Gmail'
+		,'(1.234) Feed'
+		,'(99+) Chat'
+		,'(•) Chat'
+		,'Discord'
+		,'(Draft) Notes'
+	].map(title => Shep.ux.WebView.prototype.countFromTitle(title)));
 
-	await inGuest('document.title = "(3) Fixture service"');
-	await shep.window.waitForFunction(() => Shep.util.UnreadCounter.getTotalUnreadCount() === 3, null, { timeout: 10000 });
+	expect(counts).toEqual([3, 12, 1234, 99, '•', 0, 0]);
+});
 
-	// A snippet that answers takes the service over: it is the one that knows
-	// which chats are muted, and the title does not.
-	await inGuest('window.rambox.setUnreadCount(1)');
-	await shep.window.waitForFunction(() => Shep.util.UnreadCounter.getTotalUnreadCount() === 1, null, { timeout: 10000 });
+test('waits before believing a title that drops its count, which some services blink', async () => {
+	await inGuest('document.title = "(4) Fixture service"');
+	await shep.window.waitForFunction(() => Shep.util.UnreadCounter.getTotalUnreadCount() === 4, null, { timeout: 10000 });
 
-	await inGuest('document.title = "(9) Fixture service"');
-	await new Promise(resolve => setTimeout(resolve, 500));
-	expect(await shep.window.evaluate(() => Shep.util.UnreadCounter.getTotalUnreadCount())).toBe(1);
+	await inGuest('document.title = "Fixture service"; setTimeout(() => { document.title = "(4) Fixture service"; }, 300)');
+	await new Promise(resolve => setTimeout(resolve, 2000));
+	expect(await shep.window.evaluate(() => Shep.util.UnreadCounter.getTotalUnreadCount())).toBe(4);
 
-	await inGuest('window.rambox.clearUnreadCount(); document.title = "Fixture service"');
+	await inGuest('document.title = "Fixture service"');
 	await shep.window.waitForFunction(() => Shep.util.UnreadCounter.getTotalUnreadCount() === 0, null, { timeout: 10000 });
 });
 
-test('says where each service is getting its count from', async () => {
-	// The report under View is this, once per open service. Testing unread
-	// detection means logging into the service, so what the app can do instead
-	// is say what it sees: a snippet that never answers reads "neither yet".
-	const quiet = await shep.window.evaluate(() => {
+test('says what title each service last showed and what it counted', async () => {
+	await inGuest('document.title = "(2) Fixture service"');
+	await shep.window.waitForFunction(() => Shep.util.UnreadCounter.getTotalUnreadCount() === 2, null, { timeout: 10000 });
+
+	const diagnosis = await shep.window.evaluate(() => {
 		const tab = Ext.cq1('app-main').items.items.find(item => item.id === 'tab_4242');
-		tab.snippetWorks = false;
-		tab.snippetUnread = 0;
-		tab.titleUnread = '0';
 		return tab.unreadDiagnosis();
 	});
+	expect(diagnosis).toEqual({ name: 'Fixture', title: '(2) Fixture service', total: '2' });
 
-	expect(quiet).toMatchObject({ name: 'Fixture', snippet: 'none', counting: 'neither yet', total: '0' });
-
-	const counted = await shep.window.evaluate(() => {
-		const tab = Ext.cq1('app-main').items.items.find(item => item.id === 'tab_4242');
-		tab.reportTitleUnread('2');
-		const fromTitle = tab.unreadDiagnosis();
-		tab.reportSnippetUnread(5);
-		return { fromTitle: fromTitle, fromSnippet: tab.unreadDiagnosis() };
-	});
-
-	expect(counted.fromTitle).toMatchObject({ counting: 'title', total: '2' });
-	expect(counted.fromSnippet).toMatchObject({ counting: 'snippet', total: '5' });
-
-	await shep.window.evaluate(() => {
-		const tab = Ext.cq1('app-main').items.items.find(item => item.id === 'tab_4242');
-		tab.reportSnippetUnread(0);
-	});
+	await inGuest('document.title = "Fixture service"');
+	await shep.window.waitForFunction(() => Shep.util.UnreadCounter.getTotalUnreadCount() === 0, null, { timeout: 10000 });
 });
 
-test('marks a service that can only say there is something, without a number', async () => {
-	// Google Chat puts no count in its title and none in markup worth reading,
-	// but it swaps its favicon when messages arrive. '•' is how a service says
-	// "something is waiting": it cannot be added to a total, so it is a dot on
-	// the rail and the total is left alone.
+test('marks a service whose title says there is something, without a number', async () => {
+	// '•' cannot be added to a total, so it is a dot on the rail and the total is
+	// left alone.
+	await inGuest('document.title = "(•) Fixture service"');
+	await shep.window.waitForFunction(() => Shep.util.UnreadCounter.hasSomethingUnread(4242), null, { timeout: 10000 });
+
 	const marcado = await shep.window.evaluate(() => {
 		const tab = Ext.cq1('app-main').items.items.find(item => item.id === 'tab_4242');
-		tab.reportSnippetUnread('•');
-
 		return {
 			 selo: tab.tab.el.dom.getAttribute('data-badge-text')
-			,algo: Shep.util.UnreadCounter.hasSomethingUnread(tab.record.get('id'))
 			,total: Shep.util.UnreadCounter.getTotalUnreadCount()
 		};
 	});
+	expect(marcado).toEqual({ selo: '•', total: 0 });
 
-	expect(marcado.selo).toBe('•');
-	expect(marcado.algo).toBe(true);
-	expect(marcado.total).toBe(0);
+	await inGuest('document.title = "Fixture service"');
+	await shep.window.waitForFunction(() => !Shep.util.UnreadCounter.hasSomethingUnread(4242), null, { timeout: 10000 });
+});
 
-	const limpo = await shep.window.evaluate(() => {
+test('wears the page favicon on a tile and keeps it on the record', async () => {
+	// The fixture lists an inline SVG favicon. Main hands it back in base64,
+	// because Ext writes the icon into an unquoted url(), where its quotes and
+	// spaces were a syntax error and the rail silently kept the initials.
+	await shep.window.waitForFunction(() => {
 		const tab = Ext.cq1('app-main').items.items.find(item => item.id === 'tab_4242');
-		tab.reportSnippetUnread(0);
-		return Shep.util.UnreadCounter.hasSomethingUnread(tab.record.get('id'));
-	});
+		return /^data:image\/svg\+xml;base64,/.test(tab.tab.icon || '');
+	}, null, { timeout: 10000 });
 
-	expect(limpo).toBe(false);
+	const worn = await shep.window.evaluate(() => {
+		const tab = Ext.cq1('app-main').items.items.find(item => item.id === 'tab_4242');
+		return {
+			 tile: tab.tab.hasCls('rx-tab-favicon')
+			,kept: tab.record.get('favicon') === tab.tab.icon
+			,painted: tab.tab.btnIconEl.dom.style.backgroundImage.indexOf(tab.tab.icon) > -1
+		};
+	});
+	expect(worn).toEqual({ tile: true, kept: true, painted: true });
+});
+
+test('picks the smallest favicon that is sharp at 24px on a 2x screen', async () => {
+	const picked = await shep.window.evaluate(async () => {
+		const png = size => {
+			const canvas = document.createElement('canvas');
+			canvas.width = canvas.height = size;
+			return canvas.toDataURL('image/png');
+		};
+		const pick = Shep.util.ServiceIcon.pickFavicon;
+		return {
+			 prefers48: await pick([png(128), png(16), png(48), png(32)]) === png(48)
+			,largestWhenNoneIsSharp: await pick([png(16), png(32)]) === png(32)
+			,noneLoads: await pick(['data:image/png;base64,broken'])
+		};
+	});
+	expect(picked).toEqual({ prefers48: true, largestWhenNoneIsSharp: true, noneLoads: null });
+});
+
+test('draws initials for a service that has shown no favicon yet', async () => {
+	const described = await shep.window.evaluate(() => {
+		const record = Ext.create('Shep.model.Service', { type: 'custom', name: 'Acme Chat', url: 'https://chat.acme.com' });
+		const legacy = Ext.create('Shep.model.Service', { type: 'whatsapp', logo: 'whatsapp.png', name: 'WhatsApp', url: 'https://web.whatsapp.com' });
+		return {
+			 initials: decodeURIComponent(Shep.util.ServiceIcon.describe(record).url).indexOf('>AC</text>') > -1
+			,legacy: Shep.util.ServiceIcon.describe(legacy).url
+		};
+	});
+	expect(described).toEqual({ initials: true, legacy: 'resources/icons/whatsapp.png' });
 });

@@ -14,25 +14,11 @@
 
 const { contextBridge, ipcRenderer } = require('electron');
 
-// The js_unread snippets in the catalogue, and the custom code a user writes per
-// service, run in the page's main world through executeJavaScript. This is the
-// window.rambox they call.
+// The Notification wrapper app/ux/WebView.js injects runs in the page's main
+// world through executeJavaScript, and this is the window.rambox it calls.
 contextBridge.exposeInMainWorld('rambox', {
 	/**
-	 * Sets the unread count of the tab.
-	 *
-	 * @param {*} count	The unread count
+	 * Brings the window forward and activates this service's tab.
 	 */
-	 setUnreadCount: count => ipcRenderer.sendToHost('rambox.setUnreadCount', count)
-
-	/**
-	 * Clears the unread count.
-	 */
-	,clearUnreadCount: () => ipcRenderer.sendToHost('rambox.clearUnreadCount')
-
-	/**
-	 * Brings the window forward and activates this service's tab. Called by the
-	 * notification wrapper the panel injects.
-	 */
-	,showWindowAndActivateTab: () => ipcRenderer.sendToHost('rambox.showWindowAndActivateTab')
+	showWindowAndActivateTab: () => ipcRenderer.sendToHost('rambox.showWindowAndActivateTab')
 });
