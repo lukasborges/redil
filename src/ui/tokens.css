@@ -1,0 +1,35 @@
+:root {
+	--rx-ink: #12222E;
+	--rx-surface: #FFFFFF;
+	--rx-muted: #5B7183;
+	--rx-chrome: #24506F;
+	--rx-on-chrome: #E8F1F8;
+	--rx-hover-on-chrome: rgba(255, 255, 255, 0.10);
+	--rx-radius: 6px;
+	--rx-titlebar-height: 32px;
+	--rx-rail-width: 68px;
+	color-scheme: light dark;
+	font-family: system-ui, -apple-system, 'Cantarell', 'Ubuntu', sans-serif;
+	font-size: 14px;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--rx-ink: #EDEDEF;
+		--rx-surface: #1E1E21;
+		--rx-muted: #9A9AA3;
+		--rx-chrome: #2A2A2E;
+		--rx-on-chrome: #D0D0D6;
+	}
+}
+
+html, body, #app {
+	height: 100%;
+	margin: 0;
+}
+
+body {
+	background-color: var(--rx-surface);
+	color: var(--rx-ink);
+	overflow: hidden;
+}

@@ -43,3 +43,7 @@ playwright-report/
 
 # Claude Code's notes on this repository, kept on the maintainer's machine
 CLAUDE.md
+
+# electron-vite output for the rewrite in src/
+out/
+*.tsbuildinfo

@@ -40,8 +40,12 @@ jobs:
 
       # The suite launches the real app, so it needs a display. The runner has
       # none, and Electron will not start on Linux without one.
-      - name: Test
-        run: xvfb-run --auto-servernum npx playwright test
+      - name: Lint
+        run: npx eslint .
+
+      # The 1.0 rewrite in src/, built and tested beside the Ext app until it replaces it.
+      - name: Test the rewrite
+        run: npm run test:next
 
       - name: Package
         run: npx electron-builder --linux --publish never

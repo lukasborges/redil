@@ -37,7 +37,9 @@ async function launchShep({ args = [], config = null, waitForApp = true } = {}) 
 
 	const app = await _electron.launch({
 		args: [path.join(repoRoot, 'electron', 'main.js'), `--user-data-dir=${userDataDir}`, ...args],
-		cwd: repoRoot
+		cwd: repoRoot,
+		// Playwright emulates a light prefers-color-scheme unless told not to, which raced the app's own theme
+		colorScheme: null
 	});
 
 	if (!waitForApp) return { app, window: null, userDataDir };

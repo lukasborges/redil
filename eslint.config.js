@@ -11,6 +11,8 @@
 // no formatter here to fight with.
 
 const recommended = require('@eslint/js').configs.recommended;
+const tseslint = require('typescript-eslint');
+const svelte = require('eslint-plugin-svelte');
 
 const node = {
 	 require: 'readonly'
@@ -43,6 +45,7 @@ module.exports = [
 			,'resources/js/loadscreen.js'
 			,'bootstrap.js'
 			,'dist/**'
+			,'out/**'
 			,'test-results/**'
 			,'node_modules/**'
 		]
@@ -68,6 +71,13 @@ module.exports = [
 			,globals: { ...node, window: 'readonly', document: 'readonly', location: 'readonly', Notification: 'writable' }
 		}
 		,rules: { ...recommended.rules, 'no-unused-vars': ['error', { args: 'none' }] }
+	},
+	// The 1.0 rewrite, in TypeScript and Svelte.
+	...tseslint.configs.recommended.map(config => ({ ...config, files: ['src/**/*.ts', 'src/**/*.svelte', 'tests/**/*.ts', '*.config.ts'] })),
+	...svelte.configs['flat/recommended'].map(config => ({ ...config, files: ['src/**/*.svelte'] })),
+	{
+		 files: ['src/**/*.svelte']
+		,languageOptions: { parserOptions: { parser: tseslint.parser, extraFileExtensions: ['.svelte'] } }
 	},
 	{
 		 files: ['test/**/*.js']
