@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Messages } from '../shared/i18n.ts';
 
-	const { messages, onclose }: { messages: Messages; onclose: () => void } = $props();
+	const { messages, onclose, thenLock = false }: { messages: Messages; onclose: () => void; thenLock?: boolean } = $props();
 
 	let password = $state('');
 	let repeated = $state('');
@@ -17,8 +17,8 @@
 	async function submit(event: SubmitEvent) {
 		event.preventDefault();
 		if ( !matches ) return;
-		await window.shep.invoke('lock:setPassword', password);
-		onclose();
+		await window.shep.invoke('lock:setPassword', password, thenLock);
+		if ( !thenLock ) onclose();
 	}
 
 	async function remove() {

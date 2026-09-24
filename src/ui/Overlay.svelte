@@ -7,12 +7,19 @@
 	import AboutDialog from './AboutDialog.svelte';
 	import UnreadReport from './UnreadReport.svelte';
 	import PasswordDialog from './PasswordDialog.svelte';
+	import LockScreen from './LockScreen.svelte';
+	import ScreenPicker from './ScreenPicker.svelte';
 
 	type Shown =
 		| { dialog: 'add' }
 		| { dialog: 'edit'; serviceId: string }
 		| { dialog: 'workspace'; workspaceId: string | null }
-		| { dialog: 'preferences' | 'about' | 'unreadReport' | 'lockPassword' };
+		| { dialog: 'preferences' | 'about' | 'unreadReport' | 'lock' }
+		| { dialog: 'lockPassword'; thenLock?: boolean }
+		| { dialog: 'screenPicker'; sources: { id: string; name: string; thumbnail: string }[] };
+
+	// neither is dismissed by Escape or a click beside it: the lock has to be unlocked, and the picker answered
+	const isDismissible = (dialog: Shown) => dialog.dialog !== 'lock' && dialog.dialog !== 'screenPicker';
 
 	let language = $state(window.shep.locale);
 	const messages = $derived(messagesFor(language));
@@ -47,10 +54,10 @@
 	}
 </script>
 
-<svelte:window onkeydown={event => { if ( event.key === 'Escape' && shown ) close(); }} />
+<svelte:window onkeydown={event => { if ( event.key === 'Escape' && shown && isDismissible(shown) ) close(); }} />
 
 {#if shown}
-	<div class="backdrop" role="presentation" onclick={event => { if ( event.target === event.currentTarget ) close(); }}>
+	<div class="backdrop" role="presentation" onclick={event => { if ( event.target === event.currentTarget && shown && isDismissible(shown) ) close(); }}>
 		{#key opening}
 			{#if shown.dialog === 'workspace'}
 				<WorkspaceDialog {messages} workspaceId={shown.workspaceId} onclose={close} />
@@ -61,7 +68,11 @@
 			{:else if shown.dialog === 'unreadReport'}
 				<UnreadReport {messages} onclose={close} />
 			{:else if shown.dialog === 'lockPassword'}
-				<PasswordDialog {messages} onclose={close} />
+				<PasswordDialog {messages} onclose={close} thenLock={shown.thenLock ?? false} />
+			{:else if shown.dialog === 'lock'}
+				<LockScreen {messages} />
+			{:else if shown.dialog === 'screenPicker'}
+				<ScreenPicker {messages} sources={shown.sources} />
 			{:else}
 				<ServiceDialog {messages} serviceId={shown.dialog === 'edit' ? shown.serviceId : null} onclose={close} />
 			{/if}

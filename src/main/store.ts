@@ -13,6 +13,8 @@ interface Schema {
 	activeWorkspace: ActiveWorkspace;
 	preferences: Preferences;
 	lockPasswordHash: string;
+	// a lock outlives a restart, or quitting would be the way past it
+	locked: boolean;
 }
 
 // shep.json, not config.json: Shep 0.10's config.json stays readable for the migration.
@@ -20,7 +22,7 @@ export const store = new Store<Schema>({
 	name: 'shep',
 	defaults: {
 		services: [], activeServiceId: null, permissions: {}, dontDisturb: false, workspaces: [], activeWorkspace: null,
-		preferences: DEFAULT_PREFERENCES, lockPasswordHash: ''
+		preferences: DEFAULT_PREFERENCES, lockPasswordHash: '', locked: false
 	}
 });
 

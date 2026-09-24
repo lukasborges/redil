@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Messages } from '../shared/i18n.ts';
 	import type { ServiceState } from '../shared/service.ts';
-	import { services, appState, activate, openAddDialog, openPreferences, reorder, setDontDisturb, showServiceMenu } from './services.svelte.ts';
+	import { services, appState, activate, lockApp, openAddDialog, openPreferences, reorder, setDontDisturb, showServiceMenu } from './services.svelte.ts';
 	import { initials } from './initials.ts';
 	import Icon from './Icon.svelte';
 	import WorkspaceSwitcher from './WorkspaceSwitcher.svelte';
@@ -71,6 +71,9 @@
 			title={appState.dontDisturb ? messages['rail.dontDisturb.on'] : messages['rail.dontDisturb']} aria-label={messages['rail.dontDisturb']}
 			onclick={() => setDontDisturb(!appState.dontDisturb)}>
 			<Icon name={appState.dontDisturb ? 'bellOff' : 'bell'} />
+		</button>
+		<button class="tool" type="button" title={messages['rail.lock']} aria-label={messages['rail.lock']} onclick={lockApp}>
+			<Icon name="lock" />
 		</button>
 		<button class="tool" type="button" title={messages['rail.preferences']} aria-label={messages['rail.preferences']} onclick={openPreferences}>
 			<Icon name="gear" />

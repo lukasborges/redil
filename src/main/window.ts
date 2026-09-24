@@ -7,7 +7,7 @@ function titleBarOverlay() {
 	return { color: colours.chrome, symbolColor: colours.onChrome, height: TITLE_BAR_HEIGHT };
 }
 
-export function createMainWindow(): BrowserWindow {
+export function createMainWindow(startHidden: boolean): BrowserWindow {
 	const window = new BrowserWindow({
 		width: 1200,
 		height: 800,
@@ -30,7 +30,7 @@ export function createMainWindow(): BrowserWindow {
 	nativeTheme.on('updated', syncOverlay);
 	window.on('closed', () => nativeTheme.off('updated', syncOverlay));
 
-	window.once('ready-to-show', () => window.show());
+	window.once('ready-to-show', () => { if ( !startHidden ) window.show(); });
 
 	if ( process.env.ELECTRON_RENDERER_URL ) window.loadURL(process.env.ELECTRON_RENDERER_URL);
 	else window.loadFile(join(__dirname, '../ui/index.html'));

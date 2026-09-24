@@ -90,7 +90,16 @@ const en = {
 	'password.new': 'New password',
 	'password.repeat': 'Repeat it',
 	'password.mismatch': 'The two do not match',
-	'password.remove': 'Remove Password'
+	'password.remove': 'Remove Password',
+	'lock.title': 'Shep is locked',
+	'lock.password': 'Password',
+	'lock.unlock': 'Unlock',
+	'lock.wrong': 'That is not the password',
+	'rail.lock': 'Lock',
+	'share.title': 'Share Your Screen',
+	'share.body': 'Choose what the service will see.',
+	'share.cancel': 'Cancel',
+	'share.share': 'Share'
 } as const;
 
 export type MessageKey = keyof typeof en;

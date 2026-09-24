@@ -8,7 +8,9 @@ export type OverlayDialog =
 	| { dialog: 'preferences' }
 	| { dialog: 'about' }
 	| { dialog: 'unreadReport' }
-	| { dialog: 'lockPassword' };
+	| { dialog: 'lockPassword'; thenLock?: boolean }
+	| { dialog: 'lock' }
+	| { dialog: 'screenPicker'; sources: { id: string; name: string; thumbnail: string }[] };
 
 // Dialogs live in a view of their own because a WebContentsView paints over the
 // window's own page, so a dialog drawn there would sit behind the service.

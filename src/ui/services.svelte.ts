@@ -34,3 +34,4 @@ export const stopFind = (id: string) => window.shep.invoke('service:stopFind', i
 export const setDontDisturb = (on: boolean) => window.shep.invoke('app:setDontDisturb', on);
 export const showWorkspaceMenu = () => window.shep.invoke('workspaces:menu');
 export const openPreferences = () => window.shep.invoke('overlay:open', { dialog: 'preferences' });
+export const lockApp = () => window.shep.invoke('app:lock');

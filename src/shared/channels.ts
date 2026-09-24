@@ -8,7 +8,7 @@ export const INVOKE_CHANNELS = [
 	'app:state', 'app:setDontDisturb',
 	'workspaces:menu', 'workspaces:save', 'workspaces:get',
 	'preferences:get', 'preferences:set', 'app:action', 'spellcheck:languages',
-	'lock:hasPassword', 'lock:setPassword', 'app:about', 'services:report'
+	'lock:hasPassword', 'lock:setPassword', 'lock:unlock', 'app:about', 'services:report', 'screenShare:pick', 'app:lock'
 ] as const;
 
 export const APP_ACTIONS = ['reportIssue', 'clearCache', 'removeAllServices', 'checkForUpdates', 'relaunch'] as const;

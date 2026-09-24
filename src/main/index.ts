@@ -7,7 +7,13 @@ import { ServiceHost } from './services.ts';
 import { Overlay, type OverlayDialog } from './overlay.ts';
 import { Workspaces } from './workspaces.ts';
 import { preferences, store } from './store.ts';
-import { hashPassword } from './password.ts';
+import { hashPassword, matchesPassword } from './password.ts';
+import { TopBarIcon } from './tray.ts';
+import { whatClosingDoes } from './closing.ts';
+import { startWithSystem } from './autostart.ts';
+import { Updates } from './updates.ts';
+import { spellingLanguages } from './spelling.ts';
+import { answerScreenSharing, type PickedSource } from './screenshare.ts';
 import { PreferenceHost, applyThemeBeforeTheWindow } from './preferences.ts';
 import { APP_ACTIONS, type AppAction } from '../shared/channels.ts';
 import { DEFAULT_PREFERENCES, type Preferences } from '../shared/preferences.ts';
@@ -42,6 +48,11 @@ if ( !app.requestSingleInstanceLock() ) {
 	let overlay: Overlay | null = null;
 	let workspaces: Workspaces | null = null;
 	let prefs: PreferenceHost | null = null;
+	let topBarIcon: TopBarIcon | null = null;
+	let updates: Updates | null = null;
+	let quitting = false;
+	let pendingPick: ((id: string | null) => void) | null = null;
+	const spelledSessions = new Set<Electron.Session>();
 
 	app.on('second-instance', () => {
 		if ( !mainWindow ) return;
@@ -92,10 +103,48 @@ if ( !app.requestSingleInstanceLock() ) {
 	});
 	handle('spellcheck:languages', () => session.defaultSession.availableSpellCheckerLanguages);
 	handle('lock:hasPassword', () => store.get('lockPasswordHash') !== '');
-	handle('lock:setPassword', (event, password) => {
+	handle('lock:setPassword', (event, password, thenLock) => {
 		const chosen = text(password);
 		store.set('lockPasswordHash', chosen ? hashPassword(chosen) : '');
 		if ( !chosen ) prefs?.set('lockOnStart', false);
+		if ( chosen && thenLock === true ) setImmediate(lock);
+	});
+	handle('lock:unlock', (event, password) => {
+		if ( !matchesPassword(text(password), store.get('lockPasswordHash')) ) return false;
+		store.set('locked', false);
+		services?.setLocked(false);
+		overlay?.close();
+		return true;
+	});
+	handle('app:lock', () => lock());
+	handle('screenShare:pick', (event, id) => {
+		pendingPick?.(typeof id === 'string' ? id : null);
+		pendingPick = null;
+		overlay?.close();
+	});
+
+	// Without a password there is nothing to unlock with, so one is asked for first.
+	function lock(): void {
+		if ( !store.get('lockPasswordHash') ) {
+			overlay?.open({ dialog: 'lockPassword', thenLock: true });
+			return;
+		}
+		store.set('locked', true);
+		services?.setLocked(true);
+		overlay?.open({ dialog: 'lock' });
+	}
+
+	const applySpelling = (spelled: Electron.Session) => {
+		spelledSessions.add(spelled);
+		const { spellcheckLanguages } = preferences();
+		const candidates = [app.getLocale(), ...app.getPreferredSystemLanguages(), process.env.LANG ?? ''];
+		spelled.setSpellCheckerLanguages(spellingLanguages(spellcheckLanguages, spelled.availableSpellCheckerLanguages, candidates));
+	};
+
+	const pickScreen = (sources: PickedSource[]) => new Promise<string | null>(resolve => {
+		pendingPick?.(null);
+		pendingPick = resolve;
+		overlay?.open({ dialog: 'screenPicker', sources });
 	});
 	handle('app:about', () => ({ version, electron: process.versions.electron, chrome: process.versions.chrome, homepage }));
 	handle('services:report', () => services?.list().map(service => ({ name: service.name, pageTitle: service.pageTitle, unread: service.unread })) ?? []);
@@ -106,7 +155,7 @@ if ( !app.requestSingleInstanceLock() ) {
 			case 'clearCache': return services?.clearCaches();
 			case 'removeAllServices': return services?.confirmRemoveAll();
 			case 'relaunch': app.relaunch(); app.exit(0); return;
-			case 'checkForUpdates': return;
+			case 'checkForUpdates': return updates?.check(true);
 		}
 	});
 	handle('app:setDontDisturb', (event, on) => setDontDisturb(on === true));
@@ -128,6 +177,7 @@ if ( !app.requestSingleInstanceLock() ) {
 	});
 
 	function run(shortcut: ShortcutAction): void {
+		if ( store.get('locked') ) return;
 		const active = store.get('activeServiceId');
 		switch ( shortcut.action ) {
 			case 'service': return services?.activateNth(shortcut.index);
@@ -143,34 +193,84 @@ if ( !app.requestSingleInstanceLock() ) {
 			case 'quit': app.quit(); return;
 			case 'workspace': return workspaces?.chooseNumber(shortcut.index);
 			case 'preferences': overlay?.open({ dialog: 'preferences' }); return;
-			case 'lock': return;
+			case 'lock': return lock();
 		}
 	}
 
+	// While locked, a shortcut does nothing, and no key reaches a service.
 	const handleShortcut = (input: KeyInput): boolean => {
 		const shortcut = shortcutFor(input);
 		if ( shortcut ) run(shortcut);
-		return shortcut !== null;
+		return shortcut !== null || store.get('locked');
 	};
 	const listenForShortcuts = (contents: WebContents) => contents.on('before-input-event', (event, input) => {
 		if ( handleShortcut(input) ) event.preventDefault();
 	});
 
+	const toggleWindow = () => {
+		if ( !mainWindow ) return;
+		if ( mainWindow.isVisible() && mainWindow.isFocused() ) mainWindow.hide();
+		else bringForward();
+	};
+
+	app.on('before-quit', () => { quitting = true; });
+
 	app.whenReady().then(() => {
 		applyThemeBeforeTheWindow();
-		const window = createMainWindow();
+		const { startMinimized, trayIcon } = preferences();
+		// with no icon in the top bar, a hidden window would have no way back
+		const window = createMainWindow(startMinimized && trayIcon);
+		if ( startMinimized && !trayIcon ) window.once('ready-to-show', () => window.minimize());
 		mainWindow = window;
 		listenForShortcuts(window.webContents);
 		overlay = new Overlay(window, () => services?.focusActive(), listenForShortcuts);
-		prefs = new PreferenceHost(window, announceState);
+		topBarIcon = new TopBarIcon({
+			isWindowShown: () => !!mainWindow?.isVisible(),
+			toggleWindow,
+			isDontDisturb: () => store.get('dontDisturb'),
+			toggleDontDisturb: () => setDontDisturb(!store.get('dontDisturb')),
+			quit: () => app.quit()
+		});
+		topBarIcon.show(trayIcon);
+		window.on('show', () => topBarIcon?.refreshMenu());
+		window.on('hide', () => topBarIcon?.refreshMenu());
+		window.on('close', event => {
+			const { closeBehaviour, trayIcon: iconShown } = preferences();
+			if ( whatClosingDoes(closeBehaviour, iconShown, quitting) !== 'hide' ) return;
+			event.preventDefault();
+			window.hide();
+		});
+
+		prefs = new PreferenceHost(window, () => {
+			const current = preferences();
+			topBarIcon?.show(current.trayIcon);
+			startWithSystem(current.startWithSystem, current.startMinimized);
+			spelledSessions.forEach(applySpelling);
+			announceState();
+		});
+		startWithSystem(preferences().startWithSystem, preferences().startMinimized);
+		updates = new Updates(window);
+		updates.check(false);
+		applySpelling(window.webContents.session);
 		services = new ServiceHost(window, {
 			edit: id => overlay?.open({ dialog: 'edit', serviceId: id }),
 			shortcut: handleShortcut,
-			changed: announceState,
-			sessionStarted: session => prefs?.followProxy(session)
+			changed: () => {
+				topBarIcon?.setUnread(services?.somethingUnread() ?? false);
+				announceState();
+			},
+			sessionStarted: session => {
+				prefs?.followProxy(session);
+				applySpelling(session);
+				answerScreenSharing(session, pickScreen);
+			}
 		});
 		workspaces = new Workspaces(window, services, id => overlay?.open({ dialog: 'workspace', workspaceId: id }));
-		window.webContents.once('did-finish-load', () => services?.start());
+		window.webContents.once('did-finish-load', () => {
+			services?.start();
+			const lockOnStart = preferences().lockOnStart && store.get('lockPasswordHash') !== '';
+			if ( store.get('locked') || lockOnStart ) lock();
+		});
 	});
 	app.on('window-all-closed', () => app.quit());
 }

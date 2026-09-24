@@ -34,6 +34,7 @@ const ZOOM_STEP = 0.25;
 
 export class ServiceHost {
 	private readonly running = new Map<string, RunningService>();
+	private locked = false;
 
 	constructor(private readonly window: BrowserWindow, private readonly events: ServiceHostEvents) {
 		window.on('resize', () => this.layout());
@@ -86,15 +87,22 @@ export class ServiceHost {
 		});
 	}
 
+	// Nothing of a service shows, or takes the keyboard, while the app is locked.
+	setLocked(locked: boolean): void {
+		this.locked = locked;
+		this.activate(store.get('activeServiceId'));
+	}
+
 	activate(id: string | null): void {
 		store.set('activeServiceId', id);
-		this.running.forEach((service, serviceId) => service.view.setVisible(serviceId === id));
+		this.running.forEach((service, serviceId) => service.view.setVisible(!this.locked && serviceId === id));
 		this.layout();
 		this.focusActive();
 		this.announce();
 	}
 
 	focusActive(): void {
+		if ( this.locked ) return;
 		const active = store.get('activeServiceId');
 		if ( active ) this.running.get(active)?.view.webContents.focus();
 	}
@@ -235,6 +243,10 @@ export class ServiceHost {
 		this.showWorkspace(store.get('activeWorkspace'));
 	}
 
+	somethingUnread(): boolean {
+		return [...this.running.values()].some(service => service.unread === '•' || service.unread > 0);
+	}
+
 	unreadElsewhere(): boolean {
 		const active = store.get('activeWorkspace');
 		return active !== null && store.get('services').some(record => {
@@ -329,7 +341,7 @@ export class ServiceHost {
 		const view = new WebContentsView({
 			webPreferences: {
 				partition: record.partition, preload: join(__dirname, '../preload/service.js'),
-				sandbox: true, contextIsolation: true, nodeIntegration: false, spellcheck: true
+				sandbox: true, contextIsolation: true, nodeIntegration: false, spellcheck: preferences().spellcheck
 			}
 		});
 		view.setVisible(false);
