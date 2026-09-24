@@ -5,7 +5,7 @@
  * There is no icon in this tree that is drawn by hand: a change to the mark
  * means running this and committing what it writes.
  *
- * It needs inkscape and ImageMagick's convert on the PATH, which is why it is
+ * It needs inkscape on the PATH, which is why it is
  * not part of the build: it runs when the mark changes, which is rarely.
  */
 
@@ -18,7 +18,6 @@ const logo = path.join(root, 'resources', 'logo');
 
 const MASTER = path.join(logo, 'Logo.svg');
 const UNREAD = path.join(logo, 'LogoUnread.svg');
-const MARK = path.join(logo, 'Mark.svg');
 const LINUX_TRAY = path.join(logo, 'LogoTray.svg');
 const LINUX_TRAY_UNREAD = path.join(logo, 'LogoTrayUnread.svg');
 
@@ -26,7 +25,7 @@ const LINUX_TRAY_UNREAD = path.join(logo, 'LogoTrayUnread.svg');
 // to take a mark from when something outside this tree needs one.
 const GALLERY = [16, 24, 32, 48, 64, 96, 128, 256, 512, 1024];
 
-// what electron-builder reads for the Linux and Windows packages
+// what electron-builder reads for the Linux packages
 const INSTALLER = [16, 24, 32, 48, 64, 96, 128, 256, 512];
 
 // The window and dock icon, and the tray at the three densities Electron asks
@@ -38,17 +37,7 @@ const APP = [
 	{ from: LINUX_TRAY, to: 'resources/IconTray@4x.png', size: 96 },
 	{ from: LINUX_TRAY_UNREAD, to: 'resources/IconTrayUnread.png', size: 24 },
 	{ from: LINUX_TRAY_UNREAD, to: 'resources/IconTrayUnread@2x.png', size: 48 },
-	{ from: LINUX_TRAY_UNREAD, to: 'resources/IconTrayUnread@4x.png', size: 96 },
-	// the boxless mark, for the lock screen, which paints its own background
-	{ from: MARK, to: 'resources/Mark.png', size: 256 }
-];
-
-// Windows reads one file with every size in it; these are the ones it uses.
-const ICO_SIZES = [16, 32, 48, 64, 128, 256];
-const ICOS = [
-	{ from: MASTER, to: 'resources/Icon.ico' },
-	{ from: UNREAD, to: 'resources/IconTrayUnread.ico' },
-	{ from: MASTER, to: 'resources/installer/icon.ico' }
+	{ from: LINUX_TRAY_UNREAD, to: 'resources/IconTrayUnread@4x.png', size: 96 }
 ];
 
 function render(from, to, size) {
@@ -67,22 +56,7 @@ function main() {
 
 	for (const icon of APP) render(icon.from, path.join(root, icon.to), icon.size);
 
-	// convert builds the multi-size ico out of one png per size
-	const scratch = fs.mkdtempSync(path.join(require('os').tmpdir(), 'shep-icons-'));
-	try {
-		for (const ico of ICOS) {
-			const frames = ICO_SIZES.map(size => {
-				const frame = path.join(scratch, `${path.basename(ico.to)}-${size}.png`);
-				render(ico.from, frame, size);
-				return frame;
-			});
-			execFileSync('convert', [...frames, path.join(root, ico.to)], { stdio: 'pipe' });
-		}
-	} finally {
-		fs.rmSync(scratch, { recursive: true, force: true });
-	}
-
-	const written = GALLERY.length + 2 + INSTALLER.length + APP.length + ICOS.length;
+	const written = GALLERY.length + 2 + INSTALLER.length + APP.length;
 	console.log(`${written} files written from ${path.relative(root, logo)}`);
 }
 
@@ -90,6 +64,6 @@ try {
 	main();
 } catch (error) {
 	console.error(error.message);
-	console.error('inkscape and ImageMagick have to be on the PATH for this one.');
+	console.error('inkscape has to be on the PATH for this one.');
 	process.exitCode = 1;
 }

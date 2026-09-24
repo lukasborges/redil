@@ -1,9 +1,9 @@
 {
 	"name": "Shep",
 	"productName": "Shep",
-	"version": "0.10.0",
-	"description": "One window for the messaging and email apps you already use in the browser.",
-	"main": "electron/main.js",
+	"version": "1.0.0",
+	"description": "One window for the web apps you already use in the browser.",
+	"main": "out/main/index.js",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/lukasborges/shep.git"
@@ -14,100 +14,34 @@
 	"homepage": "https://github.com/lukasborges/shep",
 	"keywords": [
 		"Shep",
+		"GNOME",
+		"web apps",
 		"messaging",
-		"app",
-		"slack",
-		"whatsapp",
-		"facebook",
-		"messenger",
-		"telegram",
-		"google",
-		"hangouts",
-		"skype"
+		"email",
+		"WhatsApp",
+		"Slack",
+		"Gmail"
 	],
 	"author": "Lucas Borges <lukasborges@users.noreply.github.com>",
 	"license": "GPL-3.0",
 	"scripts": {
-		"start": "electron electron/main.js",
-		"start:debug": "electron electron/main.js --enable-logging",
-		"dev": "electron electron/main.js",
-		"next": "electron-vite dev --entry out/main/index.js",
-		"next:build": "electron-vite build",
-		"next:typecheck": "tsc -p tsconfig.node.json --noEmit && tsc -p tsconfig.test.json --noEmit && svelte-check --tsconfig tsconfig.web.json --fail-on-warnings",
-		"test:next": "npm run next:typecheck && npm run next:build && node --test \"tests/unit/**/*.test.ts\" && scripts/headless.sh playwright test -c playwright.next.config.ts",
+		"start": "electron-vite dev",
+		"build": "electron-vite build",
+		"typecheck": "tsc -p tsconfig.node.json --noEmit && tsc -p tsconfig.test.json --noEmit && svelte-check --tsconfig tsconfig.web.json --fail-on-warnings",
 		"lint": "eslint .",
-		"test": "npm run bootstrap && eslint . && scripts/headless.sh playwright test",
-		"bootstrap": "node scripts/gen-bootstrap.js",
+		"test": "npm run typecheck && eslint . && npm run build && node --test \"tests/unit/**/*.test.ts\" && scripts/headless.sh playwright test",
+		"test:network": "SHEP_NETWORK=1 npm test",
+		"package": "npm run build && electron-builder --linux",
 		"icons": "node scripts/gen-icons.js",
-		"clean": "rm -rf ./dist",
-		"build": "npm run bootstrap && electron-builder",
-		"build:linux": "npm run bootstrap && electron-builder --linux",
-		"build:win": "npm run bootstrap && electron-builder --win",
-		"build:mac": "npm run bootstrap && electron-builder --mac",
-		"translations:generate": "node languages.js generate"
+		"clean": "rm -rf dist out"
 	},
 	"build": {
 		"productName": "Shep",
 		"appId": "io.github.lukasborges.shep",
-		"afterSign": "resources/installer/notarize.js",
 		"asar": true,
 		"electronVersion": "44.4.3",
 		"electronDownload": {
 			"version": "44.4.3"
-		},
-		"mac": {
-			"category": "public.app-category.productivity",
-			"artifactName": "Shep-${version}-mac-${arch}.${ext}",
-			"target": [
-				{
-					"target": "default",
-					"arch": [
-						"universal"
-					]
-				}
-			],
-			"hardenedRuntime": true,
-			"gatekeeperAssess": false,
-			"entitlements": "resources/installer/entitlements.mac.plist",
-			"entitlementsInherit": "resources/installer/entitlements.mac.plist",
-			"extendInfo": {
-				"NSMicrophoneUsageDescription": "Apps inside Shep may need access to your microphone. Please, grant access to have a better experience.",
-				"NSCameraUsageDescription": "Apps inside Shep may need access to your camera. Please, grant access to have a better experience."
-			}
-		},
-		"dmg": {
-			"title": "Shep",
-			"iconSize": 128,
-			"sign": false,
-			"contents": [
-				{
-					"x": 355,
-					"y": 125,
-					"type": "link",
-					"path": "/Applications"
-				},
-				{
-					"x": 155,
-					"y": 125,
-					"type": "file"
-				}
-			]
-		},
-		"win": {
-			"artifactName": "Shep-${version}-win-${arch}.${ext}",
-			"target": [
-				"nsis",
-				"zip"
-			],
-			"signtoolOptions": {
-				"publisherName": "Lucas Borges"
-			}
-		},
-		"nsis": {
-			"deleteAppDataOnUninstall": true,
-			"oneClick": false,
-			"perMachine": false,
-			"runAfterFinish": true
 		},
 		"linux": {
 			"icon": "resources/installer/icons",
@@ -159,28 +93,16 @@
 			}
 		],
 		"files": [
-			"electron/**/*",
-			"app/**/*",
-			"overrides/**/*",
-			"resources/**/*",
-			"index.html",
-			"app.js",
-			"bootstrap.js",
-			"masterpassword.html",
-			"screenselector.html",
-			"ext/build/ext-all-rtl-debug.js",
-			"ext/src/**/*",
-			"ext/packages/ext-theme-crisp/build/**/*",
-			"ext/packages/ext-locale/build/**/*"
+			"out/**/*",
+			"resources/Icon.png",
+			"resources/IconTray*.png"
 		]
 	},
 	"devDependencies": {
-		"@electron/notarize": "3.1.1",
 		"@eslint/js": "10.0.1",
 		"@playwright/test": "1.63.0",
 		"@sveltejs/vite-plugin-svelte": "6.2.4",
 		"@types/node": "24.13.6",
-		"csvjson": "4.3.3",
 		"electron": "44.4.3",
 		"electron-builder": "26.0.12",
 		"electron-vite": "5.0.0",
@@ -195,9 +117,7 @@
 	"dependencies": {
 		"auto-launch-patched": "5.0.2",
 		"electron-store": "8.2.0",
-		"electron-updater": "6.8.9",
-		"is-online": "9.0.1",
-		"mousetrap": "1.6.5"
+		"electron-updater": "6.8.9"
 	},
 	"volta": {
 		"node": "24.19.0"

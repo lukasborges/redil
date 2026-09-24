@@ -38,8 +38,8 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
-      - name: Generate bootstrap.js
-        run: npm run bootstrap
+      - name: Build
+        run: npm run build
 
       # Also writes latest-linux.yml, which is what the auto-updater reads.
       - name: Package and upload

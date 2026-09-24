@@ -38,6 +38,8 @@ export function createMainWindow(startHidden: boolean, saved: WindowBounds | nul
 		titleBarStyle: 'hidden',
 		titleBarOverlay: titleBarOverlay(),
 		backgroundColor: titleBarOverlay().color,
+		// X11 reads the window's own icon; Wayland matches the app_id to the desktop entry instead
+		icon: join(__dirname, '../../resources/Icon.png'),
 		webPreferences: {
 			preload: join(__dirname, '../preload/ui.js'),
 			contextIsolation: true,

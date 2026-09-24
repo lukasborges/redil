@@ -9,5 +9,5 @@ app.setName(productName);
 
 const hasOwnUserData = process.argv.some(argument => argument.startsWith('--user-data-dir'));
 
-// Until 1.0 replaces the Ext app, an unpacked run must never open the real Shep profile.
-if ( !app.isPackaged && !hasOwnUserData ) app.setPath('userData', join(app.getPath('appData'), 'Shep-next'));
+// A run from the repository never opens the installed app's profile.
+if ( !app.isPackaged && !hasOwnUserData ) app.setPath('userData', join(app.getPath('appData'), 'Shep-dev'));
