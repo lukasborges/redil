@@ -1,3 +1,4 @@
+import { join } from 'node:path';
 import { app, dialog, Menu, WebContentsView, type BrowserWindow, type WebContents } from 'electron';
 import { RAIL_WIDTH, TITLE_BAR_HEIGHT } from '../shared/chrome.ts';
 import { nameFromUrl, normalizeUrl } from '../shared/address.ts';
@@ -10,6 +11,8 @@ import { applyPermissionPolicy } from './permissions.ts';
 import { keepLinksInTheApp } from './auxiliary.ts';
 import { attachPageMenu } from './menus.ts';
 import { serviceMenu } from './servicemenu.ts';
+import { NOTIFICATION_WRAPPER } from './notifications.ts';
+import type { KeyInput } from './shortcuts.ts';
 
 interface RunningService {
 	view: WebContentsView;
@@ -20,9 +23,10 @@ interface RunningService {
 
 export interface ServiceHostEvents {
 	edit(id: string): void;
+	// true when the key was an app shortcut, which the page then never sees
+	shortcut(input: KeyInput): boolean;
 }
 
-const HISTORY_KEYS = { ArrowLeft: 'back', ArrowRight: 'forward' } as const;
 const ZOOM_STEP = 0.25;
 
 export class ServiceHost {
@@ -156,9 +160,8 @@ export class ServiceHost {
 			resetZoom: () => setZoom(0),
 			toggleNotifications: () => updateService(id, { notifications: !this.record(id).notifications }),
 			toggleSound: () => {
-				const muted = !this.record(id).muted;
-				updateService(id, { muted });
-				contents?.setAudioMuted(muted);
+				updateService(id, { muted: !this.record(id).muted });
+				this.applyMute(id);
 			},
 			toggleEnabled: () => this.setEnabled(id, !this.record(id).enabled),
 			edit: () => this.events.edit(id),
@@ -170,6 +173,60 @@ export class ServiceHost {
 
 	contentsOf(id: string): WebContents | undefined {
 		return this.running.get(id)?.view.webContents;
+	}
+
+	idOf(contents: WebContents): string | null {
+		for ( const [id, service] of this.running ) if ( service.view.webContents === contents ) return id;
+		return null;
+	}
+
+	mayNotify(id: string): boolean {
+		return !store.get('dontDisturb') && this.record(id).notifications;
+	}
+
+	activeContents(): WebContents | undefined {
+		const active = store.get('activeServiceId');
+		return active ? this.contentsOf(active) : undefined;
+	}
+
+	// The services the rail shows, in its order.
+	shownIds(): string[] {
+		return store.get('services').map(service => service.id);
+	}
+
+	activateNth(index: number): void {
+		const id = this.shownIds()[index];
+		if ( id ) this.activate(id);
+	}
+
+	cycle(step: 1 | -1): void {
+		const shown = this.shownIds();
+		if ( !shown.length ) return;
+		const current = shown.indexOf(store.get('activeServiceId') ?? '');
+		this.activate(shown[(current + step + shown.length) % shown.length] ?? null);
+	}
+
+	zoomActive(step: 1 | -1 | 0): void {
+		const active = store.get('activeServiceId');
+		if ( !active ) return;
+		const level = step === 0 ? 0 : this.record(active).zoomLevel + step * ZOOM_STEP;
+		updateService(active, { zoomLevel: level });
+		this.contentsOf(active)?.setZoomLevel(level);
+	}
+
+	reloadActive(ignoringCache: boolean): void {
+		const contents = this.activeContents();
+		if ( ignoringCache ) contents?.reloadIgnoringCache();
+		else contents?.reload();
+	}
+
+	setDontDisturb(on: boolean): void {
+		store.set('dontDisturb', on);
+		for ( const id of this.running.keys() ) this.applyMute(id);
+	}
+
+	private applyMute(id: string): void {
+		this.contentsOf(id)?.setAudioMuted(store.get('dontDisturb') || this.record(id).muted);
 	}
 
 	private async confirmRemove(id: string): Promise<void> {
@@ -220,7 +277,10 @@ export class ServiceHost {
 	private run(record: ServiceRecord): void {
 		if ( this.running.has(record.id) ) return;
 		const view = new WebContentsView({
-			webPreferences: { partition: record.partition, sandbox: true, contextIsolation: true, nodeIntegration: false, spellcheck: true }
+			webPreferences: {
+				partition: record.partition, preload: join(__dirname, '../preload/service.js'),
+				sandbox: true, contextIsolation: true, nodeIntegration: false, spellcheck: true
+			}
 		});
 		view.setVisible(false);
 		this.window.contentView.addChildView(view, 0);
@@ -238,7 +298,8 @@ export class ServiceHost {
 		followColorScheme(contents);
 		attachPageMenu(contents);
 		keepLinksInTheApp(contents, contents);
-		contents.setAudioMuted(record.muted);
+		this.applyMute(record.id);
+		contents.on('dom-ready', () => { contents.executeJavaScript(NOTIFICATION_WRAPPER).catch(() => {}); });
 
 		// the history the navigation events report is committed a tick after they arrive
 		const announceSoon = () => setImmediate(() => this.announce());
@@ -271,10 +332,7 @@ export class ServiceHost {
 			if ( !trusted && !this.window.isDestroyed() ) this.window.webContents.send('services:certificate-error', record.id);
 		});
 		contents.on('before-input-event', (event, input) => {
-			const direction = HISTORY_KEYS[input.key as keyof typeof HISTORY_KEYS];
-			if ( input.type !== 'keyDown' || !input.alt || input.control || input.shift || input.meta || !direction ) return;
-			event.preventDefault();
-			this.navigate(record.id, direction);
+			if ( this.events.shortcut(input) ) event.preventDefault();
 		});
 
 		contents.loadURL(record.url);

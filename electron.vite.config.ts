@@ -12,7 +12,7 @@ export default defineConfig({
 	preload: {
 		build: {
 			outDir: 'out/preload',
-			rollupOptions: { input: { ui: resolve('src/preload/ui.ts') } }
+			rollupOptions: { input: { ui: resolve('src/preload/ui.ts'), service: resolve('src/preload/service.ts') } }
 		}
 	},
 	renderer: {

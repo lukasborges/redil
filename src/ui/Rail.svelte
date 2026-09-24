@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Messages } from '../shared/i18n.ts';
 	import type { ServiceState } from '../shared/service.ts';
-	import { services, activate, openAddDialog, reorder, showServiceMenu } from './services.svelte.ts';
+	import { services, appState, activate, openAddDialog, reorder, setDontDisturb, showServiceMenu } from './services.svelte.ts';
 	import { initials } from './initials.ts';
 	import Icon from './Icon.svelte';
 
@@ -62,6 +62,14 @@
 	<button class="add" type="button" title={messages['rail.add']} aria-label={messages['rail.add']} onclick={openAddDialog}>
 		<Icon name="add" />
 	</button>
+
+	<div class="foot">
+		<button class="tool" class:on={appState.dontDisturb} type="button" aria-pressed={appState.dontDisturb}
+			title={appState.dontDisturb ? messages['rail.dontDisturb.on'] : messages['rail.dontDisturb']} aria-label={messages['rail.dontDisturb']}
+			onclick={() => setDontDisturb(!appState.dontDisturb)}>
+			<Icon name={appState.dontDisturb ? 'bellOff' : 'bell'} />
+		</button>
+	</div>
 </nav>
 
 <style>
@@ -144,6 +152,32 @@
 		font-weight: 700;
 		line-height: 16px;
 		text-align: center;
+	}
+
+	.foot {
+		display: flex;
+		flex-direction: column;
+		margin-top: auto;
+		padding-top: 8px;
+	}
+
+	.tool {
+		display: grid;
+		place-items: center;
+		height: 40px;
+		border: 0;
+		background: none;
+		color: var(--rx-on-chrome);
+		cursor: pointer;
+	}
+
+	.tool:hover {
+		background-color: var(--rx-hover-on-chrome);
+	}
+
+	/* Adwaita yellow 2 */
+	.tool.on {
+		color: #F8E45C;
 	}
 
 	.badge.dot {

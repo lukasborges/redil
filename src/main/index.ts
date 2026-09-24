@@ -1,11 +1,13 @@
 import { join } from 'node:path';
-import { app, ipcMain, type IpcMainInvokeEvent } from 'electron';
+import { app, ipcMain, type IpcMainInvokeEvent, type WebContents } from 'electron';
 import { productName, version } from '../../package.json';
 import { withoutAppTokens } from './useragent.ts';
 import { createMainWindow } from './window.ts';
 import { ServiceHost } from './services.ts';
 import { Overlay, type OverlayDialog } from './overlay.ts';
 import { store } from './store.ts';
+import { shortcutFor, type KeyInput, type ShortcutAction } from './shortcuts.ts';
+import type { AppState } from '../shared/channels.ts';
 
 // Run unpacked from out/main, Electron finds no package.json and calls itself Electron.
 app.setName(productName);
@@ -57,11 +59,64 @@ if ( !app.requestSingleInstanceLock() ) {
 	handle('overlay:open', (event, dialog) => overlay?.open(dialog as OverlayDialog));
 	handle('overlay:close', () => overlay?.close());
 
+	const appState = (): AppState => ({ dontDisturb: store.get('dontDisturb') });
+	const announceState = () => mainWindow?.webContents.send('app:state', appState());
+	const setDontDisturb = (on: boolean) => {
+		services?.setDontDisturb(on);
+		announceState();
+	};
+	handle('app:state', () => appState());
+	handle('app:setDontDisturb', (event, on) => setDontDisturb(on === true));
+
+	const bringForward = () => {
+		if ( !mainWindow ) return;
+		if ( mainWindow.isMinimized() ) mainWindow.restore();
+		mainWindow.show();
+		mainWindow.focus();
+	};
+	ipcMain.on('service:notification-click', event => {
+		const id = services?.idOf(event.sender);
+		bringForward();
+		if ( id ) services?.activate(id);
+	});
+	ipcMain.on('service:may-notify', event => {
+		const id = services?.idOf(event.sender);
+		event.returnValue = id ? services?.mayNotify(id) ?? false : false;
+	});
+
+	function run(shortcut: ShortcutAction): void {
+		const active = store.get('activeServiceId');
+		switch ( shortcut.action ) {
+			case 'service': return services?.activateNth(shortcut.index);
+			case 'cycle': return services?.cycle(shortcut.step);
+			case 'find': mainWindow?.webContents.send('titlebar:find'); mainWindow?.webContents.focus(); return;
+			case 'reload': return services?.reloadActive(shortcut.ignoringCache);
+			case 'zoom': return services?.zoomActive(shortcut.step);
+			case 'history': if ( active ) services?.navigate(active, shortcut.direction); return;
+			case 'fullscreen': mainWindow?.setFullScreen(!mainWindow.isFullScreen()); return;
+			case 'developerTools': services?.activeContents()?.toggleDevTools(); return;
+			case 'addService': overlay?.open({ dialog: 'add' }); return;
+			case 'dontDisturb': return setDontDisturb(!store.get('dontDisturb'));
+			case 'quit': app.quit(); return;
+			case 'workspace': case 'preferences': case 'lock': return;
+		}
+	}
+
+	const handleShortcut = (input: KeyInput): boolean => {
+		const shortcut = shortcutFor(input);
+		if ( shortcut ) run(shortcut);
+		return shortcut !== null;
+	};
+	const listenForShortcuts = (contents: WebContents) => contents.on('before-input-event', (event, input) => {
+		if ( handleShortcut(input) ) event.preventDefault();
+	});
+
 	app.whenReady().then(() => {
 		const window = createMainWindow();
 		mainWindow = window;
-		overlay = new Overlay(window, () => services?.focusActive());
-		services = new ServiceHost(window, { edit: id => overlay?.open({ dialog: 'edit', serviceId: id }) });
+		listenForShortcuts(window.webContents);
+		overlay = new Overlay(window, () => services?.focusActive(), listenForShortcuts);
+		services = new ServiceHost(window, { edit: id => overlay?.open({ dialog: 'edit', serviceId: id }), shortcut: handleShortcut });
 		window.webContents.once('did-finish-load', () => services?.start());
 	});
 	app.on('window-all-closed', () => app.quit());

@@ -1,4 +1,7 @@
 import type { ServiceState } from '../shared/service.ts';
+import type { AppState } from '../shared/channels.ts';
+
+export const appState = $state<AppState>({ dontDisturb: false });
 
 export const services = $state<{ list: ServiceState[]; hover: string; found: { active: number; matches: number } | null }>({
 	list: [],
@@ -11,6 +14,8 @@ export function activeService(): ServiceState | undefined {
 }
 
 export async function loadServices(): Promise<void> {
+	Object.assign(appState, await window.shep.invoke('app:state') as AppState);
+	window.shep.on('app:state', state => Object.assign(appState, state as AppState));
 	services.list = await window.shep.invoke('services:list') as ServiceState[];
 	window.shep.on('services:changed', list => { services.list = list as ServiceState[]; });
 	window.shep.on('services:hover', (id, url) => { if ( id === activeService()?.id ) services.hover = String(url ?? ''); });
@@ -26,3 +31,4 @@ export const openAddDialog = () => window.shep.invoke('overlay:open', { dialog: 
 export const navigate = (id: string, where: 'back' | 'forward' | 'reload') => window.shep.invoke('service:navigate', id, where);
 export const find = (id: string, query: string, forward: boolean) => window.shep.invoke('service:find', id, query, forward);
 export const stopFind = (id: string) => window.shep.invoke('service:stopFind', id);
+export const setDontDisturb = (on: boolean) => window.shep.invoke('app:setDontDisturb', on);

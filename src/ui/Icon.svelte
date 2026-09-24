@@ -8,7 +8,9 @@
 		up: 'M3 10 8 5l5 5',
 		down: 'M3 6l5 5 5-5',
 		close: 'M4 4l8 8M12 4l-8 8',
-		add: 'M8 3v10M3 8h10'
+		add: 'M8 3v10M3 8h10',
+		bell: 'M4 11V7a4 4 0 0 1 8 0v4l1 1H3l1-1ZM6.5 13.5a1.5 1.5 0 0 0 3 0',
+		bellOff: 'M4 11V7a4 4 0 0 1 8 0v4l1 1H3l1-1ZM6.5 13.5a1.5 1.5 0 0 0 3 0M2 2l12 12'
 	} as const;
 
 	const { name }: { name: keyof typeof PATHS } = $props();

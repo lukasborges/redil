@@ -2,6 +2,8 @@ const en = {
 	'welcome.title': 'Welcome to Shep',
 	'welcome.body': 'Add a service with the + in the bar on the left.',
 	'rail.add': 'Add a service',
+	'rail.dontDisturb': "Don't Disturb",
+	'rail.dontDisturb.on': "Don't Disturb is on",
 	'titlebar.back': 'Back',
 	'titlebar.forward': 'Forward',
 	'titlebar.reload': 'Reload',

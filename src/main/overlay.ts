@@ -9,7 +9,7 @@ export class Overlay {
 	private view: WebContentsView | null = null;
 	private loaded: Promise<void> | null = null;
 
-	constructor(private readonly window: BrowserWindow, private readonly onClose: () => void) {
+	constructor(private readonly window: BrowserWindow, private readonly onClose: () => void, private readonly onCreate: (contents: Electron.WebContents) => void) {
 		window.on('resize', () => this.fit());
 	}
 
@@ -44,6 +44,7 @@ export class Overlay {
 		});
 		view.setBackgroundColor('#00000000');
 		view.setVisible(false);
+		this.onCreate(view.webContents);
 		const address = process.env.ELECTRON_RENDERER_URL;
 		this.loaded = (address ? view.webContents.loadURL(address + '#overlay') : view.webContents.loadFile(join(__dirname, '../ui/index.html'), { hash: 'overlay' })).then(() => {});
 		this.view = view;

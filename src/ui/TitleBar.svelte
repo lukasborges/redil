@@ -15,6 +15,8 @@
 	let query = $state('');
 	let field = $state<HTMLInputElement>();
 
+	window.shep.on('titlebar:find', () => { if ( service ) openFind(); });
+
 	function openFind() {
 		finding = true;
 		queueMicrotask(() => field?.select());
