@@ -271,7 +271,7 @@ Ext.define('Shep.util.Workspaces', {
 			});
 		});
 		items.push({
-			 text: 'All services' + (workspaces.length < 9 ? '<span class="rx-menu-shortcut">' + (shep.platform === 'darwin' ? '⌘⌥' : 'Ctrl+Alt+') + (workspaces.length + 1) + '</span>' : '')
+			 text: '<span class="rx-ws-chip"><span class="rx-glyph">&#xf009;</span></span>All services' + (workspaces.length < 9 ? '<span class="rx-menu-shortcut">' + (shep.platform === 'darwin' ? '⌘⌥' : 'Ctrl+Alt+') + (workspaces.length + 1) + '</span>' : '')
 			,checked: active === ''
 			,group: 'workspace'
 			,handler: function() { me.setActive(''); }
