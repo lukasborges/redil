@@ -621,10 +621,6 @@ Ext.define('Shep.ux.WebView',{
 			if ( e.isMainFrame && me.record.get('type') === 'tweetdeck' ) Ext.defer(function() { webview.loadURL(e.newURL); }, 1000); // Applied a defer because sometimes is not redirecting. TweetDeck 2FA is an example.
 		});
 
-		webview.addEventListener('page-favicon-updated', function( e ) {
-			me.wearLargestFavicon(e.favicons);
-		});
-
 		webview.addEventListener('update-target-url', function( url ) {
 			me.hoveredURL = url.url;
 			me.down('statusbar #url').setText(Ext.String.htmlEncode(url.url));
@@ -1009,27 +1005,6 @@ Ext.define('Shep.ux.WebView',{
 			me.suspendEvent('afterrender');
 			me.tab.setStyle('-webkit-filter', 'grayscale(1)');
 		}
-	}
-
-	,wearLargestFavicon: function( favicons ) {
-		var me = this;
-		var iconLoaderSetsTheWorkspacePicture = me.record.get('type') === 'slack';
-		if ( iconLoaderSetsTheWorkspacePicture || !Ext.isArray(favicons) || !favicons.length ) return;
-
-		var request = me.faviconRequest = (me.faviconRequest || 0) + 1;
-		var pending = favicons.length;
-		var best = null;
-
-		Ext.each(favicons, function( url ) {
-			var probe = new Image();
-			probe.onload = probe.onerror = function( e ) {
-				if ( e.type === 'load' && (!best || probe.naturalWidth > best.width) ) best = { url: url, width: probe.naturalWidth };
-				if ( --pending > 0 || request !== me.faviconRequest || !best || me.isDestroyed ) return;
-				me.setIcon(best.url);
-				me.syncTitleBarIfActive();
-			};
-			probe.src = url;
-		});
 	}
 
 	,syncTitleBarIfActive: function() {
