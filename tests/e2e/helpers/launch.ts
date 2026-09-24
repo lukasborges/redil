@@ -35,7 +35,7 @@ export async function closeShep(shep: Shep | undefined): Promise<void> {
 
 export function serviceRecord(id: string, url: string, overrides: Record<string, unknown> = {}) {
 	return {
-		id, name: 'Service ' + id, url, partition: `persist:custom_${id}`, workspace: '', enabled: true,
+		id, name: 'Service ' + id, url, partition: `persist:service-${id}`, workspace: '', enabled: true,
 		notifications: false, muted: true, media: false, trust: false, zoomLevel: 0, favicon: '', ...overrides
 	};
 }

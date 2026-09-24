@@ -5,7 +5,7 @@ export interface ServiceRecord {
 	id: string;
 	name: string;
 	url: string;
-	// persist:<type>_<id>, as Shep 0.10 named it: another name is another session, signed out.
+	// persist:service-<id>: another name is another session, signed out, and the Ext app's were persist:<type>_<id>.
 	partition: string;
 	workspace: string;
 	enabled: boolean;

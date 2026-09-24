@@ -2,6 +2,7 @@ import Store from 'electron-store';
 import type { ServiceRecord } from '../shared/service.ts';
 import type { ActiveWorkspace, Workspace } from '../shared/workspace.ts';
 import { DEFAULT_PREFERENCES, type Preferences } from '../shared/preferences.ts';
+import type { WindowBounds } from './window.ts';
 
 interface Schema {
 	services: ServiceRecord[];
@@ -15,14 +16,15 @@ interface Schema {
 	lockPasswordHash: string;
 	// a lock outlives a restart, or quitting would be the way past it
 	locked: boolean;
+	windowBounds: WindowBounds | null;
 }
 
-// shep.json, not config.json: Shep 0.10's config.json stays readable for the migration.
+// shep.json, not config.json: the Ext app's config.json may still sit in the same folder, with another shape.
 export const store = new Store<Schema>({
 	name: 'shep',
 	defaults: {
 		services: [], activeServiceId: null, permissions: {}, dontDisturb: false, workspaces: [], activeWorkspace: null,
-		preferences: DEFAULT_PREFERENCES, lockPasswordHash: '', locked: false
+		preferences: DEFAULT_PREFERENCES, lockPasswordHash: '', locked: false, windowBounds: null
 	}
 });
 

@@ -1,6 +1,6 @@
-import { join } from 'node:path';
+import './profile.ts';
 import { app, ipcMain, session, shell, type IpcMainInvokeEvent, type WebContents } from 'electron';
-import { productName, version, bugs, homepage } from '../../package.json';
+import { version, bugs, homepage } from '../../package.json';
 import { withoutAppTokens } from './useragent.ts';
 import { createMainWindow } from './window.ts';
 import { ServiceHost } from './services.ts';
@@ -20,13 +20,6 @@ import { APP_ACTIONS, type AppAction } from '../shared/channels.ts';
 import { DEFAULT_PREFERENCES, type Preferences } from '../shared/preferences.ts';
 import { shortcutFor, type KeyInput, type ShortcutAction } from './shortcuts.ts';
 import type { AppState } from '../shared/channels.ts';
-
-// Run unpacked from out/main, Electron finds no package.json and calls itself Electron.
-app.setName(productName);
-
-const hasOwnUserData = process.argv.some(arg => arg.startsWith('--user-data-dir'));
-// Until 1.0 replaces the Ext app, an unpacked run must never open the real Shep profile.
-if ( !app.isPackaged && !hasOwnUserData ) app.setPath('userData', join(app.getPath('appData'), 'Shep-next'));
 
 // The default, not setUserAgent per page: Cloudflare Turnstile fails any overridden
 // agent with error 600010, since Chromium keeps client hints consistent only with a default.
@@ -224,7 +217,7 @@ if ( !app.requestSingleInstanceLock() ) {
 		applyThemeBeforeTheWindow();
 		const { startMinimized, trayIcon } = preferences();
 		// with no icon in the top bar, a hidden window would have no way back
-		const window = createMainWindow(startMinimized && trayIcon);
+		const window = createMainWindow(startMinimized && trayIcon, store.get('windowBounds'), bounds => store.set('windowBounds', bounds));
 		if ( startMinimized && !trayIcon ) window.once('ready-to-show', () => window.minimize());
 		mainWindow = window;
 		listenForShortcuts(window.webContents);

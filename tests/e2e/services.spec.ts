@@ -34,7 +34,7 @@ test.afterAll(async () => {
 test('runs each service in the session its record names, so a saved sign-in survives', async () => {
 	const storage = await shep.app.evaluate(({ webContents }, url) =>
 		webContents.getAllWebContents().find(contents => contents.getURL() === url)?.session.storagePath, serviceUrl());
-	expect(storage).toMatch(/Partitions\/custom_1$/);
+	expect(storage).toMatch(/Partitions\/service-1$/);
 });
 
 test('runs the service page isolated, sandboxed and without node', async () => {

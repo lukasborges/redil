@@ -116,7 +116,7 @@ export class ServiceHost {
 		const services = store.get('services');
 		const id = String(services.reduce((highest, service) => Math.max(highest, Number(service.id) || 0), 0) + 1);
 		const record: ServiceRecord = {
-			id, url, name: name.trim() || nameFromUrl(url), partition: `persist:custom_${id}`, workspace,
+			id, url, name: name.trim() || nameFromUrl(url), partition: `persist:service-${id}`, workspace,
 			enabled: true, notifications: true, muted: false, media: false, trust: false, zoomLevel: 0, favicon: ''
 		};
 		store.set('services', [...services, record]);
