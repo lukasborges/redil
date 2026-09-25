@@ -32,9 +32,15 @@ const titleOf = (shep: Shep) => shep.window.evaluate(async () =>
 test('refuses a certificate nobody trusted, and tells the window', async () => {
 	let shep: Shep | undefined;
 	try {
-		shep = await launchShep({ store: { services: [serviceRecord('1', url)], activeServiceId: '1' } });
-		const told = shep.window.evaluate(() => new Promise(resolve => window.shep.on('services:certificate-error', value => { resolve(value); })));
-		await expect(told).resolves.toBe('1');
+		shep = await launchShep();
+		// added once the window listens, or the warning can come before anyone hears it
+		const told = shep.window.evaluate(address => new Promise(resolve => {
+			window.shep.on('services:certificate-error', value => { resolve(value); });
+			window.shep.invoke('services:add', address, 'Self-signed service', '');
+		}), url);
+		const warnedAbout = await told;
+		const [added] = await shep.window.evaluate(() => window.shep.invoke('services:list')) as { id: string }[];
+		expect(warnedAbout).toBe(added?.id);
 		await new Promise(resolve => setTimeout(resolve, 500));
 		expect(await titleOf(shep)).not.toBe('Self-signed');
 	} finally {
