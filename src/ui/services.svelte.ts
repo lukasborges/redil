@@ -15,7 +15,7 @@ export function activeService(): ServiceState | undefined {
 
 export async function loadServices(): Promise<void> {
 	Object.assign(appState, await window.shep.invoke('app:state') as AppState);
-	window.shep.on('app:state', state => Object.assign(appState, state as AppState));
+	window.shep.on('app:state', state => { Object.assign(appState, state as AppState); });
 	services.list = await window.shep.invoke('services:list') as ServiceState[];
 	window.shep.on('services:changed', list => { services.list = list as ServiceState[]; });
 	window.shep.on('services:hover', (id, url) => { if ( id === activeService()?.id ) services.hover = String(url ?? ''); });

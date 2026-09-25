@@ -119,3 +119,16 @@ test('reorders the rail by dragging an icon onto another', async () => {
 	await shep.window.locator(`.rail .service[aria-label="${first}"]`).dragTo(shep.window.locator(`.rail .service[aria-label="${second}"]`));
 	await expect.poll(async () => (await list()).map(service => service.name).slice(0, 2)).toEqual([second, first]);
 });
+
+test('shows the app\'s state changes without an exception on the bridge', async () => {
+	const session = await shep.window.context().newCDPSession(shep.window);
+	const thrown: string[] = [];
+	session.on('Runtime.exceptionThrown', event => thrown.push(event.exceptionDetails.text));
+	await session.send('Runtime.enable');
+	await shep.window.evaluate(() => window.shep.invoke('app:setDontDisturb', true));
+	await expect(shep.window.locator('.tool.on')).toBeVisible();
+	await shep.window.evaluate(() => window.shep.invoke('app:setDontDisturb', false));
+	await expect(shep.window.locator('.tool.on')).toHaveCount(0);
+	expect(thrown).toEqual([]);
+	await session.detach();
+});

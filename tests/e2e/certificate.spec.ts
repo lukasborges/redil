@@ -33,7 +33,7 @@ test('refuses a certificate nobody trusted, and tells the window', async () => {
 	let shep: Shep | undefined;
 	try {
 		shep = await launchShep({ store: { services: [serviceRecord('1', url)], activeServiceId: '1' } });
-		const told = shep.window.evaluate(() => new Promise(resolve => window.shep.on('services:certificate-error', resolve)));
+		const told = shep.window.evaluate(() => new Promise(resolve => window.shep.on('services:certificate-error', value => { resolve(value); })));
 		await expect(told).resolves.toBe('1');
 		await new Promise(resolve => setTimeout(resolve, 500));
 		expect(await titleOf(shep)).not.toBe('Self-signed');
