@@ -18,6 +18,16 @@ function remembered(partition: string, permission: string): boolean | undefined 
 	return store.get('permissions')[rememberedKey(partition, permission)];
 }
 
+// A page asking for the camera and the microphone apart must not get two dialogs.
+const pendingQuestions = new Map<string, Promise<boolean>>();
+
+function askOnce(window: BrowserWindow, service: ServiceRecord, permission: string): Promise<boolean> {
+	const key = rememberedKey(service.partition, permission);
+	const pending = pendingQuestions.get(key) ?? ask(window, service, permission).finally(() => pendingQuestions.delete(key));
+	pendingQuestions.set(key, pending);
+	return pending;
+}
+
 async function ask(window: BrowserWindow, service: ServiceRecord, permission: string): Promise<boolean> {
 	const messages = mainMessages();
 	const { response } = await dialog.showMessageBox(window, {
@@ -46,7 +56,7 @@ export function applyPermissionPolicy(session: Session, window: BrowserWindow, c
 			if ( service.media ) return callback(true);
 			const answer = remembered(service.partition, permission);
 			if ( answer !== undefined ) return callback(answer);
-			ask(window, service, permission).then(callback, () => callback(false));
+			askOnce(window, service, permission).then(callback, () => callback(false));
 			return;
 		}
 		callback(false);
@@ -59,7 +69,8 @@ export function applyPermissionPolicy(session: Session, window: BrowserWindow, c
 		if ( permission === 'notifications' ) return service.notifications;
 		if ( SILENT_PERMISSIONS.includes(permission) ) return true;
 		if ( CALL_PERMISSIONS.includes(permission) ) return service.media;
-		if ( ASKED_PERMISSIONS[permission] ) return service.media || remembered(service.partition, permission) === true;
+		// A check can only say granted or denied, never "prompt", and a page told denied takes it for the user's refusal and never asks.
+		if ( ASKED_PERMISSIONS[permission] ) return service.media || remembered(service.partition, permission) !== false;
 		return false;
 	});
 }

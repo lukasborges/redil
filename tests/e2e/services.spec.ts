@@ -74,10 +74,21 @@ test('tells the service page the app\'s theme, which embedded content is not tol
 	await expect.poll(isDark).toBe(false);
 });
 
-test('asks before the camera unless the service is marked for calls', async () => {
+test('tells a page the camera is refused only once the user refused it, since a page told so before never asks', async () => {
 	const camera = (url: string) => inService<string>(shep, url, 'navigator.permissions.query({ name: "camera" }).then(status => status.state)');
-	expect(await camera(serviceUrl())).toBe('denied');
-	expect(await camera(at('127.0.0.1', '/away.html'))).toBe('granted');
+	const remember = (permissions: Record<string, boolean>) => shep.app.evaluate(({ app: electronApp }, permissions) => {
+		const fs = process.getBuiltinModule('node:fs');
+		const file = electronApp.getPath('userData') + '/shep.json';
+		fs.writeFileSync(file, JSON.stringify({ ...JSON.parse(fs.readFileSync(file, 'utf8')), permissions }));
+	}, permissions);
+	expect(await camera(serviceUrl())).toBe('granted');
+	try {
+		await remember({ 'persist:service-1|media': false, 'persist:service-2|media': false });
+		expect(await camera(serviceUrl())).toBe('denied');
+		expect(await camera(at('127.0.0.1', '/away.html'))).toBe('granted');
+	} finally {
+		await remember({});
+	}
 });
 
 test('opens a link to another site in a window of the app that shares the service\'s session', async () => {
