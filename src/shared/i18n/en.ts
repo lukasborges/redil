@@ -10,6 +10,7 @@ export const en = {
 	'titlebar.back': 'Back',
 	'titlebar.forward': 'Forward',
 	'titlebar.reload': 'Reload',
+	'titlebar.home': 'Home',
 	'titlebar.find': 'Find in page',
 	'find.placeholder': 'Find in page',
 	'find.previous': 'Previous match',

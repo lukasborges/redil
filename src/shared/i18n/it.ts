@@ -12,6 +12,7 @@ export const it: Messages = {
 	'titlebar.back': 'Indietro',
 	'titlebar.forward': 'Avanti',
 	'titlebar.reload': 'Ricarica',
+	'titlebar.home': 'Pagina iniziale',
 	'titlebar.find': 'Trova nella pagina',
 	'find.placeholder': 'Trova nella pagina',
 	'find.previous': 'Corrispondenza precedente',

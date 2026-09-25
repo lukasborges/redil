@@ -1,4 +1,4 @@
-import type { ServiceState } from '../shared/service.ts';
+import type { Navigation, ServiceState } from '../shared/service.ts';
 import type { AppState } from '../shared/channels.ts';
 
 export const appState = $state<AppState>({ dontDisturb: false, workspaces: [], activeWorkspace: null, unreadElsewhere: false, language: '' });
@@ -28,7 +28,7 @@ export const activate = (id: string) => window.shep.invoke('services:activate', 
 export const showServiceMenu = (id: string) => window.shep.invoke('services:menu', id);
 export const reorder = (ids: string[]) => window.shep.invoke('services:reorder', ids);
 export const openAddDialog = () => window.shep.invoke('overlay:open', { dialog: 'add' });
-export const navigate = (id: string, where: 'back' | 'forward' | 'reload') => window.shep.invoke('service:navigate', id, where);
+export const navigate = (id: string, where: Navigation) => window.shep.invoke('service:navigate', id, where);
 export const find = (id: string, query: string, forward: boolean) => window.shep.invoke('service:find', id, query, forward);
 export const stopFind = (id: string) => window.shep.invoke('service:stopFind', id);
 export const setDontDisturb = (on: boolean) => window.shep.invoke('app:setDontDisturb', on);

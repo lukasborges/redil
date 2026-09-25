@@ -12,6 +12,7 @@ export const ptBR: Messages = {
 	'titlebar.back': 'Voltar',
 	'titlebar.forward': 'Avançar',
 	'titlebar.reload': 'Recarregar',
+	'titlebar.home': 'Início',
 	'titlebar.find': 'Localizar na página',
 	'find.placeholder': 'Localizar na página',
 	'find.previous': 'Ocorrência anterior',

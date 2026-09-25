@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { app, dialog, Menu, WebContentsView, type BrowserWindow, type WebContents } from 'electron';
 import { RAIL_WIDTH, TITLE_BAR_HEIGHT } from '../shared/chrome.ts';
 import { nameFromUrl, normalizeUrl } from '../shared/address.ts';
-import type { ServiceRecord, ServiceState, UnreadCount } from '../shared/service.ts';
+import type { Navigation, ServiceRecord, ServiceState, UnreadCount } from '../shared/service.ts';
 import { preferences, store, updateService } from './store.ts';
 import { countFromTitle, createBlinkGuard, totalUnread } from './unread.ts';
 import { faviconFor } from './favicon.ts';
@@ -154,13 +154,15 @@ export class ServiceHost {
 		this.activate(id);
 	}
 
-	navigate(id: string, where: 'back' | 'forward' | 'reload'): void {
+	navigate(id: string, where: Navigation): void {
 		const contents = this.contentsOf(id);
 		if ( !contents ) return;
 		const history = contents.navigationHistory;
 		if ( where === 'back' && history.canGoBack() ) history.goBack();
 		if ( where === 'forward' && history.canGoForward() ) history.goForward();
 		if ( where === 'reload' ) contents.reload();
+		// the address the service was added with
+		if ( where === 'home' ) contents.loadURL(this.record(id).url).catch(() => {});
 	}
 
 	find(id: string, text: string, forward: boolean): void {

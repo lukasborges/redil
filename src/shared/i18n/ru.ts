@@ -12,6 +12,7 @@ export const ru: Messages = {
 	'titlebar.back': 'Назад',
 	'titlebar.forward': 'Вперёд',
 	'titlebar.reload': 'Перезагрузить',
+	'titlebar.home': 'Домой',
 	'titlebar.find': 'Найти на странице',
 	'find.placeholder': 'Найти на странице',
 	'find.previous': 'Предыдущее совпадение',

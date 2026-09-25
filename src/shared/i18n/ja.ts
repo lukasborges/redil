@@ -12,6 +12,7 @@ export const ja: Messages = {
 	'titlebar.back': '戻る',
 	'titlebar.forward': '進む',
 	'titlebar.reload': '再読み込み',
+	'titlebar.home': 'ホーム',
 	'titlebar.find': 'ページ内を検索',
 	'find.placeholder': 'ページ内を検索',
 	'find.previous': '前の一致',

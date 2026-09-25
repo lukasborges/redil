@@ -18,6 +18,7 @@ import { answerScreenSharing, type PickedSource } from './screenshare.ts';
 import { PreferenceHost, applyThemeBeforeTheWindow } from './preferences.ts';
 import { APP_ACTIONS, type AppAction } from '../shared/channels.ts';
 import { WORKSPACE_ICONS } from '../shared/workspace.ts';
+import { NAVIGATIONS } from '../shared/service.ts';
 import { DEFAULT_PREFERENCES, type Preferences } from '../shared/preferences.ts';
 import { shortcutFor, type KeyInput, type ShortcutAction } from './shortcuts.ts';
 import type { AppState } from '../shared/channels.ts';
@@ -67,7 +68,8 @@ if ( !app.requestSingleInstanceLock() ) {
 	handle('services:menu', (event, id) => services?.showMenu(text(id)));
 	handle('services:record', (event, id) => store.get('services').find(service => service.id === text(id)) ?? null);
 	handle('service:navigate', (event, id, where) => {
-		if ( where === 'back' || where === 'forward' || where === 'reload' ) services?.navigate(text(id), where);
+		const navigation = NAVIGATIONS.find(candidate => candidate === where);
+		if ( navigation ) services?.navigate(text(id), navigation);
 	});
 	handle('service:find', (event, id, query, forward) => services?.find(text(id), text(query), forward !== false));
 	handle('service:stopFind', (event, id) => services?.stopFind(text(id)));

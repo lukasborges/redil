@@ -12,6 +12,7 @@ export const zhCN: Messages = {
 	'titlebar.back': '后退',
 	'titlebar.forward': '前进',
 	'titlebar.reload': '重新载入',
+	'titlebar.home': '主页',
 	'titlebar.find': '在页面中查找',
 	'find.placeholder': '在页面中查找',
 	'find.previous': '上一个匹配',

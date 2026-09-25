@@ -12,6 +12,7 @@ export const ko: Messages = {
 	'titlebar.back': '뒤로',
 	'titlebar.forward': '앞으로',
 	'titlebar.reload': '새로 고침',
+	'titlebar.home': '홈',
 	'titlebar.find': '페이지에서 찾기',
 	'find.placeholder': '페이지에서 찾기',
 	'find.previous': '이전 결과',

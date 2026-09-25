@@ -45,6 +45,7 @@
 			<button type="button" title={messages['titlebar.back']} aria-label={messages['titlebar.back']} disabled={!service.canGoBack} onclick={() => navigate(service.id, 'back')}><Icon name="back" /></button>
 			<button type="button" title={messages['titlebar.forward']} aria-label={messages['titlebar.forward']} disabled={!service.canGoForward} onclick={() => navigate(service.id, 'forward')}><Icon name="forward" /></button>
 			<button type="button" title={messages['titlebar.reload']} aria-label={messages['titlebar.reload']} class:loading={service.loading} onclick={() => navigate(service.id, 'reload')}><Icon name="reload" /></button>
+			<button type="button" title={messages['titlebar.home']} aria-label={messages['titlebar.home']} onclick={() => navigate(service.id, 'home')}><Icon name="home" /></button>
 		</div>
 	{/if}
 

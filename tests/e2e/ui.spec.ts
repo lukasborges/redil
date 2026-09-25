@@ -60,6 +60,14 @@ test('shows the active service\'s name and page title in the title bar, and its 
 	await expect(shep.window.locator('.titlebar .identity .detail')).toHaveText('Fixture service');
 });
 
+test('goes home to the address the service was added with', async () => {
+	await inService(shep, at('127.0.0.1', '/service.html'), `location.href = ${JSON.stringify(at('127.0.0.1', '/away.html?from=home'))}`);
+	await expect(shep.window.locator('.titlebar .identity .detail')).toHaveText('Somewhere else');
+	await shep.window.locator('.titlebar button[aria-label="Home"]').click();
+	await expect(shep.window.locator('.titlebar .identity .detail')).toHaveText('Fixture service');
+	expect((await byId('1'))?.pageTitle).toBe('Fixture service');
+});
+
 test('finds text in the active page and counts the matches', async () => {
 	await shep.window.locator('.rail .service[aria-label="Second"]').click();
 	await expect(shep.window.locator('.titlebar .identity b')).toHaveText('Second');

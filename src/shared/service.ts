@@ -1,3 +1,6 @@
+export const NAVIGATIONS = ['back', 'forward', 'reload', 'home'] as const;
+export type Navigation = (typeof NAVIGATIONS)[number];
+
 // '•' is a title saying there is something without saying how much.
 export type UnreadCount = number | '•';
 
