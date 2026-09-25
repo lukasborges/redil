@@ -3,7 +3,7 @@ import type { ActiveWorkspace, Workspace } from './workspace.ts';
 export const INVOKE_CHANNELS = [
 	'app:getVersion',
 	'services:list', 'services:activate', 'services:add', 'services:update', 'services:reorder', 'services:menu', 'services:record',
-	'service:navigate', 'service:find', 'service:stopFind',
+	'service:navigate', 'service:resetZoom', 'service:find', 'service:stopFind',
 	'overlay:open', 'overlay:close',
 	'app:state', 'app:setDontDisturb',
 	'workspaces:menu', 'workspaces:save', 'workspaces:get', 'workspaces:setIcon',

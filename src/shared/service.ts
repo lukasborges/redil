@@ -30,6 +30,7 @@ export interface ServiceState {
 	active: boolean;
 	canGoBack: boolean;
 	canGoForward: boolean;
+	zoomLevel: number;
 	loading: boolean;
 	workspace: string;
 	shown: boolean;

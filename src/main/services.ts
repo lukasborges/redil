@@ -87,6 +87,7 @@ export class ServiceHost {
 				active: record.id === active,
 				canGoBack: history?.canGoBack() ?? false,
 				canGoForward: history?.canGoForward() ?? false,
+				zoomLevel: record.zoomLevel,
 				loading: running?.view.webContents.isLoading() ?? false,
 				workspace: record.workspace,
 				shown: isShownIn(record.workspace, store.get('activeWorkspace'))
@@ -179,27 +180,14 @@ export class ServiceHost {
 	showMenu(id: string): void {
 		const record = this.record(id);
 		const contents = this.contentsOf(id);
-		const history = contents?.navigationHistory;
-		const setZoom = (level: number) => {
-			updateService(id, { zoomLevel: level });
-			contents?.setZoomLevel(level);
-		};
 		const items = serviceMenu({
 			enabled: record.enabled,
-			canGoBack: history?.canGoBack() ?? false,
-			canGoForward: history?.canGoForward() ?? false,
 			notifications: record.notifications,
 			sound: !record.muted,
-			zoomLevel: record.zoomLevel,
 			workspaces: store.get('workspaces'),
 			workspace: record.workspace
 		}, {
-			back: () => this.navigate(id, 'back'),
-			forward: () => this.navigate(id, 'forward'),
 			reload: () => this.navigate(id, 'reload'),
-			zoomIn: () => setZoom((this.existing(id)?.zoomLevel ?? 0) + ZOOM_STEP),
-			zoomOut: () => setZoom((this.existing(id)?.zoomLevel ?? 0) - ZOOM_STEP),
-			resetZoom: () => setZoom(0),
 			toggleNotifications: () => updateService(id, { notifications: !(this.existing(id)?.notifications ?? true) }),
 			toggleSound: () => {
 				updateService(id, { muted: !(this.existing(id)?.muted ?? false) });
@@ -278,12 +266,15 @@ export class ServiceHost {
 
 	zoomActive(step: 1 | -1 | 0): void {
 		const active = store.get('activeServiceId');
-		if ( !active ) return;
-		const record = this.existing(active);
-		if ( !record ) return;
-		const level = step === 0 ? 0 : record.zoomLevel + step * ZOOM_STEP;
-		updateService(active, { zoomLevel: level });
-		this.contentsOf(active)?.setZoomLevel(level);
+		const record = active ? this.existing(active) : undefined;
+		if ( record ) this.setZoom(record.id, step === 0 ? 0 : record.zoomLevel + step * ZOOM_STEP);
+	}
+
+	setZoom(id: string, level: number): void {
+		if ( !this.existing(id) ) return;
+		updateService(id, { zoomLevel: level });
+		this.contentsOf(id)?.setZoomLevel(level);
+		this.announce();
 	}
 
 	reloadActive(ignoringCache: boolean): void {

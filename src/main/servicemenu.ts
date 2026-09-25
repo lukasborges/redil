@@ -1,23 +1,15 @@
-import { fill, type Messages } from '../shared/i18n/index.ts';
+import type { Messages } from '../shared/i18n/index.ts';
 
 export interface ServiceMenuState {
 	enabled: boolean;
-	canGoBack: boolean;
-	canGoForward: boolean;
 	notifications: boolean;
 	sound: boolean;
-	zoomLevel: number;
 	workspaces: readonly { id: string; name: string }[];
 	workspace: string;
 }
 
 export interface ServiceMenuActions {
-	back(): void;
-	forward(): void;
 	reload(): void;
-	zoomIn(): void;
-	zoomOut(): void;
-	resetZoom(): void;
 	toggleNotifications(): void;
 	toggleSound(): void;
 	toggleEnabled(): void;
@@ -37,26 +29,12 @@ export interface ServiceMenuItem {
 	click?: () => void;
 }
 
-export const CHROMIUM_ZOOM_FACTOR_PER_LEVEL = 1.2;
-
-export function zoomPercent(level: number): number {
-	return Math.round(100 * Math.pow(CHROMIUM_ZOOM_FACTOR_PER_LEVEL, level));
-}
-
 const SEPARATOR: ServiceMenuItem = { type: 'separator' };
 
 // Grouped by what is acted on: the page, what is switched, the service, and the developer's tools.
 export function serviceMenu(state: ServiceMenuState, actions: ServiceMenuActions, messages: Messages): ServiceMenuItem[] {
-	const page: ServiceMenuItem[] = [
-		{ label: messages['menu.back'], enabled: state.canGoBack, click: actions.back },
-		{ label: messages['menu.forward'], enabled: state.canGoForward, click: actions.forward },
-		{ label: messages['menu.reload'], click: actions.reload },
-		SEPARATOR,
-		{ label: messages['menu.zoomIn'], click: actions.zoomIn },
-		{ label: messages['menu.zoomOut'], click: actions.zoomOut },
-		{ label: fill(messages['menu.actualSize'], { percent: zoomPercent(state.zoomLevel) }), enabled: state.zoomLevel !== 0, click: actions.resetZoom },
-		SEPARATOR
-	];
+	// Back, forward and zoom are the title bar's, since they act on the page in view; reload also rescues a hidden one that stopped counting.
+	const page: ServiceMenuItem[] = [{ label: messages['menu.reload'], click: actions.reload }, SEPARATOR];
 	const switches: ServiceMenuItem[] = [
 		{ label: messages['menu.notifications'], type: 'checkbox', checked: state.notifications, click: actions.toggleNotifications },
 		{ label: messages['menu.sound'], type: 'checkbox', checked: state.sound, click: actions.toggleSound },

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Messages } from '../shared/i18n/index.ts';
-	import { services, activeService, navigate, find, stopFind } from './services.svelte.ts';
+	import { services, activeService, navigate, resetZoom, find, stopFind } from './services.svelte.ts';
+	import { zoomPercent } from '../shared/zoom.ts';
 	import { initials } from './initials.ts';
 	import Icon from './Icon.svelte';
 
@@ -61,6 +62,9 @@
 
 	{#if service}
 		<div class="group end">
+			{#if service.zoomLevel !== 0}
+				<button type="button" class="zoom" title={messages['titlebar.actualSize']} aria-label={messages['titlebar.actualSize']} onclick={() => resetZoom(service.id)}>{zoomPercent(service.zoomLevel)}%</button>
+			{/if}
 			{#if finding}
 				<input bind:this={field} bind:value={query} type="search" placeholder={messages['find.placeholder']} aria-label={messages['find.placeholder']}
 					oninput={() => search()} onkeydown={onKey} />
@@ -117,6 +121,13 @@
 
 	button:hover:not(:disabled) {
 		background-color: var(--rx-hover-on-chrome);
+	}
+
+	button.zoom {
+		width: auto;
+		padding: 0 6px;
+		font: inherit;
+		font-variant-numeric: tabular-nums;
 	}
 
 	button:disabled {

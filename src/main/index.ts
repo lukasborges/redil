@@ -71,6 +71,7 @@ if ( !app.requestSingleInstanceLock() ) {
 		const navigation = NAVIGATIONS.find(candidate => candidate === where);
 		if ( navigation ) services?.navigate(text(id), navigation);
 	});
+	handle('service:resetZoom', (event, id) => services?.setZoom(text(id), 0));
 	handle('service:find', (event, id, query, forward) => services?.find(text(id), text(query), forward !== false));
 	handle('service:stopFind', (event, id) => services?.stopFind(text(id)));
 	handle('overlay:open', (event, dialog) => overlay?.open(dialog as OverlayDialog));

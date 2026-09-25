@@ -29,6 +29,7 @@ export const showServiceMenu = (id: string) => window.shep.invoke('services:menu
 export const reorder = (ids: string[]) => window.shep.invoke('services:reorder', ids);
 export const openAddDialog = () => window.shep.invoke('overlay:open', { dialog: 'add' });
 export const navigate = (id: string, where: Navigation) => window.shep.invoke('service:navigate', id, where);
+export const resetZoom = (id: string) => window.shep.invoke('service:resetZoom', id);
 export const find = (id: string, query: string, forward: boolean) => window.shep.invoke('service:find', id, query, forward);
 export const stopFind = (id: string) => window.shep.invoke('service:stopFind', id);
 export const setDontDisturb = (on: boolean) => window.shep.invoke('app:setDontDisturb', on);

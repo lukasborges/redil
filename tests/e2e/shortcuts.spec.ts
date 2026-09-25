@@ -64,6 +64,15 @@ test('zooms the active service with Ctrl+= and resets it with Ctrl+0, keeping th
 	await expect.poll(zoom).toBe(0);
 });
 
+test('shows a zoom other than 100% in the title bar, and a click there resets it', async () => {
+	const indicator = shep.window.locator('.titlebar button[aria-label="Actual Size"]');
+	await expect(indicator).toBeHidden();
+	await press(first(), '=', ['control']);
+	await expect(indicator).toHaveText('105%');
+	await indicator.click();
+	await expect(indicator).toBeHidden();
+});
+
 test('lets a service notify, and a click on its notification brings it forward', async () => {
 	expect(await inService<boolean>(shep, second(), '!!window.__shepNotifications && window.shepService.mayNotify()')).toBe(true);
 	await inService(shep, second(), 'window.shepService.notificationClicked()');
