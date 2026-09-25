@@ -12,6 +12,10 @@ import { keepLinksInTheApp } from './auxiliary.ts';
 import { attachPageMenu } from './menus.ts';
 import { serviceMenu } from './servicemenu.ts';
 import { NOTIFICATION_WRAPPER } from './notifications.ts';
+
+// A page that marks itself as a title bar, as Teams does, would take the window's clicks, and
+// the region outlives the page. A user stylesheet outranks the page's own !important.
+const NO_WINDOW_DRAGGING = '* { app-region: no-drag !important; }';
 import type { KeyInput } from './shortcuts.ts';
 import { mainMessages } from './messages.ts';
 import { fill } from '../shared/i18n/index.ts';
@@ -377,7 +381,10 @@ export class ServiceHost {
 		attachPageMenu(contents);
 		keepLinksInTheApp(contents, contents, () => this.existing(record.id)?.url ?? '');
 		this.applyMute(record.id);
-		contents.on('dom-ready', () => { contents.executeJavaScript(NOTIFICATION_WRAPPER).catch(() => {}); });
+		contents.on('dom-ready', () => {
+			contents.executeJavaScript(NOTIFICATION_WRAPPER).catch(() => {});
+			contents.insertCSS(NO_WINDOW_DRAGGING, { cssOrigin: 'user' }).catch(() => {});
+		});
 
 		// the history the navigation events report is committed a tick after they arrive
 		const announceSoon = () => setImmediate(() => this.announce());
