@@ -33,6 +33,14 @@ jobs:
         run: npm install --no-audit --no-fund
 
       # The suite launches the real app, which needs a display: scripts/headless.sh gives it xvfb.
+      # xdotool sends the real clicks the title bar test needs. Ubuntu keeps unprivileged user
+      # namespaces from Chromium's sandbox unless told otherwise.
+      - name: Prepare the display
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb xdotool
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
       - name: Test
         run: npm test
 

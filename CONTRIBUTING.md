@@ -1,39 +1,33 @@
 # Contributing
 
-Shep is a fork of Rambox Community Edition, revived after upstream archived it. It is small and the process is light. What follows is what you actually need.
+Shep has one maintainer, who commits to `main`. A pull request from a branch is welcome; so is an issue that says what happened, on which distribution and desktop, and, for a service that misbehaves, which address you added.
 
-## Getting it running
-
-Node 22 or newer, and npm. Nothing else. The prerequisites the old guide listed, Sencha Cmd and Ruby, are gone: the renderer now boots from a generated file instead of a Sencha build.
+## Running it
 
 ```bash
-git clone https://github.com/lukasborges/shep.git
-cd shep
 npm install
-npm run bootstrap
 npm start
+npm test
 ```
 
-On Linux, `npm start` may abort with a fatal GPU error, because the Electron that npm installs ships its sandbox helper without the setuid bit. Start it with `--no-sandbox`, which is what the packaged Linux builds already do.
+`npm test` has to pass before a change goes in: it typechecks, lints, builds, runs the unit tests and then the end-to-end suite, which launches the app. Install `xvfb-run` and `xdotool` so its windows open on a virtual display instead of your desktop.
 
-## Branches and commits
+## The rule for services
 
-Never commit to `main`. Branch as `fix/short-description` or `feature/short-description`.
-
-Keep the commit subject on one line and say what changed rather than what you touched.
-
-## Services
-
-There is no catalogue to add a service to: the Add window takes any address, and every service is handled the same way, with its favicon as the icon, its page title as the unread count, and its links kept inside the app. A change that only one service needs is a change to that general rule, not a special case.
-
-## Building
-
-```bash
-npm run build:linux   # AppImage, deb and tar.gz into dist/
-```
-
-Windows and macOS targets are configured but have not been built or tested by this fork. If you have those machines, reports are welcome.
+Shep has no code for any one service, and a change must not add any. Every service is a web address with a session of its own: its icon is its favicon, its count is its title, its links stay in the app. When a site does not work, the fix is to the rule every site goes through, with a test that shows the rule on a page of the suite's own, in `tests/e2e/fixtures`. A host name in the source is the sign of a special case.
 
 ## Tests
 
-The suite is a single Spectron test inherited from upstream, and Spectron was abandoned in 2022. Moving it to Playwright is open work and a good first contribution.
+Put a pure function under test in `tests/unit`, with `node:test`. Anything that needs Electron goes in `tests/e2e`, with Playwright, against fixture pages the suite serves on localhost. Only `npm run test:network` loads real sites. A bug fix comes with the test that failed before it.
+
+## Strings
+
+Every string the interface shows is a key in `src/shared/i18n/en.ts` and in each of the nine other catalogues beside it. The typecheck and a unit test refuse a key that is missing from any of them. A translation you are not sure of is still better than English in the middle of another language, and a native speaker's correction is always welcome.
+
+## Commits
+
+One line, in English, starting with a [gitmoji](https://gitmoji.dev) and following [Conventional Commits](https://www.conventionalcommits.org): `🐛 fix(links): keep a sign-in popup attached to its opener`. The subject says what changed for someone using the app, not which files moved.
+
+## Style
+
+Tabs, LF, and whatever the file around your change already does. `.editorconfig` settles the whitespace and ESLint the mistakes; there is no formatter to argue with.

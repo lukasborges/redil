@@ -1,76 +1,92 @@
 <div align="center">
-  <img src="./resources/Icon.png" width="160" alt="Shep" />
+  <img src="./resources/Icon.png" width="128" alt="" />
   <h1>Shep</h1>
   <p>One window for the web apps you already use in the browser.</p>
-  <p><a href="https://www.gnu.org/licenses/gpl-3.0.en.html">GNU GPL v3</a></p>
 </div>
 
 <p align="center">
-  <img src="./resources/screenshots/shep-light.png" width="49%" alt="Shep on Linux, light theme" />
-  <img src="./resources/screenshots/shep-dark.png" width="49%" alt="Shep on Linux, dark theme" />
+  <img src="./resources/screenshots/shep-1.0-light.png" width="49%" alt="Shep with five services in the rail and GitHub open, light theme" />
+  <img src="./resources/screenshots/shep-1.0-dark.png" width="49%" alt="The same window in the dark theme" />
 </p>
 
----
+Shep keeps WhatsApp, Gmail, Slack, Teams, Claude or anything else with a web address in a rail down the left of one window, each signed in on its own, each counting what is unread. It is made for Linux and for GNOME in particular: the icon, the palette and the dialogs follow GNOME's guidelines, and the window follows the desktop's light or dark style.
 
-This is a maintained fork of [Rambox Community Edition](https://github.com/ramboxapp/community-edition), which its authors archived in 2022 and pointed at their commercial product. The code was left unbuildable: the renderer was compiled by a version of Sencha Cmd that is no longer distributed, and the generated file it produced was never committed.
+## How it works
 
-That is fixed. The app builds and runs from this repository with nothing but npm.
+There is no catalogue to pick from. Press `+`, type the address, and that is the service.
 
-## What changed since upstream
+- **Every service works the same way.** Nothing in Shep knows one site from another, so there are no per-service scripts to go stale when a site changes.
+- **The icon is the page's favicon**, as the page itself shows it. A service that marks news by changing its favicon, like Google Chat, shows it in the rail that way.
+- **The unread count comes from the page title**, the `(3)` most web apps put in front of it. A title that says there is something without a number, `(•)`, draws a dot.
+- **Links stay in the app.** A link to another site opens in a window of Shep's that shares the service's session, so it is already signed in. When a sign-in there finishes back on the service, the window closes and the service carries on. Open Link in Browser is on the right click.
+- **Pages see a browser**: the Chromium Shep is built on, with nothing of Shep or Electron in its user agent, which is what sign-ins and captchas check for.
+- **Everything done to a service is on its right click**: back and forward, zoom, notifications, sound, disable, edit, move to a workspace, remove.
 
-- **Electron 13 to 44.** The renderer was moved off three APIs Electron has since removed: the `remote` module, the `new-window` event, and `desktopCapturer` in the renderer.
-- **Builds without Sencha Cmd.** `scripts/gen-bootstrap.js` boots the app from the Ext JS build and theme CSS already vendored here. The Sencha workspace, the build files and the Sass that only that toolchain could read are gone.
-- **The renderer is isolated.** `contextIsolation` is on and `nodeIntegration` off; the page reaches the main process through a single preload with a closed list of channels. Service pages are isolated and sandboxed with it, because Electron will not let a guest be less isolated than the window hosting it.
-- **Packaging rebuilt** on electron-builder, straight from the repository, with no dependency on the archived artifact repo that upstream's CI cloned.
-- **Service permissions are refused by default.** The old handler granted camera, microphone and location to every service that asked. Camera, microphone and screen capture are now asked about once per service, and the answer is kept.
-- **A third-party tracker and a hardcoded API key** were removed from the renderer, along with the dead Auth0 sign-in and profile sync, which pointed at infrastructure this fork cannot use.
-- **No catalogue and no recipes.** A service is any address you type, and every service works the same way: its icon is the page's favicon, its unread count comes from the page title, and its links open inside the app in a window that shares its session, with Open Link in Browser on the right click. Upstream's list of a hundred services, each with its own unread script, kept breaking as the sites changed, and nothing in the code names a service any more.
-- **Pages see a browser.** Every service is told it is the Chromium it runs on, as the app's default rather than as an override per page, which is what Cloudflare's captcha refuses: Todoist's login failed on it. The pages also follow the app's light or dark theme, which a webview is not told on its own.
-- **A new interface.** Services sit in a rail of icons down the left, and everything done to one is on its right click, notifications and sound included; a title bar of the app's own carries the page's back, forward and reload; workspaces group services and switch from the top of the rail; adding a service is typing its address behind the `+`; preferences are five sections instead of one scroll of fourteen controls; and a dark theme follows the desktop.
-- **A mark of its own**, drawn to the GNOME app icon guidelines: a border collie puppy on the template's square, in Adwaita blue, with a monochrome tray icon on Linux. `npm run icons` renders every PNG and ICO in the tree from the SVGs in `resources/logo`.
-- **Tests and a linter.** A Playwright suite launches the real app and drives it; `npm test` runs ESLint first.
+Services can be grouped into **workspaces**, one on screen at a time, switched from the top of the rail. The ones out of sight keep running, counting and notifying, and the switcher shows a dot when one of them has something new.
+
+Shep also has a do-not-disturb switch, a lock screen with a password, an icon in the top bar, spell checking, screen sharing through the desktop's own picker on Wayland, find in page, and a report of what each service's title says, for when a count looks wrong. It speaks English, Portuguese, Spanish, French, German, Italian, Russian, Japanese, Chinese and Korean.
 
 ## Install
 
-[Releases](https://github.com/lukasborges/shep/releases) carry a Linux AppImage. `npm run build:linux` also makes a deb and a tarball.
+[Releases](https://github.com/lukasborges/shep/releases) carry an AppImage, a deb and a tarball for x86-64 Linux. Shep updates itself from those releases.
 
-Shep was briefly called Redil. Quit Redil before the first launch of Shep: that launch moves `~/.config/Redil` to `~/.config/Shep`, with your services, sign-ins and preferences.
+The AppImage needs FUSE 2, which some distributions no longer install by default: `fuse-libs` on Fedora, `libfuse2t64` on Ubuntu 24.04 and later, `libfuse2` on Debian. Without it, run the AppImage with `--appimage-extract-and-run`.
 
-The AppImage needs FUSE 2, which some distributions no longer install by default. On Fedora that is `fuse-libs`; on Debian and Ubuntu, `libfuse2`. Without it, run the AppImage with `--appimage-extract-and-run`.
+Shep 1.0 is a new app and starts from a clean profile. Services added in 0.10 have to be added again.
 
-Windows and macOS are configured but have not been built or tested by this fork.
+## Keyboard
 
-## Run from source
-
-```bash
-npm install
-npm run bootstrap     # writes bootstrap.js, which is not committed
-npm start
-```
-
-On Linux, `npm start` may abort with a fatal GPU error, because the Electron installed by npm ships its sandbox helper without the setuid bit. Start it with `--no-sandbox`, which is what the packaged Linux builds already do.
-
-```bash
-npm test                # ESLint, then the Playwright suite
-npm run build:linux     # AppImage, deb and tar.gz into dist/
-```
+| Keys | |
+|---|---|
+| `Ctrl+1` … `Ctrl+9` | The first nine services in the rail |
+| `Ctrl+Tab`, `Ctrl+Shift+Tab` | The next and the previous service |
+| `Ctrl+Alt+1` … `Ctrl+Alt+9` | A workspace, the number after the last being all services |
+| `Alt+←`, `Alt+→` | Back and forward in the page |
+| `Ctrl+R`, `F5` | Reload, and `Ctrl+Shift+R` without the cache |
+| `Ctrl+F` | Find in page |
+| `Ctrl+=`, `Ctrl+-`, `Ctrl+0` | Zoom in, out, back to actual size |
+| `Ctrl+N` | Add a service |
+| `Ctrl+,` | Preferences |
+| `Alt+Shift+D` | Do not disturb |
+| `Alt+Shift+L` | Lock |
+| `F11` | Full screen |
+| `Ctrl+Q` | Quit |
 
 ## Privacy
 
-No account is needed and none is offered. The app stores nothing remotely: your list of services lives in the renderer's local storage, and each service keeps its own session in a persistent Electron partition, so you stay signed in between launches until you remove the service.
+There is no account and no server. Shep keeps your services, workspaces and preferences in `~/.config/Shep/shep.json`, and each service keeps its own session beside it, so you stay signed in until you remove the service, which deletes its session too.
 
-Sessions belong to the services themselves. Shep is a frame around their web apps and does not see inside them.
+Shep sends nothing about you anywhere. It makes two requests of its own: the update check, to this repository's releases on GitHub, and the download of a spell-checking dictionary the first time a language needs one, which Chromium fetches from Google. What each service does is up to the service: Shep is a frame around its web app and does not look inside.
 
-## Contributing
+Camera, microphone and screen sharing are asked about once per service and the answer is remembered. Notifications follow the service's own switch, and a few that expose nothing, such as going full screen, are granted. Every other permission a page asks for is refused.
 
-This fork has one maintainer, who commits to `main`. Contributions are welcome as pull requests from a branch; [CONTRIBUTING.md](./CONTRIBUTING.md) is upstream's and still describes how to write one, except for its prerequisites: Sencha Cmd and Ruby are no longer needed.
+The lock password is stored as a salted scrypt hash. The lock hides the window's contents; it does not encrypt the sessions on disk.
 
-Translations live generated in `resources/languages`. The download half of that pipeline is gone — it called a Crowdin API version that now answers 301, through a client that no longer loads on a modern Node, against a project this fork does not own. Until there is a Crowdin project for Shep, those generated files are the only source there is, and strings added since ship in English.
+## Development
 
-## Disclosure
+Node 22 or later and npm.
 
-Shep is not affiliated with any of the messaging services it opens, nor with Rambox LLC or its product.
+```bash
+npm install
+npm start               # the app, with the interface reloading as you edit
+npm test                # typecheck, lint, build, unit tests, then the end-to-end suite
+npm run package         # AppImage, deb and tarball into dist/
+```
+
+A run from the repository uses its own profile, `~/.config/Shep-dev`, and never touches the installed app's.
+
+The end-to-end suite launches the real app, so it opens windows. With `xvfb-run` installed it opens them on a virtual display instead of your desktop; one test also needs `xdotool`. On Fedora that is `dnf install xorg-x11-server-Xvfb xdotool`. `npm run test:network` adds the tests that load real sites, such as the one that renders a Cloudflare captcha.
+
+If Electron aborts at start with a sandbox error, as it does on Ubuntu 24.04, the distribution keeps unprivileged user namespaces from Chromium's sandbox. Pass `--no-sandbox`, which is what the packaged builds do.
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) before sending a change.
+
+## Credits
+
+Shep began as a fork of [Rambox Community Edition](https://github.com/ramboxapp/community-edition), archived in 2022, and 1.0 is a rewrite that keeps its name and none of its code. The idea that every service should work the same way comes from [ElectronIM](https://github.com/manusa/electronim). The workspace icons are from [Lucide](https://lucide.dev).
+
+Shep is not affiliated with any of the services it opens.
 
 ## Licence
 
-[GNU GPL v3](./LICENSE). Ext JS 5.1.1 is vendored under the same licence.
+[GNU GPL v3](./LICENSE).

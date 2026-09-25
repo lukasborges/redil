@@ -1,25 +1,20 @@
-<!-- Please complete the follow issue template. If is not an issue, feel free to remove the steps and behaviors -->
+<!-- For a service that misbehaves, say which address you added and what it does in a browser. -->
+
+### What happened
+
+
+
+### What you expected
+
+
 
 ### Steps to reproduce
 
-1. 
-2. 
-3. 
+1.
+2.
 
-### Expected behavior
+### Environment
 
-<!-- Write here -->
-
-### Actual behavior
-
-<!-- Write here -->
-
-### ENVIRONMENT
-
-<!-- Complete your environment -->
-
-> Shep: v0.X.X
-
-> OS: XXXX
-
-> Arch: x64 or ia32
+- Shep: <!-- Preferences › Advanced › About Shep -->
+- Distribution and desktop: <!-- e.g. Fedora 44, GNOME on Wayland -->
+- Installed as: <!-- AppImage, deb, tarball, or from source -->

@@ -3,7 +3,7 @@ name: Release
 # Builds and uploads the artifacts when a version tag is pushed.
 #
 # The tag carries no "v": the publish config sets vPrefixedTagName to false, and
-# electron-updater looks the release up by the bare version. Tag 0.9.0, not v0.9.0.
+# electron-updater looks the release up by the bare version. Tag 1.0.1, not v1.0.1.
 #
 # electron-builder uploads into a draft release, so nothing reaches anyone until
 # the draft is published by hand. That also means the auto-updater sees nothing

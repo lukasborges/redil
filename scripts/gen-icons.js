@@ -17,7 +17,6 @@ const root = path.join(__dirname, '..');
 const logo = path.join(root, 'resources', 'logo');
 
 const MASTER = path.join(logo, 'Logo.svg');
-const UNREAD = path.join(logo, 'LogoUnread.svg');
 const LINUX_TRAY = path.join(logo, 'LogoTray.svg');
 const LINUX_TRAY_UNREAD = path.join(logo, 'LogoTrayUnread.svg');
 
@@ -48,7 +47,6 @@ function render(from, to, size) {
 function main() {
 	for (const size of GALLERY) render(MASTER, path.join(logo, `${size}x${size}.png`), size);
 	render(MASTER, path.join(logo, 'Logo.png'), 1024);
-	render(UNREAD, path.join(logo, 'Logo_unread.png'), 1024);
 
 	for (const size of INSTALLER) {
 		render(MASTER, path.join(root, 'resources', 'installer', 'icons', `${size}x${size}.png`), size);
@@ -56,7 +54,7 @@ function main() {
 
 	for (const icon of APP) render(icon.from, path.join(root, icon.to), icon.size);
 
-	const written = GALLERY.length + 2 + INSTALLER.length + APP.length;
+	const written = GALLERY.length + 1 + INSTALLER.length + APP.length;
 	console.log(`${written} files written from ${path.relative(root, logo)}`);
 }
 
