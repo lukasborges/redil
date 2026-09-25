@@ -20,11 +20,12 @@ Press `+` and pick a service from the list, or type any address; either way, tha
 - **The unread count comes from the page title**, the `(3)` most web apps put in front of it. A title that says there is something without a number, `(•)`, draws a dot.
 - **Links stay in the app.** A link to another site opens in a window of Shep's that shares the service's session, so it is already signed in. When a sign-in there finishes back on the service, the window closes and the service carries on. Open Link in Browser is on the right click.
 - **Pages see a browser**: the Chromium Shep is built on, with nothing of Shep or Electron in its user agent, which is what sign-ins and captchas check for.
-- **Everything done to a service is on its right click**: back and forward, zoom, notifications, sound, disable, edit, move to a workspace, remove.
+- **The page in view is driven from the title bar**: back, forward, reload, home to the address it was added with, and find. A zoom other than 100% shows there too, and a click puts it back.
+- **The service itself is on its right click in the rail**: reload, notifications, sound, disable, edit, move to a workspace, remove.
 
 Services can be grouped into **workspaces**, one on screen at a time, switched from the top of the rail. The ones out of sight keep running, counting and notifying, and the switcher shows a dot when one of them has something new.
 
-Shep also has a do-not-disturb switch, a lock screen with a password, an icon in the top bar, spell checking, screen sharing through the desktop's own picker on Wayland, find in page, and a report of what each service's title says, for when a count looks wrong. It speaks English, Portuguese, Spanish, French, German, Italian, Russian, Japanese, Chinese and Korean.
+Shep also has a do-not-disturb switch, a lock screen with a password, an icon in the system tray, spell checking, screen sharing through the desktop's own picker on Wayland, and a report of what each service's title says, for when a count looks wrong. It speaks English, Portuguese, Spanish, French, German, Italian, Russian, Japanese, Chinese and Korean.
 
 ## Install
 
