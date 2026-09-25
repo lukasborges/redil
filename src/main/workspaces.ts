@@ -1,5 +1,5 @@
 import { dialog, Menu, type BrowserWindow } from 'electron';
-import { WORKSPACE_HUES, workspaceForNumber, type ActiveWorkspace, type Workspace } from '../shared/workspace.ts';
+import { WORKSPACE_ICONS, hueOf, workspaceForNumber, type ActiveWorkspace, type Workspace, type WorkspaceIcon } from '../shared/workspace.ts';
 import { store } from './store.ts';
 import { workspaceMenu } from './workspacemenu.ts';
 import type { ServiceHost } from './services.ts';
@@ -7,7 +7,12 @@ import { mainMessages } from './messages.ts';
 import { fill } from '../shared/i18n/index.ts';
 
 export class Workspaces {
-	constructor(private readonly window: BrowserWindow, private readonly services: ServiceHost, private readonly askForName: (id: string | null) => void) {}
+	constructor(
+		private readonly window: BrowserWindow,
+		private readonly services: ServiceHost,
+		private readonly askForName: (id: string | null) => void,
+		private readonly askForIcon: (id: string) => void
+	) {}
 
 	list(): Workspace[] {
 		return store.get('workspaces');
@@ -22,7 +27,7 @@ export class Workspaces {
 		if ( workspace !== undefined ) this.choose(workspace);
 	}
 
-	// A new workspace takes a hue at random, and becomes the one on screen.
+	// A new workspace takes an icon at random, and becomes the one on screen.
 	save(id: string | null, name: string): void {
 		const trimmed = name.trim();
 		if ( !trimmed ) return;
@@ -31,10 +36,17 @@ export class Workspaces {
 			this.services.showWorkspace(store.get('activeWorkspace'));
 			return;
 		}
-		const hue = WORKSPACE_HUES[Math.floor(Math.random() * WORKSPACE_HUES.length)] ?? 'blue';
-		const created: Workspace = { id: 'w' + Date.now().toString(36), name: trimmed, hue };
+		const icon = WORKSPACE_ICONS[Math.floor(Math.random() * WORKSPACE_ICONS.length)] ?? 'briefcase';
+		const created: Workspace = { id: 'w' + Date.now().toString(36), name: trimmed, icon, hue: hueOf(icon) };
 		store.set('workspaces', [...this.list(), created]);
 		this.choose(created.id);
+	}
+
+	// The initials keep the hue the workspace had.
+	setIcon(id: string, icon: WorkspaceIcon | null): void {
+		store.set('workspaces', this.list().map(workspace => workspace.id !== id ? workspace
+			: { ...workspace, icon, hue: icon ? hueOf(icon) : workspace.hue }));
+		this.services.showWorkspace(store.get('activeWorkspace'));
 	}
 
 	// Its services stay, in no workspace, which puts them in every one.
@@ -57,6 +69,7 @@ export class Workspaces {
 			choose: workspace => this.choose(workspace),
 			create: () => this.askForName(null),
 			rename: id => this.askForName(id),
+			changeIcon: id => this.askForIcon(id),
 			remove: id => { this.remove(id); }
 		}, mainMessages());
 		Menu.buildFromTemplate(items).popup({ window: this.window });

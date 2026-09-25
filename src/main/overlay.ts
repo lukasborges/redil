@@ -5,6 +5,7 @@ export type OverlayDialog =
 	| { dialog: 'add' }
 	| { dialog: 'edit'; serviceId: string }
 	| { dialog: 'workspace'; workspaceId: string | null }
+	| { dialog: 'workspaceIcon'; workspaceId: string }
 	| { dialog: 'preferences' }
 	| { dialog: 'about' }
 	| { dialog: 'unreadReport' }

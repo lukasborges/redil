@@ -17,6 +17,7 @@ import { spellingLanguages } from './spelling.ts';
 import { answerScreenSharing, type PickedSource } from './screenshare.ts';
 import { PreferenceHost, applyThemeBeforeTheWindow } from './preferences.ts';
 import { APP_ACTIONS, type AppAction } from '../shared/channels.ts';
+import { WORKSPACE_ICONS } from '../shared/workspace.ts';
 import { DEFAULT_PREFERENCES, type Preferences } from '../shared/preferences.ts';
 import { shortcutFor, type KeyInput, type ShortcutAction } from './shortcuts.ts';
 import type { AppState } from '../shared/channels.ts';
@@ -76,6 +77,10 @@ if ( !app.requestSingleInstanceLock() ) {
 	handle('workspaces:menu', () => workspaces?.showMenu());
 	handle('workspaces:save', (event, id, name) => workspaces?.save(typeof id === 'string' ? id : null, text(name)));
 	handle('workspaces:get', (event, id) => store.get('workspaces').find(workspace => workspace.id === text(id)) ?? null);
+	handle('workspaces:setIcon', (event, id, icon) => {
+		const chosen = WORKSPACE_ICONS.find(candidate => candidate === icon) ?? null;
+		workspaces?.setIcon(text(id), chosen);
+	});
 
 	const appState = (): AppState => ({
 		dontDisturb: store.get('dontDisturb'),
@@ -263,7 +268,9 @@ if ( !app.requestSingleInstanceLock() ) {
 				answerScreenSharing(session, pickScreen);
 			}
 		});
-		workspaces = new Workspaces(window, services, id => overlay?.open({ dialog: 'workspace', workspaceId: id }));
+		workspaces = new Workspaces(window, services,
+			id => overlay?.open({ dialog: 'workspace', workspaceId: id }),
+			id => overlay?.open({ dialog: 'workspaceIcon', workspaceId: id }));
 		window.webContents.once('did-finish-load', () => {
 			services?.start();
 			const lockOnStart = preferences().lockOnStart && store.get('lockPasswordHash') !== '';

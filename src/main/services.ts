@@ -191,15 +191,15 @@ export class ServiceHost {
 			back: () => this.navigate(id, 'back'),
 			forward: () => this.navigate(id, 'forward'),
 			reload: () => this.navigate(id, 'reload'),
-			zoomIn: () => setZoom(this.record(id).zoomLevel + ZOOM_STEP),
-			zoomOut: () => setZoom(this.record(id).zoomLevel - ZOOM_STEP),
+			zoomIn: () => setZoom((this.existing(id)?.zoomLevel ?? 0) + ZOOM_STEP),
+			zoomOut: () => setZoom((this.existing(id)?.zoomLevel ?? 0) - ZOOM_STEP),
 			resetZoom: () => setZoom(0),
-			toggleNotifications: () => updateService(id, { notifications: !this.record(id).notifications }),
+			toggleNotifications: () => updateService(id, { notifications: !(this.existing(id)?.notifications ?? true) }),
 			toggleSound: () => {
-				updateService(id, { muted: !this.record(id).muted });
+				updateService(id, { muted: !(this.existing(id)?.muted ?? false) });
 				this.applyMute(id);
 			},
-			toggleEnabled: () => this.setEnabled(id, !this.record(id).enabled),
+			toggleEnabled: () => { const current = this.existing(id); if ( current ) this.setEnabled(id, !current.enabled); },
 			edit: () => this.events.edit(id),
 			moveToWorkspace: workspace => this.moveToWorkspace(id, workspace),
 			remove: () => { this.confirmRemove(id); },
@@ -218,7 +218,7 @@ export class ServiceHost {
 	}
 
 	mayNotify(id: string): boolean {
-		return !store.get('dontDisturb') && this.record(id).notifications;
+		return !store.get('dontDisturb') && (this.existing(id)?.notifications ?? false);
 	}
 
 	activeContents(): WebContents | undefined {
@@ -273,7 +273,9 @@ export class ServiceHost {
 	zoomActive(step: 1 | -1 | 0): void {
 		const active = store.get('activeServiceId');
 		if ( !active ) return;
-		const level = step === 0 ? 0 : this.record(active).zoomLevel + step * ZOOM_STEP;
+		const record = this.existing(active);
+		if ( !record ) return;
+		const level = step === 0 ? 0 : record.zoomLevel + step * ZOOM_STEP;
 		updateService(active, { zoomLevel: level });
 		this.contentsOf(active)?.setZoomLevel(level);
 	}
@@ -290,7 +292,8 @@ export class ServiceHost {
 	}
 
 	private applyMute(id: string): void {
-		this.contentsOf(id)?.setAudioMuted(store.get('dontDisturb') || this.record(id).muted);
+		const record = this.existing(id);
+		if ( record ) this.contentsOf(id)?.setAudioMuted(store.get('dontDisturb') || record.muted);
 	}
 
 	private async confirmRemove(id: string): Promise<void> {
@@ -313,9 +316,14 @@ export class ServiceHost {
 	}
 
 	private record(id: string): ServiceRecord {
-		const record = store.get('services').find(service => service.id === id);
+		const record = this.existing(id);
 		if ( !record ) throw new Error('No service with id ' + id);
 		return record;
+	}
+
+	// What a page's own events use: they can still arrive after the service is removed.
+	private existing(id: string): ServiceRecord | undefined {
+		return store.get('services').find(service => service.id === id);
 	}
 
 	private layout(): void {
@@ -360,14 +368,14 @@ export class ServiceHost {
 		});
 		this.running.set(record.id, { view, unread: 0, pageTitle: '', disposeBlinkGuard: blinkGuard.dispose });
 
-		applyPermissionPolicy(contents.session, this.window, () => this.record(record.id));
+		applyPermissionPolicy(contents.session, this.window, () => this.existing(record.id));
 		this.events.sessionStarted(contents.session);
 		// typed into Preferences, and so an override, which Cloudflare's Turnstile refuses
 		const { userAgent } = preferences();
 		if ( userAgent ) contents.setUserAgent(userAgent);
 		followColorScheme(contents);
 		attachPageMenu(contents);
-		keepLinksInTheApp(contents, contents, () => this.record(record.id).url);
+		keepLinksInTheApp(contents, contents, () => this.existing(record.id)?.url ?? '');
 		this.applyMute(record.id);
 		contents.on('dom-ready', () => { contents.executeJavaScript(NOTIFICATION_WRAPPER).catch(() => {}); });
 
@@ -383,7 +391,8 @@ export class ServiceHost {
 		});
 		contents.on('page-favicon-updated', (event, favicons) => {
 			faviconFor(favicons, url => contents.session.fetch(url)).then(favicon => {
-				if ( !favicon || favicon === this.record(record.id).favicon ) return;
+				const current = this.existing(record.id);
+				if ( !favicon || !current || favicon === current.favicon ) return;
 				updateService(record.id, { favicon });
 				this.announce();
 			}, () => {});
@@ -394,9 +403,9 @@ export class ServiceHost {
 		contents.on('found-in-page', (event, result) => {
 			if ( !this.window.isDestroyed() ) this.window.webContents.send('services:found', record.id, result.activeMatchOrdinal, result.matches);
 		});
-		contents.on('did-finish-load', () => contents.setZoomLevel(this.record(record.id).zoomLevel));
+		contents.on('did-finish-load', () => contents.setZoomLevel(this.existing(record.id)?.zoomLevel ?? 0));
 		contents.on('certificate-error', (event, url, error, certificate, callback) => {
-			const trusted = this.record(record.id).trust;
+			const trusted = this.existing(record.id)?.trust ?? false;
 			if ( trusted ) event.preventDefault();
 			callback(trusted);
 			if ( !trusted && !this.window.isDestroyed() ) this.window.webContents.send('services:certificate-error', record.id);

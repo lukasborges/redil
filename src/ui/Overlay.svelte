@@ -3,6 +3,7 @@
 	import type { AppState } from '../shared/channels.ts';
 	import ServiceDialog from './ServiceDialog.svelte';
 	import WorkspaceDialog from './WorkspaceDialog.svelte';
+	import WorkspaceIconDialog from './WorkspaceIconDialog.svelte';
 	import Preferences from './Preferences.svelte';
 	import AboutDialog from './AboutDialog.svelte';
 	import UnreadReport from './UnreadReport.svelte';
@@ -14,6 +15,7 @@
 		| { dialog: 'add' }
 		| { dialog: 'edit'; serviceId: string }
 		| { dialog: 'workspace'; workspaceId: string | null }
+		| { dialog: 'workspaceIcon'; workspaceId: string }
 		| { dialog: 'preferences' | 'about' | 'unreadReport' | 'lock' }
 		| { dialog: 'lockPassword'; thenLock?: boolean }
 		| { dialog: 'screenPicker'; sources: { id: string; name: string; thumbnail: string }[] };
@@ -61,6 +63,8 @@
 		{#key opening}
 			{#if shown.dialog === 'workspace'}
 				<WorkspaceDialog {messages} workspaceId={shown.workspaceId} onclose={close} />
+			{:else if shown.dialog === 'workspaceIcon'}
+				<WorkspaceIconDialog {messages} workspaceId={shown.workspaceId} onclose={close} />
 			{:else if shown.dialog === 'preferences'}
 				<Preferences {messages} onclose={close} onopen={openFromPreferences} />
 			{:else if shown.dialog === 'about'}

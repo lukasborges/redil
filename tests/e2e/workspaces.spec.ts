@@ -89,3 +89,25 @@ test('moves a service to another workspace from its Edit window', async () => {
 	await inOverlay(`(() => { const select = document.querySelector('select[name=workspace]'); select.value = 'w1'; select.dispatchEvent(new Event('change', { bubbles: true })); document.querySelector('form').requestSubmit(); })()`);
 	await expect.poll(rail).toEqual(['Localhost']);
 });
+
+test('gives a new workspace an icon, and changes it from the grid with the initials first', async () => {
+	const sideProject = async () => (await state()).workspaces.find(workspace => workspace.name === 'Side project');
+	const created = await sideProject();
+	expect(created?.icon).toBeTruthy();
+
+	await shep.window.evaluate(id => window.shep.invoke('overlay:open', { dialog: 'workspaceIcon', workspaceId: id }), created?.id);
+	await expect.poll(() => inOverlay<number>('document.querySelectorAll(".icons .grid button").length')).toBe(30);
+	expect(await inOverlay<string>('document.querySelector(".icons .grid button[aria-checked=true]")?.getAttribute("aria-label")')).toBe(created?.icon);
+
+	await inOverlay('document.querySelector(".icons .grid button[aria-label=rocket]").click()');
+	await expect.poll(async () => (await sideProject())?.icon).toBe('rocket');
+	await expect(shep.window.locator('.switcher svg')).toBeVisible();
+	const hue = (await sideProject())?.hue;
+
+	await shep.window.evaluate(id => window.shep.invoke('overlay:open', { dialog: 'workspaceIcon', workspaceId: id }), created?.id);
+	await expect.poll(() => inOverlay<number>('document.querySelectorAll(".icons .grid button").length')).toBe(30);
+	await inOverlay('document.querySelector(".icons .grid button").click()');
+	await expect.poll(async () => (await sideProject())?.icon).toBe(null);
+	expect((await sideProject())?.hue).toBe(hue);
+	await expect(shep.window.locator('.switcher .initials')).toHaveText('SP');
+});

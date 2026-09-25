@@ -34,9 +34,11 @@ async function ask(window: BrowserWindow, service: ServiceRecord, permission: st
 	return allowed;
 }
 
-export function applyPermissionPolicy(session: Session, window: BrowserWindow, current: () => ServiceRecord): void {
+// current() is undefined once the service is removed, while its session can still be asking.
+export function applyPermissionPolicy(session: Session, window: BrowserWindow, current: () => ServiceRecord | undefined): void {
 	session.setPermissionRequestHandler((contents, permission, callback) => {
 		const service = current();
+		if ( !service ) return callback(false);
 		if ( permission === 'notifications' ) return callback(service.notifications);
 		if ( SILENT_PERMISSIONS.includes(permission) ) return callback(true);
 		if ( CALL_PERMISSIONS.includes(permission) ) return callback(service.media);
@@ -53,6 +55,7 @@ export function applyPermissionPolicy(session: Session, window: BrowserWindow, c
 	// navigator.permissions.query never reaches the request handler
 	session.setPermissionCheckHandler((contents, permission) => {
 		const service = current();
+		if ( !service ) return false;
 		if ( permission === 'notifications' ) return service.notifications;
 		if ( SILENT_PERMISSIONS.includes(permission) ) return true;
 		if ( CALL_PERMISSIONS.includes(permission) ) return service.media;

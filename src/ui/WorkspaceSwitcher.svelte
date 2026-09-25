@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Messages } from '../shared/i18n/index.ts';
 	import { appState, showWorkspaceMenu } from './services.svelte.ts';
-	import { initials } from './initials.ts';
+	import WorkspaceAvatar from './WorkspaceAvatar.svelte';
 
 	const { messages }: { messages: Messages } = $props();
 
@@ -9,13 +9,11 @@
 	const label = $derived(active ? active.name : messages['rail.allServices']);
 </script>
 
-<button class="switcher" type="button" title={label} aria-label="{messages['rail.workspaces']}: {label}" onclick={showWorkspaceMenu}
-	style:--hue={active ? `var(--rx-hue-${active.hue})` : 'var(--rx-on-chrome)'}
-	style:--tint={active ? `var(--rx-tint-${active.hue})` : 'var(--rx-hover-on-chrome)'}>
+<button class="switcher" type="button" title={label} aria-label="{messages['rail.workspaces']}: {label}" onclick={showWorkspaceMenu}>
 	{#if active}
-		<span class="avatar">{initials(active.name)}</span>
+		<WorkspaceAvatar name={active.name} hue={active.hue} icon={active.icon ?? null} onRail />
 	{:else}
-		<svg class="avatar" width="30" height="30" viewBox="0 0 30 30" aria-hidden="true">
+		<svg class="all" width="30" height="30" viewBox="0 0 30 30" aria-hidden="true">
 			<rect x="8" y="8" width="6" height="6" rx="1.5" /><rect x="16" y="8" width="6" height="6" rx="1.5" />
 			<rect x="8" y="16" width="6" height="6" rx="1.5" /><rect x="16" y="16" width="6" height="6" rx="1.5" />
 		</svg>
@@ -36,20 +34,17 @@
 		cursor: pointer;
 	}
 
-	.avatar {
+	.all {
 		display: grid;
 		place-items: center;
 		width: 34px;
 		height: 34px;
 		border-radius: 9px;
-		background-color: var(--tint);
-		color: var(--hue);
-		fill: var(--hue);
-		font-size: 12px;
-		font-weight: 700;
+		background-color: var(--rx-hover-on-chrome);
+		fill: var(--rx-on-chrome);
 	}
 
-	.switcher:hover .avatar {
+	.switcher:hover :global(.avatar), .switcher:hover .all {
 		filter: brightness(1.15);
 	}
 

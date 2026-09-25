@@ -5,6 +5,7 @@ export interface WorkspaceMenuActions {
 	choose(id: ActiveWorkspace): void;
 	create(): void;
 	rename(id: string): void;
+	changeIcon(id: string): void;
 	remove(id: string): void;
 }
 
@@ -28,6 +29,12 @@ export function workspaceMenu(workspaces: readonly Workspace[], active: ActiveWo
 		{ label: messages['menu.allServices'], type: 'radio', checked: active === null, accelerator: shortcut(workspaces.length), click: () => actions.choose(null) }
 	];
 	const managing: WorkspaceMenuItem[] = [{ label: messages['menu.newWorkspace'], click: actions.create }];
-	if ( active !== null ) managing.push({ label: messages['menu.renameWorkspace'], click: () => actions.rename(active) }, { label: messages['menu.deleteWorkspace'], click: () => actions.remove(active) });
+	if ( active !== null ) {
+		managing.push(
+			{ label: messages['menu.renameWorkspace'], click: () => actions.rename(active) },
+			{ label: messages['menu.changeIcon'], click: () => actions.changeIcon(active) },
+			{ label: messages['menu.deleteWorkspace'], click: () => actions.remove(active) }
+		);
+	}
 	return [...choices, SEPARATOR, ...managing];
 }

@@ -142,3 +142,24 @@ test('hands a sign-in back to the address the service was added with, though its
 		await closeShep(other);
 	}
 });
+
+test('keeps running when a removed service\'s page asks for something after it is gone', async () => {
+	let other: Shep | undefined;
+	try {
+		other = await launchShep({ store: { services: [serviceRecord('3', at('127.0.0.1', '/service.html'))], activeServiceId: '3' } });
+		const app = other;
+		await expect.poll(() => app.app.evaluate(({ webContents }, url) => webContents.getAllWebContents().some(contents => contents.getURL() === url), at('127.0.0.1', '/service.html'))).toBe(true);
+		// the store reads its file on every get, so this is the service gone while its page lives on
+		await app.app.evaluate(({ app: electronApp }) => {
+			const fs = process.getBuiltinModule('node:fs');
+			const file = electronApp.getPath('userData') + '/shep.json';
+			const saved = JSON.parse(fs.readFileSync(file, 'utf8'));
+			fs.writeFileSync(file, JSON.stringify({ ...saved, services: [] }));
+		});
+		expect(await inService<string>(app, at('127.0.0.1', '/service.html'), 'navigator.permissions.query({ name: "camera" }).then(status => status.state)')).toBe('denied');
+		expect(await inService<boolean>(app, at('127.0.0.1', '/service.html'), 'window.shepService.mayNotify()')).toBe(false);
+		expect(await app.app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().length)).toBe(1);
+	} finally {
+		await closeShep(other);
+	}
+});

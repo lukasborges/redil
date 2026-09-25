@@ -59,13 +59,36 @@ html.overlay, html.overlay body {
 	background: transparent;
 }
 
-/* Workspace hues: Adwaita's 3 for the glyph on the dark rail, over a thin tint of 5. */
+/*
+ * Workspace hues, from the Adwaita palette. The glyph takes the darker shade (5) on a light surface and the
+ * lighter one (3) on a dark surface; the rail is dark in both themes, so there it is always the lighter one.
+ */
 :root {
-	--rx-hue-blue: #62A0EA;    --rx-tint-blue: rgba(53, 132, 228, 0.28);
-	--rx-hue-green: #57E389;   --rx-tint-green: rgba(51, 209, 122, 0.24);
-	--rx-hue-yellow: #F8E45C;  --rx-tint-yellow: rgba(246, 211, 45, 0.24);
-	--rx-hue-orange: #FFA348;  --rx-tint-orange: rgba(255, 120, 0, 0.26);
-	--rx-hue-red: #F66151;     --rx-tint-red: rgba(224, 27, 36, 0.26);
-	--rx-hue-purple: #C061CB;  --rx-tint-purple: rgba(145, 65, 172, 0.30);
-	--rx-hue-brown: #CDAB8F;   --rx-tint-brown: rgba(152, 106, 68, 0.30);
+	--rx-rail-hue-blue: #62A0EA;    --rx-tint-blue: rgba(53, 132, 228, 0.24);
+	--rx-rail-hue-green: #57E389;   --rx-tint-green: rgba(51, 209, 122, 0.22);
+	--rx-rail-hue-yellow: #F8E45C;  --rx-tint-yellow: rgba(246, 211, 45, 0.26);
+	--rx-rail-hue-orange: #FFA348;  --rx-tint-orange: rgba(255, 120, 0, 0.22);
+	--rx-rail-hue-red: #F66151;     --rx-tint-red: rgba(224, 27, 36, 0.20);
+	--rx-rail-hue-purple: #C061CB;  --rx-tint-purple: rgba(145, 65, 172, 0.24);
+	--rx-rail-hue-brown: #CDAB8F;   --rx-tint-brown: rgba(152, 106, 68, 0.26);
+
+	--rx-hue-blue: #1A5FB4;
+	--rx-hue-green: #26A269;
+	--rx-hue-yellow: #C88800;
+	--rx-hue-orange: #C64600;
+	--rx-hue-red: #C01C28;
+	--rx-hue-purple: #813D9C;
+	--rx-hue-brown: #865E3C;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--rx-hue-blue: var(--rx-rail-hue-blue);
+		--rx-hue-green: var(--rx-rail-hue-green);
+		--rx-hue-yellow: var(--rx-rail-hue-yellow);
+		--rx-hue-orange: var(--rx-rail-hue-orange);
+		--rx-hue-red: var(--rx-rail-hue-red);
+		--rx-hue-purple: var(--rx-rail-hue-purple);
+		--rx-hue-brown: var(--rx-rail-hue-brown);
+	}
 }

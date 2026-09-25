@@ -108,6 +108,7 @@
 		"electron-vite": "5.0.0",
 		"eslint": "10.11.0",
 		"eslint-plugin-svelte": "3.23.0",
+		"lucide": "1.48.0",
 		"svelte": "5.57.1",
 		"svelte-check": "4.7.6",
 		"typescript": "5.9.3",
