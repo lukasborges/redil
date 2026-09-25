@@ -203,14 +203,14 @@ if ( !app.requestSingleInstanceLock() ) {
 		}
 	}
 
-	// While locked, a shortcut does nothing, and no key reaches a service.
-	const handleShortcut = (input: KeyInput): boolean => {
+	// While locked, a shortcut does nothing, and no key reaches a page but the lock screen's.
+	const handleShortcut = (input: KeyInput, showsLockScreen = false): boolean => {
 		const shortcut = shortcutFor(input);
 		if ( shortcut ) run(shortcut);
-		return shortcut !== null || store.get('locked');
+		return shortcut !== null || (store.get('locked') && !showsLockScreen);
 	};
-	const listenForShortcuts = (contents: WebContents) => contents.on('before-input-event', (event, input) => {
-		if ( handleShortcut(input) ) event.preventDefault();
+	const listenForShortcuts = (contents: WebContents, showsLockScreen = false) => contents.on('before-input-event', (event, input) => {
+		if ( handleShortcut(input, showsLockScreen) ) event.preventDefault();
 	});
 
 	const toggleWindow = () => {
@@ -229,7 +229,7 @@ if ( !app.requestSingleInstanceLock() ) {
 		if ( startMinimized && !trayIcon ) window.minimize();
 		mainWindow = window;
 		listenForShortcuts(window.webContents);
-		overlay = new Overlay(window, () => services?.focusActive(), listenForShortcuts);
+		overlay = new Overlay(window, () => services?.focusActive(), contents => listenForShortcuts(contents, true));
 		topBarIcon = new TopBarIcon({
 			isWindowShown: () => !!mainWindow?.isVisible(),
 			toggleWindow,

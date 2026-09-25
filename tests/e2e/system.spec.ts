@@ -25,6 +25,15 @@ const fill = (shep: Shep, fields: Record<string, string>) => inOverlay(shep, `((
 	}
 	document.querySelector('form').requestSubmit();
 })()`);
+// through before-input-event, which fill skips
+const typeInOverlay = (shep: Shep, keys: string) => shep.app.evaluate(({ webContents }, keys) => {
+	const overlay = webContents.getAllWebContents().find(contents => contents.getURL().endsWith('#overlay'));
+	for ( const key of keys ) {
+		overlay?.sendInputEvent({ type: 'keyDown', keyCode: key });
+		overlay?.sendInputEvent({ type: 'char', keyCode: key });
+		overlay?.sendInputEvent({ type: 'keyUp', keyCode: key });
+	}
+}, keys);
 const loaded = (shep: Shep, url: string) => shep.app.evaluate(({ webContents }, url) => webContents.getAllWebContents().some(contents => contents.getURL() === url && !contents.isLoading()), url);
 
 test('asks for a password the first time it locks, then hides every service and ignores shortcuts until unlocked', async () => {
@@ -49,7 +58,10 @@ test('asks for a password the first time it locks, then hides every service and 
 
 		await fill(app, { password: 'wolf' });
 		await expect.poll(() => inOverlay<string>(app, 'document.querySelector("[role=alert]")?.textContent ?? ""')).toContain('not the password');
-		await fill(app, { password: 'sheepdog' });
+		await inOverlay(app, 'document.querySelector("input[name=password]").focus()');
+		await typeInOverlay(app, 'sheepdog');
+		await expect.poll(() => inOverlay<string>(app, 'document.querySelector("input[name=password]").value')).toBe('sheepdog');
+		await inOverlay(app, 'document.querySelector("form").requestSubmit()');
 		await expect.poll(() => visibleServiceViews(app)).toBe(1);
 	} finally {
 		await closeShep(shep);
