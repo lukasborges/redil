@@ -15,7 +15,7 @@ Shep keeps WhatsApp, Gmail, Slack, Teams, Claude or anything else with a web add
 
 Press `+` and pick a service from the list, or type any address; either way, that is the service. The list only fills in a name and an address, and a service picked from it is the same as one typed in.
 
-- **Every service works the same way.** Nothing in Shep knows one site from another, so there are no per-service scripts to go stale when a site changes.
+- **Every service works the same way.** Nothing in Shep knows one site from another, so there are no per-service scripts to go stale when a site changes. The one exception is Google's sign-in, which turns away a browser that states its Chrome version, so the request that carries it leaves the version out.
 - **The icon is the page's favicon**, as the page itself shows it. A service that marks news by changing its favicon, like Google Chat, shows it in the rail that way.
 - **The unread count comes from the page title**, the `(3)` most web apps put in front of it. A title that says there is something without a number, `(•)`, draws a dot.
 - **Links stay in the app.** A link to another site opens in a window of Shep's that shares the service's session, so it is already signed in. When a sign-in there finishes back on the service, the window closes and the service carries on. Open Link in Browser is on the right click.

@@ -15,6 +15,7 @@ import { startWithSystem } from './autostart.ts';
 import { Updates } from './updates.ts';
 import { spellingLanguages } from './spelling.ts';
 import { catalogueIcon } from './catalogue.ts';
+import { stripChromeVersionFromGoogleSignInHeader } from './googlesignin.ts';
 import { answerScreenSharing, type PickedSource } from './screenshare.ts';
 import { PreferenceHost, applyThemeBeforeTheWindow } from './preferences.ts';
 import { APP_ACTIONS, type AppAction } from '../shared/channels.ts';
@@ -274,6 +275,7 @@ if ( !app.requestSingleInstanceLock() ) {
 				prefs?.followProxy(session);
 				applySpelling(session);
 				answerScreenSharing(session, pickScreen);
+				stripChromeVersionFromGoogleSignInHeader(session);
 			}
 		});
 		workspaces = new Workspaces(window, services,
