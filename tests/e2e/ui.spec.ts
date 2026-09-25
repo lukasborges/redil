@@ -89,6 +89,24 @@ test('adds a service from the address typed behind the +, naming it after the si
 	await expect(shep.window.locator('.rail .service[aria-label="Localhost"]')).toHaveAttribute('aria-current', 'page');
 });
 
+test('fills in the name and the address from the list behind the +, filtered by what is typed', async () => {
+	await shep.window.locator('.rail .add').click();
+	await expect.poll(overlayShown).toBe(true);
+	expect(await inOverlay<number>('document.querySelectorAll(".catalogue .entry").length')).toBeGreaterThan(40);
+	await typeInto('input[name="address"]', 'slack');
+	await expect.poll(() => inOverlay<string[]>('[...document.querySelectorAll(".catalogue .entry")].map(entry => entry.textContent.trim())')).toEqual(['Slack']);
+	await inOverlay('document.querySelector(".catalogue .entry").click()');
+	await expect.poll(() => inOverlay<string[]>('[document.querySelector("input[name=address]").value, document.querySelector("input[name=name]").value]'))
+		.toEqual(['https://app.slack.com/client', 'Slack']);
+	await typeInto('input[name="address"]', 'intranet.example.com');
+	await expect.poll(() => inOverlay<number>('document.querySelectorAll(".catalogue").length')).toBe(0);
+	await shep.app.evaluate(({ webContents }) => {
+		const overlay = webContents.getAllWebContents().find(contents => contents.getURL().endsWith('#overlay'));
+		overlay?.sendInputEvent({ type: 'keyDown', keyCode: 'Escape' });
+	});
+	await expect.poll(overlayShown).toBe(false);
+});
+
 test('refuses an address that is not a web address, and keeps the dialog open', async () => {
 	await shep.window.locator('.rail .add').click();
 	await expect.poll(overlayShown).toBe(true);

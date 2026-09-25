@@ -54,6 +54,20 @@ export function pickFavicon(candidates: FaviconCandidate[]): string | null {
 	return (sharp[0] ?? [...candidates].sort(byWidth).at(-1))?.dataUrl ?? null;
 }
 
+// The icons a page's <link rel="icon"> tags name, as absolute addresses, then the /favicon.ico every site may have.
+export function iconLinksFrom(html: string, pageUrl: string): string[] {
+	const links: string[] = [];
+	for ( const [tag] of html.matchAll(/<link\b[^>]*>/gi) ) {
+		const rel = /\brel\s*=\s*["']?([^"'>]+)/i.exec(tag)?.[1]?.toLowerCase().split(/\s+/) ?? [];
+		const href = /\bhref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i.exec(tag);
+		const target = href?.[1] ?? href?.[2] ?? href?.[3];
+		if ( !target || !(rel.includes('icon') || rel.includes('apple-touch-icon')) ) continue;
+		try { links.push(new URL(target.replaceAll('&amp;', '&'), pageUrl).href); } catch { /* not an address */ }
+	}
+	links.push(new URL('/favicon.ico', pageUrl).href);
+	return [...new Set(links)];
+}
+
 const FAVICON_BYTES_LIMIT = 1024 * 1024;
 const MAX_FAVICONS_ASKED = 8;
 

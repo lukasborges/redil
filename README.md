@@ -13,7 +13,7 @@ Shep keeps WhatsApp, Gmail, Slack, Teams, Claude or anything else with a web add
 
 ## How it works
 
-There is no catalogue to pick from. Press `+`, type the address, and that is the service.
+Press `+` and pick a service from the list, or type any address; either way, that is the service. The list only fills in a name and an address, and a service picked from it is the same as one typed in.
 
 - **Every service works the same way.** Nothing in Shep knows one site from another, so there are no per-service scripts to go stale when a site changes.
 - **The icon is the page's favicon**, as the page itself shows it. A service that marks news by changing its favicon, like Google Chat, shows it in the rail that way.

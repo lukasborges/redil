@@ -14,6 +14,7 @@ import { whatClosingDoes } from './closing.ts';
 import { startWithSystem } from './autostart.ts';
 import { Updates } from './updates.ts';
 import { spellingLanguages } from './spelling.ts';
+import { catalogueIcon } from './catalogue.ts';
 import { answerScreenSharing, type PickedSource } from './screenshare.ts';
 import { PreferenceHost, applyThemeBeforeTheWindow } from './preferences.ts';
 import { APP_ACTIONS, type AppAction } from '../shared/channels.ts';
@@ -112,6 +113,7 @@ if ( !app.requestSingleInstanceLock() ) {
 		const available = session.defaultSession.availableSpellCheckerLanguages;
 		return { available, automatic: spellingLanguages([], available, spellingCandidates()) };
 	});
+	handle('catalogue:icon', (event, url) => catalogueIcon(text(url)));
 	handle('lock:hasPassword', () => store.get('lockPasswordHash') !== '');
 	handle('lock:setPassword', (event, password, thenLock) => {
 		const chosen = text(password);

@@ -9,6 +9,7 @@
 		"noUncheckedIndexedAccess": true,
 		"allowImportingTsExtensions": true,
 		"verbatimModuleSyntax": true,
+		"resolveJsonModule": true,
 		"skipLibCheck": true,
 		"composite": true,
 		"noEmit": true
