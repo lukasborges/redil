@@ -13,7 +13,7 @@ export interface TrayActions {
 // The monochrome masters from resources/logo, drawn the way a panel's own icons are.
 const icon = (name: string) => nativeImage.createFromPath(join(__dirname, '../../resources', name));
 
-export class TopBarIcon {
+export class TrayIcon {
 	private tray: Tray | null = null;
 	private unread = false;
 

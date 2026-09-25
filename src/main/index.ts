@@ -9,7 +9,7 @@ import { Workspaces } from './workspaces.ts';
 import { preferences, store } from './store.ts';
 import { resolvedLanguage } from './messages.ts';
 import { hashPassword, matchesPassword } from './password.ts';
-import { TopBarIcon } from './tray.ts';
+import { TrayIcon } from './tray.ts';
 import { whatClosingDoes } from './closing.ts';
 import { startWithSystem } from './autostart.ts';
 import { Updates } from './updates.ts';
@@ -35,6 +35,7 @@ app.commandLine.appendSwitch('class', 'shep');
 app.commandLine.appendSwitch('ozone-platform-hint', 'auto');
 
 const text = (value: unknown) => typeof value === 'string' ? value : '';
+const spellingCandidates = () => [app.getLocale(), ...app.getPreferredSystemLanguages(), process.env.LANG ?? ''];
 
 if ( !app.requestSingleInstanceLock() ) {
 	app.quit();
@@ -44,7 +45,7 @@ if ( !app.requestSingleInstanceLock() ) {
 	let overlay: Overlay | null = null;
 	let workspaces: Workspaces | null = null;
 	let prefs: PreferenceHost | null = null;
-	let topBarIcon: TopBarIcon | null = null;
+	let tray: TrayIcon | null = null;
 	let updates: Updates | null = null;
 	let quitting = false;
 	let pendingPick: ((id: string | null) => void) | null = null;
@@ -107,7 +108,10 @@ if ( !app.requestSingleInstanceLock() ) {
 		if ( typeof key !== 'string' || !(key in DEFAULT_PREFERENCES) ) return false;
 		return prefs?.set(key as keyof Preferences, value) ?? false;
 	});
-	handle('spellcheck:languages', () => session.defaultSession.availableSpellCheckerLanguages);
+	handle('spellcheck:languages', () => {
+		const available = session.defaultSession.availableSpellCheckerLanguages;
+		return { available, automatic: spellingLanguages([], available, spellingCandidates()) };
+	});
 	handle('lock:hasPassword', () => store.get('lockPasswordHash') !== '');
 	handle('lock:setPassword', (event, password, thenLock) => {
 		const chosen = text(password);
@@ -143,8 +147,7 @@ if ( !app.requestSingleInstanceLock() ) {
 	const applySpelling = (spelled: Electron.Session) => {
 		spelledSessions.add(spelled);
 		const { spellcheckLanguages } = preferences();
-		const candidates = [app.getLocale(), ...app.getPreferredSystemLanguages(), process.env.LANG ?? ''];
-		spelled.setSpellCheckerLanguages(spellingLanguages(spellcheckLanguages, spelled.availableSpellCheckerLanguages, candidates));
+		spelled.setSpellCheckerLanguages(spellingLanguages(spellcheckLanguages, spelled.availableSpellCheckerLanguages, spellingCandidates()));
 	};
 
 	const pickScreen = (sources: PickedSource[]) => new Promise<string | null>(resolve => {
@@ -224,22 +227,22 @@ if ( !app.requestSingleInstanceLock() ) {
 	app.whenReady().then(() => {
 		applyThemeBeforeTheWindow();
 		const { startMinimized, trayIcon } = preferences();
-		// with no icon in the top bar, a hidden window would have no way back
+		// with no tray icon, a hidden window would have no way back
 		const window = createMainWindow(startMinimized && trayIcon, store.get('windowBounds'), bounds => store.set('windowBounds', bounds));
 		if ( startMinimized && !trayIcon ) window.minimize();
 		mainWindow = window;
 		listenForShortcuts(window.webContents);
 		overlay = new Overlay(window, () => services?.focusActive(), contents => listenForShortcuts(contents, true));
-		topBarIcon = new TopBarIcon({
+		tray = new TrayIcon({
 			isWindowShown: () => !!mainWindow?.isVisible(),
 			toggleWindow,
 			isDontDisturb: () => store.get('dontDisturb'),
 			toggleDontDisturb: () => setDontDisturb(!store.get('dontDisturb')),
 			quit: () => app.quit()
 		});
-		topBarIcon.show(trayIcon);
-		window.on('show', () => topBarIcon?.refreshMenu());
-		window.on('hide', () => topBarIcon?.refreshMenu());
+		tray.show(trayIcon);
+		window.on('show', () => tray?.refreshMenu());
+		window.on('hide', () => tray?.refreshMenu());
 		window.on('close', event => {
 			const { closeBehaviour, trayIcon: iconShown } = preferences();
 			if ( whatClosingDoes(closeBehaviour, iconShown, quitting) !== 'hide' ) return;
@@ -249,7 +252,7 @@ if ( !app.requestSingleInstanceLock() ) {
 
 		prefs = new PreferenceHost(window, () => {
 			const current = preferences();
-			topBarIcon?.show(current.trayIcon);
+			tray?.show(current.trayIcon);
 			startWithSystem(current.startWithSystem, current.startMinimized);
 			spelledSessions.forEach(applySpelling);
 			announceState();
@@ -262,7 +265,7 @@ if ( !app.requestSingleInstanceLock() ) {
 			edit: id => overlay?.open({ dialog: 'edit', serviceId: id }),
 			shortcut: handleShortcut,
 			changed: () => {
-				topBarIcon?.setUnread(services?.somethingUnread() ?? false);
+				tray?.setUnread(services?.somethingUnread() ?? false);
 				announceState();
 			},
 			sessionStarted: session => {

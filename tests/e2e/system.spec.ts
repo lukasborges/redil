@@ -92,7 +92,7 @@ test('locks on start when that is the preference and there is a password', async
 	}
 });
 
-test('hides the window on close while the top bar has its icon, and keeps running', async () => {
+test('hides the window on close while the tray has its icon, and keeps running', async () => {
 	let shep: Shep | undefined;
 	try {
 		shep = await launchShep({ store: { services: twoServices() } });
@@ -104,7 +104,7 @@ test('hides the window on close while the top bar has its icon, and keeps runnin
 	}
 });
 
-test('starts hidden in the top bar when asked to start minimized', async () => {
+test('starts hidden in the tray when asked to start minimized', async () => {
 	let shep: Shep | undefined;
 	try {
 		shep = await launchShep({ store: { preferences: { startMinimized: true } } });

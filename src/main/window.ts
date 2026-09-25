@@ -34,7 +34,7 @@ export function createMainWindow(startHidden: boolean, saved: WindowBounds | nul
 		minWidth: 600,
 		minHeight: 400,
 		// Shown from the start, not on ready-to-show: on Wayland a window that was never mapped never paints,
-		// so ready-to-show never came and the app was left in the top bar. The background colour keeps it from flashing.
+		// so ready-to-show never came and the app was left in the tray. The background colour keeps it from flashing.
 		show: !startHidden,
 		title: 'Shep',
 		titleBarStyle: 'hidden',

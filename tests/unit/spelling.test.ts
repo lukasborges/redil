@@ -15,7 +15,7 @@ test('works them out from the app\'s language, the desktop\'s and LANG, then Eng
 	assert.deepEqual(spellingLanguages([], available, []), ['en-US']);
 });
 
-test('hides the window on close only when there is an icon in the top bar to bring it back', () => {
+test('hides the window on close only when there is a tray icon to bring it back', () => {
 	assert.equal(whatClosingDoes('tray', true, false), 'hide');
 	assert.equal(whatClosingDoes('tray', false, false), 'quit');
 	assert.equal(whatClosingDoes('quit', true, false), 'quit');

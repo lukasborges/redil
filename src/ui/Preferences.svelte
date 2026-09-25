@@ -6,14 +6,14 @@
 </script>
 
 <script lang="ts">
-	import type { Messages } from '../shared/i18n/index.ts';
+	import { fill, type Messages } from '../shared/i18n/index.ts';
 	import { LANGUAGES, type Preferences } from '../shared/preferences.ts';
 	import type { ServiceState } from '../shared/service.ts';
 	import type { AppAction } from '../shared/channels.ts';
 	import Row from './Row.svelte';
 	import Switch from './Switch.svelte';
 
-	const { messages, onclose, onopen }: { messages: Messages; onclose: () => void; onopen: (dialog: 'about' | 'unreadReport' | 'lockPassword') => void } = $props();
+	const { messages, locale, onclose, onopen }: { messages: Messages; locale: string; onclose: () => void; onopen: (dialog: 'about' | 'unreadReport' | 'lockPassword') => void } = $props();
 
 	const LANGUAGE_NAMES: Record<string, string> = {
 		en: 'English', 'pt-BR': 'Português (Brasil)', es: 'Español', fr: 'Français', de: 'Deutsch',
@@ -24,14 +24,14 @@
 	$effect(() => { lastSection = section; });
 	let prefs = $state<Preferences | null>(null);
 	let services = $state<ServiceState[]>([]);
-	let dictionaries = $state<string[]>([]);
+	let dictionaries = $state<{ available: string[]; automatic: string[] }>({ available: [], automatic: [] });
 	let needsRelaunch = $state(false);
 	let hasLockPassword = $state(false);
 
 	$effect(() => {
 		window.shep.invoke('preferences:get').then(value => { prefs = value as Preferences; });
 		window.shep.invoke('services:list').then(value => { services = value as ServiceState[]; });
-		window.shep.invoke('spellcheck:languages').then(value => { dictionaries = value as string[]; });
+		window.shep.invoke('spellcheck:languages').then(value => { dictionaries = value as typeof dictionaries; });
 		window.shep.invoke('lock:hasPassword').then(value => { hasLockPassword = value === true; });
 	});
 
@@ -43,11 +43,18 @@
 
 	const act = (action: AppAction) => window.shep.invoke('app:action', action);
 
-	function toggleDictionary(language: string, on: boolean) {
-		if ( !prefs ) return;
-		const others = prefs.spellcheckLanguages.filter(chosen => chosen !== language);
-		set('spellcheckLanguages', on ? [...others, language] : others);
+	const displayNames = $derived(new Intl.DisplayNames([locale], { type: 'language', languageDisplay: 'standard' }));
+	function dictionaryName(language: string): string {
+		let name = language;
+		// Chromium lists a few dictionaries under tags Intl does not know
+		try { name = displayNames.of(language) ?? language; } catch { /* keep the tag */ }
+		return name.charAt(0).toLocaleUpperCase(locale) + name.slice(1);
 	}
+	const byName = (languages: string[]) => languages.map(language => ({ language, name: dictionaryName(language) })).sort((a, b) => a.name.localeCompare(b.name, locale));
+	const addable = $derived(byName(dictionaries.available.filter(language => !prefs?.spellcheckLanguages.includes(language))));
+
+	const addDictionary = (language: string) => { if ( prefs && language ) set('spellcheckLanguages', [...prefs.spellcheckLanguages, language]); };
+	const removeDictionary = (language: string) => { if ( prefs ) set('spellcheckLanguages', prefs.spellcheckLanguages.filter(chosen => chosen !== language)); };
 </script>
 
 <div class="preferences" role="dialog" aria-label={messages['prefs.title']}>
@@ -96,14 +103,26 @@
 						</select>
 					</Row>
 					<Row title={messages['prefs.spellcheck']} hint={messages['prefs.relaunch']}><Switch label={messages['prefs.spellcheck']} checked={prefs.spellcheck} onchange={on => set('spellcheck', on)} /></Row>
-					{#if prefs.spellcheck && dictionaries.length}
-						<Row title={messages['prefs.spellcheckLanguages']} hint={messages['prefs.spellcheckLanguages.hint']}>
-							<div class="dictionaries">
-								{#each dictionaries as language (language)}
-									<label><input type="checkbox" checked={prefs.spellcheckLanguages.includes(language)} onchange={event => toggleDictionary(language, event.currentTarget.checked)} />{language}</label>
-								{/each}
-							</div>
+					{#if prefs.spellcheck && dictionaries.available.length}
+						{@const chosen = prefs.spellcheckLanguages.filter(language => dictionaries.available.includes(language))}
+						<Row title={messages['prefs.spellcheckLanguages']} hint={chosen.length
+							? messages['prefs.spellcheckLanguages.picked']
+							: fill(messages['prefs.spellcheckLanguages.automatic'], { languages: dictionaries.automatic.map(dictionaryName).join(', ') })}>
+							<select name="addDictionary" value="" onchange={event => { addDictionary(event.currentTarget.value); event.currentTarget.value = ''; }}>
+								<option value="" disabled>{messages['prefs.spellcheckLanguages.add']}</option>
+								{#each addable as { language, name } (language)}<option value={language}>{name}</option>{/each}
+							</select>
 						</Row>
+						{#if chosen.length}
+							<ul class="dictionaries">
+								{#each chosen as language (language)}
+									<li>
+										{dictionaryName(language)}
+										<button type="button" aria-label={fill(messages['prefs.spellcheckLanguages.remove'], { language: dictionaryName(language) })} onclick={() => removeDictionary(language)}>×</button>
+									</li>
+								{/each}
+							</ul>
+						{/if}
 					{/if}
 				{:else if section === 'security'}
 					<Row title={messages['prefs.lockPassword']} hint={messages['prefs.lockPassword.hint']}>
@@ -225,13 +244,48 @@
 		width: 96px;
 	}
 
+	/* a dictionary's name can run long, and the select would grow to it */
+	select[name='addDictionary'] {
+		width: 200px;
+	}
+
 	.dictionaries {
-		display: grid;
-		grid-template-columns: repeat(2, auto);
-		gap: 4px 12px;
-		max-height: 120px;
-		overflow-y: auto;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 6px;
+		margin: 0;
+		padding: 0 14px 12px;
+		list-style: none;
+	}
+
+	.dictionaries li {
+		display: flex;
+		align-items: center;
+		gap: 2px;
+		height: 28px;
+		padding: 0 4px 0 10px;
+		border-radius: 14px;
+		background-color: color-mix(in srgb, var(--rx-ink) 8%, transparent);
 		font-size: 13px;
+	}
+
+	.dictionaries button {
+		width: 22px;
+		height: 22px;
+		padding: 0;
+		border: 0;
+		border-radius: 50%;
+		background: none;
+		color: var(--rx-muted);
+		font: inherit;
+		font-size: 15px;
+		line-height: 1;
+		cursor: pointer;
+	}
+
+	.dictionaries button:hover {
+		background-color: color-mix(in srgb, var(--rx-ink) 12%, transparent);
+		color: inherit;
 	}
 
 	.actions {

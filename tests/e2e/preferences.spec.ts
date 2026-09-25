@@ -125,3 +125,19 @@ test('opens on the welcome page when that is the preference, whatever was open l
 		await closeShep(restarted);
 	}
 });
+
+test('names the spelling languages, adds one from the list and removes it from its chip', async () => {
+	await shep.window.locator('.rail .tool[aria-label="Preferences"]').click();
+	await expect.poll(() => inOverlay<number>('document.querySelectorAll(".preferences nav button").length')).toBe(5);
+	await inOverlay('[...document.querySelectorAll(".preferences nav button")].find(button => button.textContent.trim() === "Services").click()');
+	await expect.poll(() => inOverlay<string>('document.querySelector("select[name=addDictionary]")?.closest(".row")?.querySelector(".hint")?.textContent ?? ""')).toMatch(/^Automatic: [A-Z]/);
+	await inOverlay(`(() => {
+		const select = document.querySelector("select[name=addDictionary]");
+		select.value = "pt-BR";
+		select.dispatchEvent(new Event("change", { bubbles: true }));
+	})()`);
+	await expect.poll(async () => (await prefs()).spellcheckLanguages).toEqual(['pt-BR']);
+	await expect.poll(() => inOverlay<string>('document.querySelector(".dictionaries li")?.firstChild?.textContent.trim() ?? ""')).toBe('Portuguese (Brazil)');
+	await inOverlay('document.querySelector(".dictionaries li button").click()');
+	await expect.poll(async () => (await prefs()).spellcheckLanguages).toEqual([]);
+});

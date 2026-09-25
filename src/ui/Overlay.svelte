@@ -66,7 +66,7 @@
 			{:else if shown.dialog === 'workspaceIcon'}
 				<WorkspaceIconDialog {messages} workspaceId={shown.workspaceId} onclose={close} />
 			{:else if shown.dialog === 'preferences'}
-				<Preferences {messages} onclose={close} onopen={openFromPreferences} />
+				<Preferences {messages} locale={language} onclose={close} onopen={openFromPreferences} />
 			{:else if shown.dialog === 'about'}
 				<AboutDialog {messages} onclose={close} />
 			{:else if shown.dialog === 'unreadReport'}
