@@ -11,7 +11,7 @@
 
 Shep keeps WhatsApp, Gmail, Slack, Teams, Claude or anything else with a web address in a rail down the left of one window, each signed in on its own, each counting what is unread. It runs on Linux and on Windows.
 
-Its looks come from GNOME, which is where it was drawn: the icon, the palette and the dialogs follow GNOME's guidelines, and the window follows the desktop's light or dark style on either system. On Windows the title bar carries the system's own buttons, and the notification area takes the coloured mark rather than the flat one a GNOME panel asks for.
+The window follows the desktop's light or dark style on either system. On Windows the title bar carries the system's own buttons, and the notification area takes the coloured mark rather than the flat one Linux panels get.
 
 ## How it works
 
