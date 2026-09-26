@@ -1,0 +1,6 @@
+#!/bin/sh
+# A co-author counts as a contributor on GitHub, and a trailer that was pushed stays in its cache after the history is rewritten.
+if grep -qi '^co-authored-by:' "$1"; then
+	echo 'commit-msg: Co-Authored-By is not allowed; remove the trailer and commit again.' >&2
+	exit 1
+fi
