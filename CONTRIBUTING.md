@@ -10,7 +10,9 @@ npm start
 npm test
 ```
 
-`npm test` has to pass before a change goes in: it typechecks, lints, builds, runs the unit tests and then the end-to-end suite, which launches the app. Install `xvfb-run` and `xdotool` so its windows open on a virtual display instead of your desktop.
+`npm test` has to pass before a change goes in: it typechecks, lints, builds, runs the unit tests and then the end-to-end suite, which launches the app. On Linux, install `xvfb-run` and `xdotool` so its windows open on a virtual display instead of your desktop; on Windows they open on the desktop, and the one test that needs `xdotool` skips itself.
+
+A change to the packaging or to anything the main process asks the system for should be tried on both: the build workflow packages on Linux and on Windows, and a change that only one of them can run belongs behind `process.platform`.
 
 ## The rule for services
 

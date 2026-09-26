@@ -29,11 +29,12 @@
 		"build": "electron-vite build",
 		"typecheck": "tsc -p tsconfig.node.json --noEmit && tsc -p tsconfig.test.json --noEmit && svelte-check --tsconfig tsconfig.web.json --fail-on-warnings",
 		"lint": "eslint .",
-		"test": "npm run typecheck && eslint . && npm run build && node --test \"tests/unit/**/*.test.ts\" && scripts/headless.sh playwright test",
-		"test:network": "SHEP_NETWORK=1 npm test",
-		"package": "npm run build && electron-builder --linux",
+		"checks": "npm run typecheck && eslint . && npm run build && node --test \"tests/unit/**/*.test.ts\"",
+		"test": "npm run checks && node scripts/headless.js playwright test",
+		"test:network": "npm run checks && node scripts/headless.js --network playwright test",
+		"package": "npm run build && electron-builder",
 		"icons": "node scripts/gen-icons.js",
-		"clean": "rm -rf dist out"
+		"clean": "node -e \"for ( const directory of ['dist', 'out'] ) require('fs').rmSync(directory, { recursive: true, force: true })\""
 	},
 	"build": {
 		"productName": "Shep",
@@ -78,6 +79,32 @@
 					]
 				}
 			]
+		},
+		"win": {
+			"icon": "resources/installer/icon.ico",
+			"artifactName": "Shep-${version}-windows-${arch}.${ext}",
+			"verifyUpdateCodeSignature": false,
+			"target": [
+				{
+					"target": "nsis",
+					"arch": [
+						"x64"
+					]
+				},
+				{
+					"target": "zip",
+					"arch": [
+						"x64"
+					]
+				}
+			]
+		},
+		"nsis": {
+			"oneClick": false,
+			"perMachine": false,
+			"allowToChangeInstallationDirectory": true,
+			"shortcutName": "Shep",
+			"artifactName": "Shep-${version}-windows-${arch}-setup.${ext}"
 		},
 		"directories": {
 			"buildResources": "resources/installer/",

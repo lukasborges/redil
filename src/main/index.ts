@@ -31,10 +31,12 @@ app.userAgentFallback = withoutAppTokens(app.userAgentFallback);
 
 if ( !preferences().hardwareAcceleration ) app.disableHardwareAcceleration();
 
-// The Wayland app_id the desktop entry matches, or the window is an iconless second app.
-app.commandLine.appendSwitch('class', 'shep');
-// Under XWayland the screen-share portal sees X windows only, never the screens.
-app.commandLine.appendSwitch('ozone-platform-hint', 'auto');
+if ( process.platform === 'linux' ) {
+	// The Wayland app_id the desktop entry matches, or the window is an iconless second app.
+	app.commandLine.appendSwitch('class', 'shep');
+	// Under XWayland the screen-share portal sees X windows only, never the screens.
+	app.commandLine.appendSwitch('ozone-platform-hint', 'auto');
+}
 
 const text = (value: unknown) => typeof value === 'string' ? value : '';
 const spellingCandidates = () => [app.getLocale(), ...app.getPreferredSystemLanguages(), process.env.LANG ?? ''];

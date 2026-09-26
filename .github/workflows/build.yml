@@ -55,3 +55,42 @@ jobs:
             dist/*.AppImage
             dist/*.deb
             dist/*.tar.gz
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~\AppData\Local\electron\Cache
+            ~\AppData\Local\electron-builder\Cache
+          key: electron-${{ runner.os }}-${{ hashFiles('package.json') }}
+          restore-keys: electron-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      # Windows has a desktop of its own, so there is no display to prepare: the suite's windows
+      # open on it. The one test that sends the display server's own clicks skips itself, xdotool
+      # being X11's alone.
+      - name: Test
+        run: npm test
+
+      # Nothing here is signed. electron-builder skips the signing step when no certificate is
+      # configured, and what comes out warns of an unknown publisher on the machine that runs it.
+      - name: Package
+        run: npm run build && npx electron-builder --win --publish never
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shep-windows
+          if-no-files-found: error
+          path: |
+            dist/*.exe
+            dist/*.zip

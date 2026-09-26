@@ -12,6 +12,7 @@ const node = {
 	,process: 'readonly'
 	,console: 'readonly'
 	,__dirname: 'readonly'
+	,Buffer: 'readonly'
 	,URL: 'readonly'
 	,fetch: 'readonly'
 	,setTimeout: 'readonly'

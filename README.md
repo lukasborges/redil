@@ -9,7 +9,7 @@
   <img src="./resources/screenshots/shep-1.0-dark.png" width="49%" alt="The same window in the dark theme" />
 </p>
 
-Shep keeps WhatsApp, Gmail, Slack, Teams, Claude or anything else with a web address in a rail down the left of one window, each signed in on its own, each counting what is unread. It is made for Linux and for GNOME in particular: the icon, the palette and the dialogs follow GNOME's guidelines, and the window follows the desktop's light or dark style.
+Shep keeps WhatsApp, Gmail, Slack, Teams, Claude or anything else with a web address in a rail down the left of one window, each signed in on its own, each counting what is unread. It is made for Linux and for GNOME in particular: the icon, the palette and the dialogs follow GNOME's guidelines, and the window follows the desktop's light or dark style. It runs on Windows 10 and 11 as well, where the same window follows the system's style, the title bar carries Windows' own buttons, and the notification area takes the coloured mark.
 
 ## How it works
 
@@ -29,9 +29,17 @@ Shep also has a do-not-disturb switch, a lock screen with a password, an icon in
 
 ## Install
 
-[Releases](https://github.com/lukasborges/shep/releases) carry an AppImage, a deb and a tarball for x86-64 Linux. Shep updates itself from those releases.
+[Releases](https://github.com/lukasborges/shep/releases) carry an AppImage, a deb and a tarball for x86-64 Linux, and an installer and a zip for x86-64 Windows. Shep updates itself from those releases.
+
+### Linux
 
 The AppImage needs FUSE 2, which some distributions no longer install by default: `fuse-libs` on Fedora, `libfuse2t64` on Ubuntu 24.04 and later, `libfuse2` on Debian. Without it, run the AppImage with `--appimage-extract-and-run`.
+
+### Windows
+
+The installer writes to your own account, `%LOCALAPPDATA%\Programs\Shep`, and asks no administrator for anything; the zip is the same app with nothing to install. Windows 10 or 11.
+
+Neither is signed, because a certificate costs money this app does not have. The first run of either one meets SmartScreen: **More info**, then **Run anyway**. For the zip, ticking **Unblock** in the downloaded file's properties before extracting settles it for every file inside at once. Nothing an installer can do changes this, since the warning is about the missing signature rather than about what is installed.
 
 Shep 1.0 is a new app and starts from a clean profile. Services added in 0.10 have to be added again.
 
@@ -55,7 +63,7 @@ Shep 1.0 is a new app and starts from a clean profile. Services added in 0.10 ha
 
 ## Privacy
 
-There is no account and no server. Shep keeps your services, workspaces and preferences in `~/.config/Shep/shep.json`, and each service keeps its own session beside it, so you stay signed in until you remove the service, which deletes its session too.
+There is no account and no server. Shep keeps your services, workspaces and preferences in `~/.config/Shep/shep.json`, on Windows `%APPDATA%\Shep\shep.json`, and each service keeps its own session beside it, so you stay signed in until you remove the service, which deletes its session too.
 
 Shep sends nothing about you anywhere. It makes two requests of its own: the update check, to this repository's releases on GitHub, and the download of a spell-checking dictionary the first time a language needs one, which Chromium fetches from Google. What each service does is up to the service: Shep is a frame around its web app and does not look inside.
 
@@ -71,12 +79,14 @@ Node 22 or later and npm.
 npm install
 npm start               # the app, with the interface reloading as you edit
 npm test                # typecheck, lint, build, unit tests, then the end-to-end suite
-npm run package         # AppImage, deb and tarball into dist/
+npm run package         # the packages for the system you are on, into dist/
 ```
 
-A run from the repository uses its own profile, `~/.config/Shep-dev`, and never touches the installed app's.
+`npm run package` builds what that system can build: on Linux the AppImage, the deb and the tarball, on Windows the installer and the zip. Neither builds the other's.
 
-The end-to-end suite launches the real app, so it opens windows. With `xvfb-run` installed it opens them on a virtual display instead of your desktop; one test also needs `xdotool`. On Fedora that is `dnf install xorg-x11-server-Xvfb xdotool`. `npm run test:network` adds the tests that load real sites, such as the one that renders a Cloudflare captcha.
+A run from the repository uses its own profile, `~/.config/Shep-dev`, on Windows `%APPDATA%\Shep-dev`, and never touches the installed app's.
+
+The end-to-end suite launches the real app, so it opens windows. On Linux, with `xvfb-run` installed, it opens them on a virtual display instead of your desktop; one test also needs `xdotool`, and skips itself where there is none. On Fedora that is `dnf install xorg-x11-server-Xvfb xdotool`. Windows has no such thing, so the windows open on your desktop and take the focus while the suite runs. `npm run test:network` adds the tests that load real sites, such as the one that renders a Cloudflare captcha.
 
 If Electron aborts at start with a sandbox error, as it does on Ubuntu 24.04, the distribution keeps unprivileged user namespaces from Chromium's sandbox. Pass `--no-sandbox`, which is what the packaged builds do.
 

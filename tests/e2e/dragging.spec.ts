@@ -5,7 +5,9 @@ import { launchShep, closeShep, serviceRecord, type Shep } from './helpers/launc
 import { serveFixtures } from './helpers/server.ts';
 
 // Playwright's clicks go straight to the page and never meet the window's title bar hit test,
-// so these are the display server's own, sent with xdotool.
+// so these are the display server's own, sent with xdotool, which is X11's alone.
+test.skip(process.platform !== 'linux', 'needs xdotool');
+
 let shep: Shep;
 let server: Server;
 

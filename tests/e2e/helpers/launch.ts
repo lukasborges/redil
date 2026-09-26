@@ -17,7 +17,9 @@ export async function launchShep({ store }: { store?: Record<string, unknown> } 
 	if ( store ) writeFileSync(join(userDataDir, 'shep.json'), JSON.stringify(store));
 
 	const app = await _electron.launch({
-		args: [join(repoRoot, 'out', 'main', 'index.js'), `--user-data-dir=${userDataDir}`],
+		// Every expectation here is written in English, and with no language of its own the app would
+		// speak the desktop's: the suite passes on a Portuguese machine only because of this.
+		args: [join(repoRoot, 'out', 'main', 'index.js'), `--user-data-dir=${userDataDir}`, '--lang=en-US'],
 		cwd: repoRoot,
 		// Playwright emulates a light prefers-color-scheme unless told not to, which races the app's own theme
 		colorScheme: null

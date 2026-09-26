@@ -10,8 +10,14 @@ export interface TrayActions {
 	quit(): void;
 }
 
-// The monochrome masters from resources/logo, drawn the way a panel's own icons are.
-const icon = (name: string) => nativeImage.createFromPath(join(__dirname, '../../resources', name));
+// On Linux the monochrome masters from resources/logo, drawn the way a panel's own icons are.
+// Windows' notification area expects the full-colour mark instead, and sits on a taskbar that is
+// light as often as dark, where a white one would not be there at all.
+const COLOURED = process.platform === 'win32';
+const icon = (unread: boolean) => {
+	const name = COLOURED ? (unread ? 'IconTrayColourUnread.png' : 'IconTrayColour.png') : (unread ? 'IconTrayUnread.png' : 'IconTray.png');
+	return nativeImage.createFromPath(join(__dirname, '../../resources', name));
+};
 
 export class TrayIcon {
 	private tray: Tray | null = null;
@@ -21,7 +27,7 @@ export class TrayIcon {
 
 	show(on: boolean): void {
 		if ( on && !this.tray ) {
-			this.tray = new Tray(icon(this.unread ? 'IconTrayUnread.png' : 'IconTray.png'));
+			this.tray = new Tray(icon(this.unread));
 			this.tray.setToolTip('Shep');
 			this.tray.on('click', () => this.actions.toggleWindow());
 			this.refreshMenu();
@@ -39,7 +45,7 @@ export class TrayIcon {
 	setUnread(unread: boolean): void {
 		if ( unread === this.unread ) return;
 		this.unread = unread;
-		this.tray?.setImage(icon(unread ? 'IconTrayUnread.png' : 'IconTray.png'));
+		this.tray?.setImage(icon(unread));
 	}
 
 	refreshMenu(): void {
