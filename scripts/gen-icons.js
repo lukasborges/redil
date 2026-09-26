@@ -33,7 +33,7 @@ const ICO = [16, 24, 32, 48, 64, 128, 256];
 
 // The window and dock icon, and the tray at the three densities Electron asks
 // for. The tray is small: 24 is what a panel gives it, 16 what Windows' notification
-// area does, and Windows takes the coloured mark rather than the symbolic one.
+// area and a Mac's menu bar do, and Windows takes the coloured mark rather than the symbolic one.
 const APP = [
 	{ from: MASTER, to: 'resources/Icon.png', size: 256 },
 	{ from: LINUX_TRAY, to: 'resources/IconTray.png', size: 24 },
@@ -42,6 +42,12 @@ const APP = [
 	{ from: LINUX_TRAY_UNREAD, to: 'resources/IconTrayUnread.png', size: 24 },
 	{ from: LINUX_TRAY_UNREAD, to: 'resources/IconTrayUnread@2x.png', size: 48 },
 	{ from: LINUX_TRAY_UNREAD, to: 'resources/IconTrayUnread@4x.png', size: 96 },
+	{ from: LINUX_TRAY, to: 'resources/IconTrayMac.png', size: 16 },
+	{ from: LINUX_TRAY, to: 'resources/IconTrayMac@2x.png', size: 32 },
+	{ from: LINUX_TRAY, to: 'resources/IconTrayMac@4x.png', size: 64 },
+	{ from: LINUX_TRAY_UNREAD, to: 'resources/IconTrayMacUnread.png', size: 16 },
+	{ from: LINUX_TRAY_UNREAD, to: 'resources/IconTrayMacUnread@2x.png', size: 32 },
+	{ from: LINUX_TRAY_UNREAD, to: 'resources/IconTrayMacUnread@4x.png', size: 64 },
 	{ from: MASTER, to: 'resources/IconTrayColour.png', size: 16 },
 	{ from: MASTER, to: 'resources/IconTrayColour@2x.png', size: 32 },
 	{ from: MASTER, to: 'resources/IconTrayColour@4x.png', size: 64 },

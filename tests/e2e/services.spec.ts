@@ -117,7 +117,7 @@ test('hands a sign-in that left the service back to the service\'s own page, and
 	await expect.poll(() => shep.app.evaluate(({ webContents }) => webContents.getAllWebContents().some(contents => contents.getURL().endsWith('?signed-in=1')))).toBe(true);
 });
 
-test('goes back and forward in the service with Alt and the arrows', async () => {
+test('goes back in the service with Alt and the left arrow, or Command and the bracket on a Mac', async () => {
 	// the second service already sits on away.html, so this one goes to an address of its own
 	const away = at('127.0.0.1', '/away.html?from=first-service');
 	await inFixture(`location.href = ${JSON.stringify(away)}`);
@@ -125,8 +125,9 @@ test('goes back and forward in the service with Alt and the arrows', async () =>
 	await expect.poll(loadedAway).toBe(true);
 	await shep.app.evaluate(({ webContents }, away) => {
 		const contents = webContents.getAllWebContents().find(candidate => candidate.getURL() === away);
-		contents?.sendInputEvent({ type: 'keyDown', keyCode: 'Left', modifiers: ['alt'] });
-		contents?.sendInputEvent({ type: 'keyUp', keyCode: 'Left', modifiers: ['alt'] });
+		const [keyCode, modifier] = process.platform === 'darwin' ? ['[', 'meta'] as const : ['Left', 'alt'] as const;
+		contents?.sendInputEvent({ type: 'keyDown', keyCode, modifiers: [modifier] });
+		contents?.sendInputEvent({ type: 'keyUp', keyCode, modifiers: [modifier] });
 	}, away);
 	await expect.poll(() => shep.app.evaluate(({ webContents }, url) => webContents.getAllWebContents().some(contents => contents.getURL().startsWith(url)), serviceUrl())).toBe(true);
 });

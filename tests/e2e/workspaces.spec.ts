@@ -2,7 +2,7 @@ import type { Server } from 'node:http';
 import { test, expect } from '@playwright/test';
 import type { ServiceState } from '../../src/shared/service.ts';
 import type { AppState } from '../../src/shared/channels.ts';
-import { launchShep, closeShep, inService, serviceRecord, type Shep } from './helpers/launch.ts';
+import { launchShep, closeShep, inService, serviceRecord, COMMAND, type Shep } from './helpers/launch.ts';
 import { serveFixtures } from './helpers/server.ts';
 
 let shep: Shep;
@@ -48,7 +48,7 @@ test('shows every service under All Services', async () => {
 });
 
 test('shows a workspace\'s services and the ones in no workspace, and moves off a service it hides', async () => {
-	await press('1', ['control', 'alt']);
+	await press('1', [COMMAND, 'alt']);
 	await expect.poll(rail).toEqual(['Mail', 'Chat']);
 	await expect(shep.window.locator('.switcher')).toHaveAttribute('aria-label', 'Workspaces: Work');
 	expect((await list()).find(service => service.active)?.name).toBe('Mail');
@@ -62,7 +62,7 @@ test('keeps a hidden service counting, and marks the switcher when it has someth
 });
 
 test('gives All Services the number after the last workspace', async () => {
-	await press('3', ['control', 'alt']);
+	await press('3', [COMMAND, 'alt']);
 	await expect.poll(async () => (await state()).activeWorkspace).toBe(null);
 	await expect.poll(rail).toEqual(['Mail', 'Family', 'Chat']);
 });

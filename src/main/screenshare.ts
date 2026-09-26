@@ -24,5 +24,7 @@ export function answerScreenSharing(session: Session, pick: (sources: PickedSour
 		const source = sources.find(candidate => candidate.id === chosen);
 		if ( source ) answer({ video: source });
 		else refuse();
-	});
+	},
+	// A Mac from 15 on has a picker of its own, and asks for the screen recording permission as it opens it.
+	{ useSystemPicker: true });
 }

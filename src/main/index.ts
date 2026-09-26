@@ -1,5 +1,5 @@
 import './profile.ts';
-import { app, ipcMain, session, shell, type IpcMainInvokeEvent, type WebContents } from 'electron';
+import { app, ipcMain, Menu, session, shell, type IpcMainInvokeEvent, type WebContents } from 'electron';
 import { version, bugs, homepage } from '../../package.json';
 import { withoutAppTokens } from './useragent.ts';
 import { createMainWindow } from './window.ts';
@@ -213,7 +213,7 @@ if ( !app.requestSingleInstanceLock() ) {
 
 	// While locked, a shortcut does nothing, and no key reaches a page but the lock screen's.
 	const handleShortcut = (input: KeyInput, showsLockScreen = false): boolean => {
-		const shortcut = shortcutFor(input);
+		const shortcut = shortcutFor(input, process.platform);
 		if ( shortcut ) run(shortcut);
 		return shortcut !== null || (store.get('locked') && !showsLockScreen);
 	};
@@ -228,9 +228,13 @@ if ( !app.requestSingleInstanceLock() ) {
 	};
 
 	app.on('before-quit', () => { quitting = true; });
+	// the Dock icon, which on a Mac is how a closed window comes back
+	app.on('activate', bringForward);
 
 	app.whenReady().then(() => {
 		applyThemeBeforeTheWindow();
+		// A Mac has a menu bar whether the app fills it or not, and without Edit's items Command+C, V and A reach no page.
+		if ( process.platform === 'darwin' ) Menu.setApplicationMenu(Menu.buildFromTemplate([{ role: 'appMenu' }, { role: 'editMenu' }, { role: 'windowMenu' }]));
 		const { startMinimized, trayIcon } = preferences();
 		// with no tray icon, a hidden window would have no way back
 		const window = createMainWindow(startMinimized && trayIcon, store.get('windowBounds'), bounds => store.set('windowBounds', bounds));
@@ -250,7 +254,8 @@ if ( !app.requestSingleInstanceLock() ) {
 		window.on('hide', () => tray?.refreshMenu());
 		window.on('close', event => {
 			const { closeBehaviour, trayIcon: iconShown } = preferences();
-			if ( whatClosingDoes(closeBehaviour, iconShown, quitting) !== 'hide' ) return;
+			const canComeBack = iconShown || process.platform === 'darwin';
+			if ( whatClosingDoes(closeBehaviour, canComeBack, quitting) !== 'hide' ) return;
 			event.preventDefault();
 			window.hide();
 		});

@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, realpathSync } from 'node:fs';
 import { join } from 'node:path';
 import { test, expect } from '@playwright/test';
 import { launchShep, closeShep, repoRoot, type Shep } from './helpers/launch.ts';
@@ -41,5 +41,6 @@ test('refuses a channel the preload does not expose', async () => {
 });
 
 test('uses the profile it was given, not the developer\'s', async () => {
-	expect(await shep.app.evaluate(({ app }) => app.getPath('userData'))).toBe(shep.userDataDir);
+	// a Mac's temporary folder is under /var, which is a link to /private/var
+	expect(realpathSync(await shep.app.evaluate(({ app }) => app.getPath('userData')))).toBe(realpathSync(shep.userDataDir));
 });

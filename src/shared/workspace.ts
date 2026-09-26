@@ -32,7 +32,7 @@ export function isShownIn(serviceWorkspace: string, active: ActiveWorkspace): bo
 	return active === null || serviceWorkspace === '' || serviceWorkspace === active;
 }
 
-// Ctrl+Alt and a number: the workspaces in order, then All Services right after the last.
+// Ctrl+Alt, or Command+Option on a Mac, and a number: the workspaces in order, then All Services right after the last.
 export function workspaceForNumber(index: number, workspaces: readonly Workspace[]): ActiveWorkspace | undefined {
 	if ( index < workspaces.length ) return workspaces[index]?.id;
 	if ( index === workspaces.length ) return null;

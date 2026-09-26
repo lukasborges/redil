@@ -51,3 +51,6 @@ export function inService<T>(shep: Shep, urlPrefix: string, expression: string, 
 		return contents.executeJavaScript(expression, userGesture);
 	}, { urlPrefix, expression, userGesture }) as Promise<T>;
 }
+
+// the modifier the app's own keys are on, Command on a Mac and Control elsewhere
+export const COMMAND = process.platform === 'darwin' ? 'meta' : 'control';

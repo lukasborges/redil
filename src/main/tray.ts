@@ -12,11 +12,14 @@ export interface TrayActions {
 
 // On Linux the monochrome masters from resources/logo, drawn the way a panel's own icons are.
 // Windows' notification area expects the full-colour mark instead, and sits on a taskbar that is
-// light as often as dark, where a white one would not be there at all.
-const COLOURED = process.platform === 'win32';
+// light as often as dark, where a white one would not be there at all. A Mac's menu bar takes the
+// monochrome mark as a template, which it paints in its own colour, at the size its own icons are.
+const MAC = process.platform === 'darwin';
+const STYLE = process.platform === 'win32' ? 'Colour' : MAC ? 'Mac' : '';
 const icon = (unread: boolean) => {
-	const name = COLOURED ? (unread ? 'IconTrayColourUnread.png' : 'IconTrayColour.png') : (unread ? 'IconTrayUnread.png' : 'IconTray.png');
-	return nativeImage.createFromPath(join(__dirname, '../../resources', name));
+	const image = nativeImage.createFromPath(join(__dirname, '../../resources', `IconTray${STYLE}${unread ? 'Unread' : ''}.png`));
+	image.setTemplateImage(MAC);
+	return image;
 };
 
 export class TrayIcon {

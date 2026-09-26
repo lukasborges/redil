@@ -1,7 +1,7 @@
 import type { Server } from 'node:http';
 import { test, expect } from '@playwright/test';
 import type { ServiceState } from '../../src/shared/service.ts';
-import { launchShep, closeShep, inService, serviceRecord, type Shep } from './helpers/launch.ts';
+import { launchShep, closeShep, inService, serviceRecord, COMMAND, type Shep } from './helpers/launch.ts';
 import { serveFixtures } from './helpers/server.ts';
 
 let shep: Shep;
@@ -37,9 +37,9 @@ test.afterAll(async () => {
 });
 
 test('picks a service with Ctrl and its number, typed while another service has the keyboard', async () => {
-	await press(first(), '2', ['control']);
+	await press(first(), '2', [COMMAND]);
 	await expect.poll(activeName).toBe('Second');
-	await press(second(), '1', ['control']);
+	await press(second(), '1', [COMMAND]);
 	await expect.poll(activeName).toBe('First');
 });
 
@@ -51,23 +51,23 @@ test('cycles through the services with Ctrl+Tab and back with Ctrl+Shift+Tab', a
 });
 
 test('opens find in page with Ctrl+F from inside the service', async () => {
-	await press(first(), 'F', ['control']);
+	await press(first(), 'F', [COMMAND]);
 	await expect(shep.window.locator('.titlebar input[type="search"]')).toBeVisible();
 	await shep.window.locator('.titlebar input[type="search"]').press('Escape');
 });
 
 test('zooms the active service with Ctrl+= and resets it with Ctrl+0, keeping the level', async () => {
 	const zoom = () => shep.app.evaluate(({ webContents }, url) => webContents.getAllWebContents().find(contents => contents.getURL() === url)?.getZoomLevel(), first());
-	await press(first(), '=', ['control']);
+	await press(first(), '=', [COMMAND]);
 	await expect.poll(zoom).toBe(0.25);
-	await press(first(), '0', ['control']);
+	await press(first(), '0', [COMMAND]);
 	await expect.poll(zoom).toBe(0);
 });
 
 test('shows a zoom other than 100% in the title bar, and a click there resets it', async () => {
 	const indicator = shep.window.locator('.titlebar button[aria-label="Actual Size"]');
 	await expect(indicator).toBeHidden();
-	await press(first(), '=', ['control']);
+	await press(first(), '=', [COMMAND]);
 	await expect(indicator).toHaveText('105%');
 	await indicator.click();
 	await expect(indicator).toBeHidden();

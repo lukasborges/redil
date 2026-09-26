@@ -1,12 +1,14 @@
-import { app, dialog, type BrowserWindow } from 'electron';
+import { app, dialog, shell, type BrowserWindow } from 'electron';
 import electronUpdater from 'electron-updater';
+import { homepage } from '../../package.json';
 import { mainMessages } from './messages.ts';
 import { fill } from '../shared/i18n/index.ts';
 
 // Only a packaged build has an update to install, and electron-updater refuses the version an unpacked run reports.
 export class Updates {
 	private askedByHand = false;
-	private readonly updater = app.isPackaged ? electronUpdater.autoUpdater : null;
+	// Squirrel, which installs an update on a Mac, takes only a signed app, and this one is not signed.
+	private readonly updater = app.isPackaged && process.platform !== 'darwin' ? electronUpdater.autoUpdater : null;
 
 	constructor(private readonly window: BrowserWindow) {
 		const updater = this.updater;
@@ -36,7 +38,8 @@ export class Updates {
 
 	check(byHand: boolean): void {
 		if ( !this.updater ) {
-			if ( byHand ) dialog.showMessageBox(this.window, { type: 'info', message: mainMessages()['updates.packagedOnly'] });
+			if ( byHand && app.isPackaged ) shell.openExternal(`${homepage}/releases/latest`);
+			else if ( byHand ) dialog.showMessageBox(this.window, { type: 'info', message: mainMessages()['updates.packagedOnly'] });
 			return;
 		}
 		this.askedByHand = byHand;

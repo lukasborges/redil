@@ -4,7 +4,8 @@
     because the panels it sits in -- GNOME's top bar above all -- draw their
     own icons monochrome and light, and a coloured tile there is the one thing
     that is not. Windows keeps the full-colour icon, which is what its
-    notification area expects, and macOS draws no tray at all.
+    notification area expects. A Mac's menu bar takes this one too, as a
+    template: it reads only the shape and paints it in its own colour.
   -->
   <defs>
     <mask id="coat" maskUnits="userSpaceOnUse" x="0" y="0" width="128" height="128">

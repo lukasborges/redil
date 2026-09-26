@@ -39,6 +39,8 @@ export function createMainWindow(startHidden: boolean, saved: WindowBounds | nul
 		title: 'Shep',
 		titleBarStyle: 'hidden',
 		titleBarOverlay: titleBarOverlay(),
+		// centred in the title bar, whose height the overlay gives a Mac's buttons nowhere else
+		trafficLightPosition: { x: 12, y: (TITLE_BAR_HEIGHT - 14) / 2 },
 		backgroundColor: titleBarOverlay().color,
 		// X11 reads the window's own icon; Wayland matches the app_id to the desktop entry instead
 		icon: join(__dirname, '../../resources/Icon.png'),
@@ -50,7 +52,8 @@ export function createMainWindow(startHidden: boolean, saved: WindowBounds | nul
 		}
 	});
 
-	const syncOverlay = () => { if ( !window.isDestroyed() ) window.setTitleBarOverlay(titleBarOverlay()); };
+	// A Mac draws its own buttons in their own colours, and has no overlay to recolour.
+	const syncOverlay = () => { if ( !window.isDestroyed() && process.platform !== 'darwin' ) window.setTitleBarOverlay(titleBarOverlay()); };
 	nativeTheme.on('updated', syncOverlay);
 	window.on('closed', () => nativeTheme.off('updated', syncOverlay));
 

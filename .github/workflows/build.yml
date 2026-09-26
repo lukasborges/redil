@@ -94,3 +94,40 @@ jobs:
           path: |
             dist/*.exe
             dist/*.zip
+
+  mac:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Caches/electron
+            ~/Library/Caches/electron-builder
+          key: electron-${{ runner.os }}-${{ hashFiles('package.json') }}
+          restore-keys: electron-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      # A Mac runner has a desktop of its own, as Windows does, and the title bar test skips itself there too.
+      - name: Test
+        run: npm test
+
+      # Signed ad hoc only, which an Apple silicon Mac needs to run it at all: without a Developer ID it is
+      # neither signed nor notarised, and Gatekeeper asks before it first opens.
+      - name: Package
+        run: npm run build && npx electron-builder --mac --publish never
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shep-mac
+          if-no-files-found: error
+          path: |
+            dist/*.dmg
+            dist/*.zip

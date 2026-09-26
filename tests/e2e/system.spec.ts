@@ -117,6 +117,7 @@ test('starts hidden in the tray when asked to start minimized', async () => {
 });
 
 test('checks spelling in the languages picked in Preferences', async () => {
+	test.skip(process.platform === 'darwin', 'a Mac checks spelling with its own checker, in the languages it is set to');
 	let shep: Shep | undefined;
 	try {
 		shep = await launchShep({ store: { services: twoServices(), preferences: { spellcheckLanguages: ['pt-BR'] } } });
@@ -132,6 +133,7 @@ test('checks spelling in the languages picked in Preferences', async () => {
 
 // Where the system has no picker, X11 here, the app asks; a service for calls, or the screen permission is asked first.
 test('asks which screen or window to share, hands the page the choice, and keeps running', async () => {
+	test.skip(process.platform === 'darwin', 'a Mac opens its own picker, which nothing here can click');
 	let shep: Shep | undefined;
 	try {
 		shep = await launchShep({ store: { services: [serviceRecord('1', at('127.0.0.1', '/service.html'), { media: true })], activeServiceId: '1' } });

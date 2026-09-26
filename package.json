@@ -100,6 +100,32 @@
 				}
 			]
 		},
+		"mac": {
+			"icon": "resources/logo/1024x1024.png",
+			"category": "public.app-category.social-networking",
+			"artifactName": "Shep-${version}-mac-${arch}.${ext}",
+			"identity": "-",
+			"extendInfo": {
+				"NSCameraUsageDescription": "A service you add may ask for the camera, for a call.",
+				"NSMicrophoneUsageDescription": "A service you add may ask for the microphone, for a call."
+			},
+			"target": [
+				{
+					"target": "dmg",
+					"arch": [
+						"arm64",
+						"x64"
+					]
+				},
+				{
+					"target": "zip",
+					"arch": [
+						"arm64",
+						"x64"
+					]
+				}
+			]
+		},
 		"nsis": {
 			"oneClick": false,
 			"perMachine": false,
