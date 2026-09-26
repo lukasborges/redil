@@ -1,0 +1,84 @@
+name: Mac session
+
+# A Mac to try Shep on by hand, since nobody working on it owns one: a runner with the build in
+# /Applications, reached over VNC through the maintainer's Tailscale network, never the internet.
+#
+# The runner's own user has a password nobody knows, and VNC's own password alone opens a login
+# window of its own, so the job makes a user, shep, whose password is the MAC_VNC_PASSWORD secret.
+# It needs TAILSCALE_AUTHKEY too, an ephemeral key, so the Mac leaves the network with the job.
+# Connect to shep-mac:5900 as shep. Cancelling the run ends the session.
+
+on:
+  workflow_dispatch:
+    inputs:
+      minutes:
+        description: How long to keep the Mac, in minutes (a job ends at 360)
+        default: '120'
+
+jobs:
+  session:
+    runs-on: macos-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build
+        run: |
+          npm run build
+          npx electron-builder --mac dir --arm64 --publish never
+          sudo cp -R dist/mac-arm64/Shep.app /Applications/
+
+      # The runner's image turns System Integrity Protection off, which is what lets screen sharing be
+      # given its permissions here rather than in System Settings, where only a person could.
+      - name: Screen sharing
+        env:
+          PASSWORD: ${{ secrets.MAC_VNC_PASSWORD }}
+        run: |
+          DB="/Library/Application Support/com.apple.TCC/TCC.db"
+          for client in com.apple.screensharing.agent com.apple.RemoteDesktopAgent; do
+            for service in kTCCServiceScreenCapture kTCCServicePostEvent kTCCServiceAccessibility; do
+              sudo sqlite3 "$DB" "insert or replace into access (service, client, client_type, auth_value, auth_reason, auth_version, flags) values ('$service', '$client', 0, 2, 4, 1, 0)"
+            done
+          done
+          sudo sysadminctl -addUser shep -fullName Shep -password "$PASSWORD" -admin 2>&1 | grep -v -F "$PASSWORD" || true
+          # the questions a first login asks, which would stand between the session and the desktop
+          SETUP=/Users/shep/Library/Preferences/com.apple.SetupAssistant
+          sudo mkdir -p /Users/shep/Library/Preferences
+          for key in DidSeeCloudSetup DidSeePrivacy DidSeeSiriSetup DidSeeScreenTime DidSeeAppearanceSetup DidSeeAccessibility DidSeeTouchIDSetup DidSeeActivationLock DidSeeTermsOfAddress DidSeeIntelligence DidSeeApplePaySetup DidSeeSyncSetup DidSeeSyncSetup2 DidSeeTrueTonePrivacy DidSeeWalletSetup SkipFirstLoginOptimization; do
+            sudo defaults write $SETUP $key -bool true
+          done
+          sudo defaults write $SETUP LastSeenCloudProductVersion "$(sw_vers -productVersion)"
+          sudo defaults write $SETUP LastSeenBuddyBuildVersion "$(sw_vers -buildVersion)"
+          sudo chown -R shep:staff /Users/shep/Library
+          sudo /System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart -activate -configure -access -on -privs -all -allowAccessFor -allUsers -clientopts -setvnclegacy -vnclegacy yes -setvncpw -vncpw "$PASSWORD" -restart -agent
+          sudo defaults write /var/db/launchd.db/com.apple.launchd/overrides.plist com.apple.screensharing -dict Disabled -bool false
+          sudo launchctl load -w /System/Library/LaunchDaemons/com.apple.screensharing.plist || true
+
+      # So the maintainer's machine can read logs over SSH while someone tries the app; the key is public.
+      - name: SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFh5YknntICp9QgusV+pIF4ntaRwYt8OuBGMjh4g8H3i shep-mac-build' >> ~/.ssh/authorized_keys
+          chmod 600 ~/.ssh/authorized_keys
+
+      - name: Tailscale
+        env:
+          AUTHKEY: ${{ secrets.TAILSCALE_AUTHKEY }}
+        run: |
+          brew install tailscale
+          sudo tailscaled --state=mem: > /tmp/tailscaled.log 2>&1 &
+          sleep 3
+          sudo tailscale up --authkey "$AUTHKEY" --hostname shep-mac
+          echo "VNC at $(tailscale ip -4):5900, as shep"
+
+      - name: Keep the Mac
+        env:
+          MINUTES: ${{ inputs.minutes }}
+        run: sleep $(( ${MINUTES//[^0-9]/} * 60 ))
