@@ -9,7 +9,9 @@
   <img src="./resources/screenshots/shep-1.0-dark.png" width="49%" alt="The same window in the dark theme" />
 </p>
 
-Shep keeps WhatsApp, Gmail, Slack, Teams, Claude or anything else with a web address in a rail down the left of one window, each signed in on its own, each counting what is unread. It is made for Linux and for GNOME in particular: the icon, the palette and the dialogs follow GNOME's guidelines, and the window follows the desktop's light or dark style. It runs on Windows 10 and 11 as well, where the same window follows the system's style, the title bar carries Windows' own buttons, and the notification area takes the coloured mark.
+Shep keeps WhatsApp, Gmail, Slack, Teams, Claude or anything else with a web address in a rail down the left of one window, each signed in on its own, each counting what is unread. It runs on Linux and on Windows.
+
+Its looks come from GNOME, which is where it was drawn: the icon, the palette and the dialogs follow GNOME's guidelines, and the window follows the desktop's light or dark style on either system. On Windows the title bar carries the system's own buttons, and the notification area takes the coloured mark rather than the flat one a GNOME panel asks for.
 
 ## How it works
 
@@ -25,7 +27,7 @@ Press `+` and pick a service from the list, or type any address; either way, tha
 
 Services can be grouped into **workspaces**, one on screen at a time, switched from the top of the rail. The ones out of sight keep running, counting and notifying, and the switcher shows a dot when one of them has something new.
 
-Shep also has a do-not-disturb switch, a lock screen with a password, an icon in the system tray, spell checking, screen sharing through the desktop's own picker on Wayland, and a report of what each service's title says, for when a count looks wrong. It speaks English, Portuguese, Spanish, French, German, Italian, Russian, Japanese, Chinese and Korean.
+Shep also has a do-not-disturb switch, a lock screen with a password, an icon in the system tray, spell checking, screen sharing through the desktop's own picker on Wayland and through Shep's own everywhere else, and a report of what each service's title says, for when a count looks wrong. It speaks English, Portuguese, Spanish, French, German, Italian, Russian, Japanese, Chinese and Korean.
 
 ## Install
 
