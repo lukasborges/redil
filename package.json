@@ -1,7 +1,7 @@
 {
 	"name": "Shep",
 	"productName": "Shep",
-	"version": "1.0.1",
+	"version": "1.1.0",
 	"description": "One window for the web apps you already use in the browser.",
 	"main": "out/main/index.js",
 	"repository": {
